@@ -233,7 +233,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Empieza hoy mismo tu transformación
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-violet-100">
+            <p className="mx-auto mt-4 max-x-2xl text-violet-100">
               Únete a la comunidad de aprendizaje más vibrante de Latinoamérica. Sin cuotas
               mensuales obligatorias, paga solo por lo que aprendes.
             </p>

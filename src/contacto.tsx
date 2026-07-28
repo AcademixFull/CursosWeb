@@ -1,4 +1,6 @@
 import { type FormEvent, useState } from 'react';
+import Map, { Marker } from 'react-map-gl/mapbox';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { Link } from 'react-router-dom';
 import Header from './components/Header';
 
@@ -56,25 +58,25 @@ const contactCards: ContactCard[] = [
     icon: 'mail',
     title: 'Correo electronico',
     description: 'Escribenos para resolver dudas sobre cursos, pagos o acceso.',
-    action: 'academia@cursosjhonson.com',
+    action: 'mo27marco@gmail.com',
   },
   {
     icon: 'phone',
     title: 'Telefono',
     description: 'Atencion directa para estudiantes y empresas.',
-    action: '+52 55 1234 9876',
+    action: '+52 2411087863',
   },
   {
     icon: 'pin',
     title: 'Direccion',
-    description: 'Oficina virtual con soporte para Mexico y Latinoamerica.',
-    action: 'Ciudad de Mexico, MX',
+    description: 'Apizaco,Tlaxcala',
+    action: 'Apizaco',
   },
   {
     icon: 'discord',
     title: 'Comunidad / Discord',
     description: 'Conecta con mentores y alumnos en tiempo real.',
-    action: 'discord.gg/cursosjhonson',
+    action: 'discord',
   },
 ];
 
@@ -597,12 +599,12 @@ export default function Contacto() {
                 Ubicacion y horarios
               </h2>
               <p className="mt-4 text-slate-400">
-                Seccion preparada para integrar Google Maps posteriormente.
+                Apizaco, Tlaxcala, Mexico. Atencion remota disponible para todo el mundo.
               </p>
               <div className="mt-6 space-y-3 text-sm text-slate-300">
                 <p>
-                  <span className="font-semibold text-white">Direccion:</span> Ciudad de Mexico,
-                  Mexico. Atencion remota para toda Latinoamerica.
+                  <span className="font-semibold text-white">Direccion:</span> Ciudad de Apizaco,
+                  Mexico. Atencion remota.
                 </p>
                 <p>
                   <span className="font-semibold text-white">Horarios:</span> Lunes a viernes,
@@ -614,15 +616,14 @@ export default function Contacto() {
                 </p>
               </div>
             </div>
-            <div className="flex min-h-72 items-center justify-center rounded-2xl border border-dashed border-violet-300/30 bg-slate-950/80 p-8 text-center">
-              <div>
-                <Icon name="pin" className="mx-auto h-10 w-10 text-violet-300" />
-                <p className="mt-4 text-lg font-bold text-white">Mapa proximamente</p>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
-                  Aqui se podra montar el iframe o componente de Google Maps sin alterar la
-                  estructura de la pagina.
-                </p>
-              </div>
+            <div className="min-h-72 overflow-hidden rounded-2xl">
+              <Map
+                initialViewState={{ longitude: -98.1333, latitude: 19.4167, zoom: 13 }}
+                style={{ width: '100%', height: '100%', minHeight: '288px' }}
+                mapStyle="mapbox://styles/mapbox/dark-v11"
+              >
+                <Marker longitude={-98.1333} latitude={19.4167} color="#7c3aed" />
+              </Map>
             </div>
           </div>
         </section>
@@ -632,7 +633,7 @@ export default function Contacto() {
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Listo para elegir el curso correcto?
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-violet-100">
+            <p className="mx-auto mt-4 max-2xl text-violet-100">
               Nuestro equipo puede ayudarte a encontrar una ruta clara y realista para avanzar en
               desarrollo web, backend, mobile o arquitectura.
             </p>

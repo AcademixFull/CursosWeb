@@ -1,55 +1,54 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 interface HeaderProps {
-  active?: 'inicio' | 'cursos' | 'nosotros' | 'contacto';
+  active?: "inicio" | "cursos" | "nosotros" | "contacto";
 }
 
 export default function Header({ active }: HeaderProps) {
   const [showLogin, setShowLogin] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  function linkClasses(key: HeaderProps['active']) {
+  function linkClasses(key: HeaderProps["active"]) {
     return active === key
-      ? 'text-white font-semibold'
-      : 'text-slate-300 transition-colors hover:text-white';
+      ? "text-white font-semibold"
+      : "text-slate-300 transition-colors hover:text-white";
   }
 
   function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setShowLogin(false);
-    setEmail('');
-    setPassword('');
-    navigate('/dashboard');
+    setEmail("");
+    setPassword("");
+    navigate("/dashboard");
   }
 
   return (
     <>
       <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur sticky top-0 z-40">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link to="/" className="text-lg font-extrabold tracking-tight text-white">
+          <Link
+            to="/"
+            className="text-lg font-extrabold tracking-tight text-white"
+          >
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
               Academix
             </span>
           </Link>
 
           <div className="hidden items-center gap-6 text-sm font-medium sm:flex">
-            <Link to="/" className={linkClasses('inicio')}>
+            <Link to="/" className={linkClasses("inicio")}>
               Inicio
             </Link>
-            <Link to="/cursos" className={linkClasses('cursos')}>
+            <Link to="/cursos" className={linkClasses("cursos")}>
               Cursos
             </Link>
-            <span
-              aria-disabled="true"
-              title="Próximamente"
-              className="cursor-not-allowed text-slate-500"
-            >
+            <Link to="/nosotros" className={linkClasses("nosotros")}>
               Nosotros
-            </span>
-            <Link to="/contacto" className={linkClasses('contacto')}>
+            </Link>
+            <Link to="/contacto" className={linkClasses("contacto")}>
               Contacto
             </Link>
           </div>
@@ -96,7 +95,10 @@ export default function Header({ active }: HeaderProps) {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label htmlFor="login-email" className="text-sm font-medium text-slate-300">
+                <label
+                  htmlFor="login-email"
+                  className="text-sm font-medium text-slate-300"
+                >
                   Correo electrónico
                 </label>
                 <input
@@ -111,7 +113,10 @@ export default function Header({ active }: HeaderProps) {
               </div>
 
               <div>
-                <label htmlFor="login-password" className="text-sm font-medium text-slate-300">
+                <label
+                  htmlFor="login-password"
+                  className="text-sm font-medium text-slate-300"
+                >
                   Contraseña
                 </label>
                 <input
