@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import Header from './components/Header';
 
 interface ValueItem {
@@ -160,7 +160,7 @@ export default function Nosotros() {
             </span>
             <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
               Transformando la{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
+              <span className="bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-fuchsia-400">
                 educación digital
               </span>
             </h1>
@@ -257,7 +257,7 @@ export default function Nosotros() {
                       className="h-24 w-24 rounded-full object-cover ring-2 ring-violet-400/40"
                     />
                   ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-xl font-bold text-violet-300 ring-2 ring-dashed ring-violet-400/40">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-violet-500/20 to-fuchsia-500/20 text-xl font-bold text-violet-300 ring-2 ring-dashed ring-violet-400/40">
                       {initials(member.name)}
                     </div>
                   )}
@@ -270,7 +270,7 @@ export default function Nosotros() {
         </section>
 
         <section className="px-6 py-16">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-gradient-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               ¿Listo para unirte a nuestra comunidad?
             </h2>

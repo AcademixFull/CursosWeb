@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import Header from '../components/Header';
 
 const stats = [
@@ -62,7 +62,7 @@ export default function HomePage() {
               </span>
               <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
                 Aprende habilidades{' '}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400">
+                <span className="bg-clip-text text-transparent bg-linear-to-r from-violet-400 via-fuchsia-400 to-blue-400">
                   reales
                 </span>{' '}
                 para el futuro.
@@ -88,9 +88,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-2xl shadow-violet-950/40 backdrop-blur">
+            <div className="rounded-2xl border border-white/10 bg-white/6 p-3 shadow-2xl shadow-violet-950/40 backdrop-blur">
               <div className="overflow-hidden rounded-xl">
-                <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 text-center">
+                <div className="flex aspect-video w-full items-center justify-center bg-linear-to-br from-violet-900 via-slate-900 to-blue-900 text-center">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">
                       Cursos tecnología
@@ -149,7 +149,7 @@ export default function HomePage() {
                   key={course.title}
                   className="flex flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/60"
                 >
-                  <div className="flex h-32 items-center justify-center bg-gradient-to-br from-violet-800/40 to-slate-800 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                  <div className="flex h-32 items-center justify-center bg-linear-to-br from-violet-800/40 to-slate-800 text-xs font-semibold uppercase tracking-wider text-violet-300">
                     {course.tag}
                   </div>
                   <div className="flex flex-1 flex-col p-5">
@@ -229,7 +229,7 @@ export default function HomePage() {
 
         {/* CTA final */}
         <section className="px-6 py-20">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-gradient-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-12">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-12">
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Empieza hoy mismo tu transformación
             </h2>

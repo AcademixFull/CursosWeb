@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 const dashboardStats = [
   { label: 'Cursos en progreso', value: '0' },
@@ -13,7 +13,7 @@ export default function Dashboard() {
       <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link to="/" className="text-lg font-extrabold tracking-tight text-white">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
+            <span className="bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-fuchsia-400">
               Academix
             </span>
           </Link>
@@ -28,7 +28,7 @@ export default function Dashboard() {
 
       <main className="px-6 py-16">
         <div className="mx-auto max-w-6xl">
-          <div className="rounded-2xl border border-violet-400/20 bg-gradient-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 shadow-2xl shadow-violet-950/40 sm:p-10">
+          <div className="rounded-2xl border border-violet-400/20 bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 shadow-2xl shadow-violet-950/40 sm:p-10">
             <span className="text-xs font-semibold uppercase tracking-wider text-violet-100">
               Bienvenido de vuelta
             </span>

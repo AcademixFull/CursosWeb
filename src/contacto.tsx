@@ -1,8 +1,10 @@
 import { type FormEvent, useState } from 'react';
 import Map, { Marker } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import Header from './components/Header';
+import { env } from './config/env';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkolnvvo';
 
@@ -354,7 +356,7 @@ export default function Contacto() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-left shadow-2xl shadow-violet-950/40 backdrop-blur">
+            <div className="rounded-2xl border border-white/10 bg-white/6 p-6 text-left shadow-2xl shadow-violet-950/40 backdrop-blur">
               <div className="rounded-xl border border-violet-400/20 bg-slate-950/70 p-6">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-300">
                   Atencion personalizada
@@ -364,7 +366,7 @@ export default function Contacto() {
                 </h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {benefits.map((benefit) => (
-                    <div key={benefit.title} className="rounded-xl bg-white/[0.04] p-4">
+                    <div key={benefit.title} className="rounded-xl bg-white/4 p-4">
                       <Icon name={benefit.icon} className="h-5 w-5 text-violet-300" />
                       <p className="mt-3 text-sm font-semibold text-white">{benefit.title}</p>
                     </div>
@@ -618,6 +620,7 @@ export default function Contacto() {
             </div>
             <div className="min-h-72 overflow-hidden rounded-2xl">
               <Map
+                mapboxAccessToken={env.mapboxToken}
                 initialViewState={{ longitude: -98.1333, latitude: 19.4167, zoom: 13 }}
                 style={{ width: '100%', height: '100%', minHeight: '288px' }}
                 mapStyle="mapbox://styles/mapbox/dark-v11"
@@ -629,7 +632,7 @@ export default function Contacto() {
         </section>
 
         <section className="px-6 py-16">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-gradient-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Listo para elegir el curso correcto?
             </h2>

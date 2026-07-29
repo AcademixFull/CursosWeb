@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 
 interface HeaderProps {
   active?: "inicio" | "cursos" | "nosotros" | "contacto";
@@ -33,7 +33,7 @@ export default function Header({ active }: HeaderProps) {
             to="/"
             className="text-lg font-extrabold tracking-tight text-white"
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400">
+            <span className="bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-fuchsia-400">
               Academix
             </span>
           </Link>
