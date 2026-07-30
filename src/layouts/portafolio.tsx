@@ -43,14 +43,14 @@ export default function Portfolio() {
 
   return (
     // Centramos el layout y usamos la paleta fija para evitar conflictos con el compilador v4
-    <div className="w-full min-h-screen bg-[#1a1f2c] text-white box-border font-sans">
+    <div className="w-full min-h-screen bg-cyber-bg text-white box-border font-sans">
       <Header active="cursos" />
       <div className="p-6 md:p-16 flex flex-col items-center justify-start">
       <div className="w-full max-w-6xl mx-auto block">
         
         {/* Encabezado */}
         <header className="mb-12 text-center md:text-left border-b border-slate-800 pb-6">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
             Mi Portafolio de Cursos
           </h1>
           <p className="mt-2 text-slate-400 text-lg">
@@ -71,9 +71,9 @@ export default function Portfolio() {
                 <div className="mb-5 flex items-center justify-between w-full">
                   <div className="w-8 h-8 rounded-full border border-slate-700 bg-slate-900/50 flex items-center justify-center">
                     {/* Color rosa exacto aplicado mediante hex nativo */}
-                    <span className="text-[#e23b56] text-xs font-mono">⚡</span>
+                    <span className="text-neon-rosetext-xs font-mono">⚡</span>
                   </div>
-                  <span className="text-[11px] font-mono bg-[#1a1f2c] text-slate-400 px-2 py-0.5 rounded border border-slate-800">
+                  <span className="text-[11px] font-mono bg-cyber-bg text-slate-400 px-2 py-0.5 rounded border border-slate-800">
                     {curso.duracion}
                   </span>
                 </div>
@@ -97,7 +97,7 @@ export default function Portfolio() {
                   {curso.tecnologias.map((tech, index) => (
                     <span 
                       key={index} 
-                      className="bg-[#1a1f2c] text-slate-300 text-[11px] font-mono px-2 py-1 rounded border border-slate-800"
+                      className="bg-cyber-bg text-slate-300 text-[11px] font-mono px-2 py-1 rounded border border-slate-800"
                     >
                       {tech}
                     </span>
@@ -105,7 +105,7 @@ export default function Portfolio() {
                 </div>
 
                 {/* Enlace de acción "Learn more" idéntico al diseño de referencia */}
-                <span className="text-[#e23b56] hover:text-[#ff526f] text-sm font-medium tracking-wide inline-flex items-center gap-1 cursor-pointer transition-colors mt-2">
+                <span className="text-neon-rosehover:text-[#ff526f] text-sm font-medium tracking-wide inline-flex items-center gap-1 cursor-pointer transition-colors mt-2">
                   Learn more <span className="text-base">→</span>
                 </span>
               </div>

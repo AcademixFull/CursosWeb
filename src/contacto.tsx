@@ -4,9 +4,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Link } from 'react-router';
 import Header from './components/Header';
 import { env } from './config/env';
-import 'mapbox-gl/dist/mapbox-gl.css';
-
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkolnvvo';
 
 interface ContactForm {
   nombre: string;
@@ -284,45 +281,19 @@ export default function Contacto() {
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const nextErrors = validateForm(form);
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
 
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      setStatus('error');
-      return;
-    }
+  const nextErrors = validateForm(form);
 
-    setStatus('loading');
-
-    try {
-      const response = await fetch(FORMSPREE_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nombre: form.nombre.trim(),
-          email: form.email.trim(),
-          asunto: form.asunto.trim(),
-          mensaje: form.mensaje.trim(),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Formspree rejected the message');
-      }
-
-      setStatus('success');
-      setForm(initialForm);
-      setErrors({});
-    } catch {
-      setStatus('error');
-    }
+  if (Object.keys(nextErrors).length > 0) {
+    setErrors(nextErrors);
+    setStatus('error');
+    return;
   }
-
+  }
+  // El envío se implementará mediante contact.service.ts
+  // y POST /api/v1/contact cuando academix-backend esté disponible.
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
       <Header active="contacto" />
