@@ -1,8 +1,7 @@
 import { courseMocks } from "./courseMocks";
 import type { CourseDetail, CourseLesson } from "../types/course.types";
 import type { LearningCourse, LearningLesson, LearningModule } from "../types/learning.types";
-
-const PROGRESS_KEY = "academix.learning-progress.v1";
+import { MOCK_LEARNING_PROGRESS_KEY } from "../utils/mockStudentStorage";
 const DEFAULT_COMPLETED_LESSON_IDS = [
   "web-lesson-1",
   "web-lesson-2",
@@ -13,7 +12,7 @@ const DEFAULT_COMPLETED_LESSON_IDS = [
 
 function readCompletedLessons(): Set<string> {
   try {
-    const storedValue = sessionStorage.getItem(PROGRESS_KEY);
+    const storedValue = sessionStorage.getItem(MOCK_LEARNING_PROGRESS_KEY);
     const lessonIds: unknown = storedValue ? JSON.parse(storedValue) : DEFAULT_COMPLETED_LESSON_IDS;
     return new Set(Array.isArray(lessonIds) ? lessonIds.filter((id): id is string => typeof id === "string") : []);
   } catch {
@@ -22,7 +21,7 @@ function readCompletedLessons(): Set<string> {
 }
 
 function saveCompletedLessons(lessonIds: Set<string>): void {
-  sessionStorage.setItem(PROGRESS_KEY, JSON.stringify([...lessonIds]));
+  sessionStorage.setItem(MOCK_LEARNING_PROGRESS_KEY, JSON.stringify([...lessonIds]));
 }
 
 function lessonDescription(course: CourseDetail, lesson: CourseLesson): string {
@@ -30,7 +29,21 @@ function lessonDescription(course: CourseDetail, lesson: CourseLesson): string {
 }
 
 function buildModules(course: CourseDetail, completedIds: Set<string>): LearningModule[] {
-  return course.modules.map((module) => ({
+  const sourceModules = course.modules.length
+    ? course.modules
+    : [{
+        id: `${course.id}-module-introduction`,
+        title: "Introducción al curso",
+        position: 1,
+        lessons: [{
+          id: `${course.id}-lesson-welcome`,
+          title: "Bienvenida y objetivos",
+          durationMinutes: 12,
+          isPreview: true,
+        }],
+      }];
+
+  return sourceModules.map((module) => ({
     id: module.id,
     title: module.title,
     position: module.position,

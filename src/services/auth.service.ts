@@ -6,6 +6,7 @@ import type {
   RegisterInput,
 } from "../types/auth.types";
 import { api } from "./api";
+import { clearMockStudentStorage } from "../utils/mockStudentStorage";
 
 function createMockSession(email: string, fullName?: string): AuthSession {
   const normalizedEmail = email.trim().toLowerCase();
@@ -46,7 +47,9 @@ export const authService = {
   async logout(): Promise<void> {
     if (env.dataSource === "api") {
       await api.post<void>("/auth/logout");
+      return;
     }
+    clearMockStudentStorage();
   },
 
   async requestPasswordReset(input: PasswordResetInput): Promise<void> {

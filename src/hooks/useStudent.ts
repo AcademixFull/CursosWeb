@@ -14,8 +14,8 @@ export const studentQueryKeys = {
   profile: (userId: string) => ["student", "profile", userId] as const,
 };
 
-export function useMyCourses() {
-  return useQuery({ queryKey: studentQueryKeys.courses, queryFn: listMyCourses });
+export function useMyCourses(enabled = true) {
+  return useQuery({ queryKey: studentQueryKeys.courses, queryFn: listMyCourses, enabled });
 }
 
 export function useMyCertificates() {

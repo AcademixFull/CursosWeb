@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { authService } from "../services/auth.service";
 import type { AuthSession, LoginInput, RegisterInput } from "../types/auth.types";
 import { clearAuthSession, readAuthSession, saveAuthSession } from "../utils/authSessionStore";
@@ -10,6 +11,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(readAuthSession);
+  const queryClient = useQueryClient();
 
   const value = useMemo<AuthContextValue>(() => ({
     session,
@@ -30,6 +32,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await authService.logout();
       } finally {
         clearAuthSession();
+        queryClient.removeQueries({ queryKey: ["student"] });
+        queryClient.removeQueries({ queryKey: ["learning"] });
         setSession(null);
       }
     },
@@ -46,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return nextSession;
       });
     },
-  }), [session]);
+  }), [queryClient, session]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

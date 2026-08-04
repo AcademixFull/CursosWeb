@@ -1,11 +1,16 @@
-import { useParams } from "react-router";
+import { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
+import { EnrollmentDialog } from "../components/enrollment/EnrollmentDialog";
 import { Badge } from "../components/ui/Badge";
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
-import { ROUTES } from "../config/routes";
+import { learningRoute, ROUTES } from "../config/routes";
+import { useAuth } from "../hooks/useAuth";
 import { useCourse, useRelatedCourses } from "../hooks/useCourse";
+import { useEnrollCourse } from "../hooks/useEnrollment";
+import { useMyCourses } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
 
 function formatPrice(price: number): string {
@@ -20,6 +25,12 @@ export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const courseQuery = useCourse(courseId);
   const relatedQuery = useRelatedCourses(courseId);
+  const { isAuthenticated } = useAuth();
+  const enrollmentsQuery = useMyCourses(isAuthenticated);
+  const enrollmentMutation = useEnrollCourse();
+  const [showEnrollment, setShowEnrollment] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   if (courseQuery.isPending) {
     return (
@@ -51,6 +62,26 @@ export default function CourseDetailPage() {
   }
 
   const course = courseQuery.data;
+  const isEnrolled = enrollmentsQuery.data?.some((enrollment) => enrollment.course.id === course.id) ?? false;
+
+  function startEnrollment() {
+    if (!isAuthenticated) {
+      navigate(ROUTES.login, { state: { returnTo: location.pathname } });
+      return;
+    }
+    enrollmentMutation.reset();
+    setShowEnrollment(true);
+  }
+
+  async function confirmEnrollment() {
+    try {
+      await enrollmentMutation.mutateAsync(course.id);
+      setShowEnrollment(false);
+      navigate(learningRoute(course.id));
+    } catch {
+      // El mensaje de error se muestra dentro del diálogo.
+    }
+  }
 
   return (
     <PublicLayout active="cursos">
@@ -162,11 +193,17 @@ export default function CourseDetailPage() {
 
             <aside className="h-fit rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl shadow-black/30 lg:sticky lg:top-28">
               <p className="text-3xl font-extrabold text-white">{formatPrice(course.price)}</p>
-              <Button size="lg" fullWidth className="mt-5">
-                Inscribirme ahora
-              </Button>
-              <Button variant="secondary" size="lg" fullWidth className="mt-3">
-                Añadir al carrito
+              {isEnrolled ? (
+                <ButtonLink to={learningRoute(course.id)} size="lg" fullWidth className="mt-5">
+                  Ir a mi curso
+                </ButtonLink>
+              ) : (
+                <Button size="lg" fullWidth className="mt-5" onClick={startEnrollment} disabled={enrollmentsQuery.isLoading}>
+                  {enrollmentsQuery.isLoading ? "Consultando..." : "Inscribirme ahora"}
+                </Button>
+              )}
+              <Button variant="secondary" size="lg" fullWidth className="mt-3" disabled title="Disponible cuando se defina el proveedor de pagos">
+                Carrito próximamente
               </Button>
               <div className="mt-6 border-t border-white/10 pt-5 text-sm text-slate-400">
                 <p>Este curso incluye:</p>
@@ -190,6 +227,17 @@ export default function CourseDetailPage() {
               </div>
             </div>
           </section>
+        ) : null}
+
+        {showEnrollment ? (
+          <EnrollmentDialog
+            courseTitle={course.title}
+            priceLabel={formatPrice(course.price)}
+            isPending={enrollmentMutation.isPending}
+            error={enrollmentMutation.isError ? "No pudimos completar la inscripción. Intenta nuevamente." : undefined}
+            onClose={() => setShowEnrollment(false)}
+            onConfirm={() => void confirmEnrollment()}
+          />
         ) : null}
     </PublicLayout>
   );

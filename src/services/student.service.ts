@@ -1,5 +1,5 @@
 import { env } from "../config/env";
-import { certificateMocks, enrollmentMocks } from "../data/studentMocks";
+import { certificateMocks, getEnrollmentMocks } from "../data/studentMocks";
 import { getLearningCourseMock } from "../data/learningMocks";
 import type { AuthUser } from "../types/auth.types";
 import type {
@@ -34,7 +34,7 @@ export async function listMyCourses(): Promise<EnrollmentSummary[]> {
   }
 
   await waitForMocks();
-  return enrollmentMocks.map((enrollment) => {
+  return getEnrollmentMocks().map((enrollment) => {
     const learningCourse = getLearningCourseMock(enrollment.course.id);
     if (!learningCourse?.totalLessons) return enrollment;
 

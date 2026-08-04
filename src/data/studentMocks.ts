@@ -1,5 +1,6 @@
 import { courseMocks } from "./courseMocks";
 import type { CertificateSummary, EnrollmentSummary } from "../types/student.types";
+import { MOCK_ENROLLMENTS_KEY } from "../utils/mockStudentStorage";
 
 function getCourse(index: number) {
   const course = courseMocks[index];
@@ -7,7 +8,7 @@ function getCourse(index: number) {
   return course;
 }
 
-export const enrollmentMocks: EnrollmentSummary[] = [
+const initialEnrollmentMocks: EnrollmentSummary[] = [
   {
     id: "enrollment-web",
     course: getCourse(0),
@@ -36,6 +37,58 @@ export const enrollmentMocks: EnrollmentSummary[] = [
     lastAccessedAt: "2026-07-20T16:00:00.000Z",
   },
 ];
+
+function readExtraEnrollmentIds(): string[] {
+  try {
+    const storedValue = sessionStorage.getItem(MOCK_ENROLLMENTS_KEY);
+    const courseIds: unknown = storedValue ? JSON.parse(storedValue) : [];
+    return Array.isArray(courseIds) ? courseIds.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function createEnrollment(courseId: string): EnrollmentSummary | null {
+  const course = courseMocks.find((item) => item.id === courseId || item.slug === courseId);
+  if (!course) return null;
+
+  const lessonCount = course.modules.reduce((total, module) => total + module.lessons.length, 0) || 1;
+  return {
+    id: `enrollment-${course.id}`,
+    course,
+    status: "in_progress",
+    progressPercentage: 0,
+    completedLessons: 0,
+    totalLessons: lessonCount,
+    lastAccessedAt: new Date().toISOString(),
+  };
+}
+
+export function getEnrollmentMocks(): EnrollmentSummary[] {
+  const existingCourseIds = new Set(initialEnrollmentMocks.map((enrollment) => enrollment.course.id));
+  const extraEnrollments = readExtraEnrollmentIds()
+    .filter((courseId) => !existingCourseIds.has(courseId))
+    .map(createEnrollment)
+    .filter((enrollment): enrollment is EnrollmentSummary => Boolean(enrollment));
+
+  return [...initialEnrollmentMocks, ...extraEnrollments];
+}
+
+export function createEnrollmentMock(courseId: string): EnrollmentSummary | null {
+  const currentEnrollments = getEnrollmentMocks();
+  const existing = currentEnrollments.find(
+    (enrollment) => enrollment.course.id === courseId || enrollment.course.slug === courseId,
+  );
+  if (existing) return existing;
+
+  const enrollment = createEnrollment(courseId);
+  if (!enrollment) return null;
+
+  const extraCourseIds = new Set(readExtraEnrollmentIds());
+  extraCourseIds.add(enrollment.course.id);
+  sessionStorage.setItem(MOCK_ENROLLMENTS_KEY, JSON.stringify([...extraCourseIds]));
+  return enrollment;
+}
 
 export const certificateMocks: CertificateSummary[] = [
   {
