@@ -17,6 +17,7 @@ const MyCoursesPage = lazy(() => import("../pages/MyCoursesPage"));
 const CertificatesPage = lazy(() => import("../pages/CertificatesPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const StudentLayout = lazy(() => import("../layouts/StudentLayout"));
+const LearningPage = lazy(() => import("../pages/LearningPage"));
 
 function RouteFallback() {
   return (
@@ -45,6 +46,7 @@ export function AppRouter() {
             <Route path={ROUTES.certificates} element={<CertificatesPage />} />
             <Route path={ROUTES.profile} element={<ProfilePage />} />
           </Route>
+          <Route path={`${ROUTES.learning}/:courseId/:lessonId?`} element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </Suspense>

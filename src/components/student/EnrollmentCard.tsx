@@ -1,4 +1,4 @@
-import { courseDetailRoute } from "../../config/routes";
+import { learningRoute } from "../../config/routes";
 import type { EnrollmentSummary } from "../../types/student.types";
 import { Badge } from "../ui/Badge";
 import { ButtonLink } from "../ui/Button";
@@ -29,7 +29,7 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
           {enrollment.completedLessons} de {enrollment.totalLessons} lecciones completadas
         </p>
         <div className="mt-auto pt-6">
-          <ButtonLink to={courseDetailRoute(course.id)} variant={isCompleted ? "secondary" : "primary"} fullWidth>
+          <ButtonLink to={learningRoute(course.id)} variant={isCompleted ? "secondary" : "primary"} fullWidth>
             {isCompleted ? "Repasar curso" : "Continuar aprendiendo"}
           </ButtonLink>
         </div>
