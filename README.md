@@ -1,75 +1,105 @@
-# React + TypeScript + Vite
+# Academix Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend independiente de Academix, construido con React, TypeScript, Vite, Tailwind CSS y React Query.
 
-Currently, two official plugins are available:
+Este repositorio contiene únicamente la interfaz. La lógica de negocio y el acceso a Supabase pertenecen a `academix-backend`; el frontend se conecta mediante la API REST configurada en `VITE_API_URL`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Requisitos
 
-## React Compiler
+- Node.js 20 o superior
+- npm
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Ejecución local
 
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm ci
+cp .env.example .env
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Mientras el backend de cursos no esté disponible, conserva:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_DATA_SOURCE=mock
 ```
+
+Para consumir la API:
+
+```env
+VITE_API_URL=http://localhost:3000/api/v1
+VITE_DATA_SOURCE=api
+```
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
+
+## Arquitectura
+
+```text
+src/
+├── app/                  # Providers y enrutamiento principal
+├── components/           # Componentes visuales reutilizables
+│   └── courses/          # Componentes del catálogo
+├── config/               # Variables, rutas y navegación
+├── data/                 # Datos mock temporales
+├── hooks/                # Integración entre React Query y servicios
+├── pages/                # Pantallas asociadas a rutas
+├── services/             # Cliente HTTP y acceso a recursos de la API
+└── types/                # Contratos TypeScript del dominio
+```
+
+El flujo de datos del catálogo es:
+
+```text
+Página → Hook de React Query → Servicio de cursos → Mock o API REST
+```
+
+Los componentes no llaman `fetch` ni Supabase directamente. Al conectar el backend se cambia `VITE_DATA_SOURCE` a `api`; las pantallas no necesitan reescribirse.
+
+## Rutas actuales
+
+- `/#/`
+- `/#/cursos`
+- `/#/cursos/:courseId`
+- `/#/nosotros`
+- `/#/contacto`
+- `/#/dashboard`
+
+Se usa `HashRouter` porque el despliegue actual está configurado para GitHub Pages.
+
+## Contrato esperado del catálogo
+
+```http
+GET /api/v1/courses?search=&category=&level=&page=1&limit=12
+GET /api/v1/courses/:id
+GET /api/v1/courses/:id/related
+```
+
+Las respuestas deben respetar el sobre común del backend:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 12,
+    "total": 0,
+    "totalPages": 1
+  }
+}
+```
+
+## Reglas de integración
+
+- No incluir `SUPABASE_SERVICE_ROLE_KEY` en este repositorio.
+- No acceder directamente a PostgreSQL desde componentes React.
+- Usar `src/services/api.ts` para toda comunicación HTTP.
+- Mantener validación de UX en frontend y validación definitiva en backend.
+- Mostrar estados de carga, error y resultados vacíos.
