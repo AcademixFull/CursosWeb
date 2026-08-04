@@ -34,6 +34,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     },
     requestPasswordReset: authService.requestPasswordReset,
+    updateUser(changes) {
+      setSession((currentSession) => {
+        if (!currentSession) return currentSession;
+
+        const nextSession = {
+          ...currentSession,
+          user: { ...currentSession.user, ...changes },
+        };
+        saveAuthSession(nextSession);
+        return nextSession;
+      });
+    },
   }), [session]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

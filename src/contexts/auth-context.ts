@@ -15,6 +15,7 @@ export interface AuthContextValue {
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   requestPasswordReset: (input: PasswordResetInput) => Promise<void>;
+  updateUser: (changes: Partial<Pick<AuthUser, "fullName">>) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

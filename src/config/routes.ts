@@ -7,6 +7,9 @@ export const ROUTES = {
   register: "/registro",
   forgotPassword: "/recuperar-contrasena",
   dashboard: "/dashboard",
+  myCourses: "/mis-cursos",
+  certificates: "/certificados",
+  profile: "/perfil",
 } as const;
 
 export function courseDetailRoute(courseId: string): string {

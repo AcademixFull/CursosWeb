@@ -13,6 +13,10 @@ const Dashboard = lazy(() => import("../pages/Dashboard"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
+const MyCoursesPage = lazy(() => import("../pages/MyCoursesPage"));
+const CertificatesPage = lazy(() => import("../pages/CertificatesPage"));
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const StudentLayout = lazy(() => import("../layouts/StudentLayout"));
 
 function RouteFallback() {
   return (
@@ -35,14 +39,12 @@ export function AppRouter() {
           <Route path={ROUTES.login} element={<LoginPage />} />
           <Route path={ROUTES.register} element={<RegisterPage />} />
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
-          <Route
-            path={ROUTES.dashboard}
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route element={<ProtectedRoute><StudentLayout /></ProtectedRoute>}>
+            <Route path={ROUTES.dashboard} element={<Dashboard />} />
+            <Route path={ROUTES.myCourses} element={<MyCoursesPage />} />
+            <Route path={ROUTES.certificates} element={<CertificatesPage />} />
+            <Route path={ROUTES.profile} element={<ProfilePage />} />
+          </Route>
           <Route path="*" element={<HomePage />} />
         </Routes>
       </Suspense>

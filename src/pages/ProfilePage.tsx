@@ -1,0 +1,134 @@
+import { useState, type FormEvent } from "react";
+import { FormField } from "../components/auth/FormField";
+import { StudentPageHeader } from "../components/student/StudentPageHeader";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { ErrorState } from "../components/ui/ErrorState";
+import { PageLoader } from "../components/ui/PageLoader";
+import { useMyProfile, useUpdateMyProfile } from "../hooks/useStudent";
+import type { UpdateProfileInput, UserProfile } from "../types/student.types";
+
+interface ProfileFormProps {
+  profile: UserProfile;
+}
+
+function ProfileForm({ profile }: ProfileFormProps) {
+  const [form, setForm] = useState<UpdateProfileInput>(() => ({
+    fullName: profile.fullName,
+    phone: profile.phone,
+    country: profile.country,
+    bio: profile.bio,
+  }));
+  const [formError, setFormError] = useState("");
+  const mutation = useUpdateMyProfile();
+
+  function updateField<Key extends keyof UpdateProfileInput>(key: Key, value: UpdateProfileInput[Key]) {
+    setForm((current) => ({ ...current, [key]: value }));
+    setFormError("");
+    mutation.reset();
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (form.fullName.trim().length < 3) {
+      setFormError("Escribe un nombre válido de al menos 3 caracteres.");
+      return;
+    }
+    if (form.bio.length > 300) {
+      setFormError("La biografía no puede superar los 300 caracteres.");
+      return;
+    }
+
+    mutation.mutate({ ...form, fullName: form.fullName.trim() });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <section className="rounded-2xl border border-slate-700/70 bg-slate-900 p-6 sm:p-8">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FormField
+            label="Nombre completo"
+            autoComplete="name"
+            value={form.fullName}
+            onChange={(event) => updateField("fullName", event.target.value)}
+          />
+          <FormField label="Correo electrónico" type="email" value={profile.email} disabled hint="El correo se administra desde tu cuenta." />
+          <FormField
+            label="Teléfono"
+            type="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={(event) => updateField("phone", event.target.value)}
+            placeholder="+52 000 000 0000"
+          />
+          <FormField
+            label="País"
+            autoComplete="country-name"
+            value={form.country}
+            onChange={(event) => updateField("country", event.target.value)}
+          />
+        </div>
+
+        <label className="mt-5 block text-sm font-medium text-slate-200">
+          Biografía
+          <textarea
+            value={form.bio}
+            onChange={(event) => updateField("bio", event.target.value)}
+            maxLength={300}
+            rows={5}
+            placeholder="Cuéntanos brevemente qué quieres aprender."
+            className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15"
+          />
+          <span className="mt-2 block text-right text-xs text-slate-500">{form.bio.length}/300</span>
+        </label>
+
+        {formError || mutation.isError ? (
+          <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {formError || "No pudimos guardar tu perfil. Intenta nuevamente."}
+          </div>
+        ) : null}
+        {mutation.isSuccess ? (
+          <div role="status" className="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+            Tu perfil se actualizó correctamente.
+          </div>
+        ) : null}
+
+        <Button type="submit" className="mt-6" disabled={mutation.isPending}>
+          {mutation.isPending ? "Guardando..." : "Guardar cambios"}
+        </Button>
+      </section>
+
+      <aside className="h-fit rounded-2xl border border-slate-700/70 bg-slate-900 p-6 text-center">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-500/15 text-2xl font-extrabold text-brand-200">
+          {profile.fullName.charAt(0).toUpperCase()}
+        </div>
+        <p className="mt-4 font-bold text-white">{profile.fullName}</p>
+        <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
+        <Badge className="mt-4">Estudiante</Badge>
+        <p className="mt-5 border-t border-white/10 pt-5 text-xs leading-5 text-slate-500">
+          La imagen de perfil estará disponible cuando conectemos Supabase Storage desde el backend.
+        </p>
+      </aside>
+    </form>
+  );
+}
+
+export default function ProfilePage() {
+  const query = useMyProfile();
+
+  if (query.isLoading) return <PageLoader label="Cargando tu perfil" />;
+  if (query.isError || !query.data) {
+    return <ErrorState description="No pudimos cargar tu perfil." onRetry={() => void query.refetch()} />;
+  }
+
+  return (
+    <div>
+      <StudentPageHeader
+        eyebrow="Cuenta Academix"
+        title="Mi perfil"
+        description="Mantén actualizada tu información personal y tus objetivos de aprendizaje."
+      />
+      <ProfileForm profile={query.data} />
+    </div>
+  );
+}
