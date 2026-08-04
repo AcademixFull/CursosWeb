@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
 import { EnrollmentDialog } from "../components/enrollment/EnrollmentDialog";
+import { ReviewDialog } from "../components/reviews/ReviewDialog";
 import { Badge } from "../components/ui/Badge";
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -10,6 +11,7 @@ import { learningRoute, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useCourse, useRelatedCourses } from "../hooks/useCourse";
 import { useEnrollCourse } from "../hooks/useEnrollment";
+import { useCreateReview } from "../hooks/useReviews";
 import { useMyCourses } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
 
@@ -25,10 +27,12 @@ export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const courseQuery = useCourse(courseId);
   const relatedQuery = useRelatedCourses(courseId);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const enrollmentsQuery = useMyCourses(isAuthenticated);
   const enrollmentMutation = useEnrollCourse();
+  const reviewMutation = useCreateReview(courseId ?? "");
   const [showEnrollment, setShowEnrollment] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -63,6 +67,8 @@ export default function CourseDetailPage() {
 
   const course = courseQuery.data;
   const isEnrolled = enrollmentsQuery.data?.some((enrollment) => enrollment.course.id === course.id) ?? false;
+  const enrollment = enrollmentsQuery.data?.find((item) => item.course.id === course.id);
+  const hasReviewed = course.reviews.some((review) => review.authorId === user?.id);
 
   function startEnrollment() {
     if (!isAuthenticated) {
@@ -80,6 +86,15 @@ export default function CourseDetailPage() {
       navigate(learningRoute(course.id));
     } catch {
       // El mensaje de error se muestra dentro del diálogo.
+    }
+  }
+
+  async function publishReview(input: { rating: number; comment: string }) {
+    try {
+      await reviewMutation.mutateAsync({ courseId: course.id, input });
+      setShowReview(false);
+    } catch {
+      // El diálogo muestra el error de publicación.
     }
   }
 
@@ -172,7 +187,17 @@ export default function CourseDetailPage() {
               </section>
 
               <section>
-                <h2 className="text-2xl font-extrabold text-white">Opiniones de estudiantes</h2>
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-white">Opiniones de estudiantes</h2>
+                    <p className="mt-2 text-sm text-slate-400">{course.rating} de 5 · {course.reviewCount} reseñas</p>
+                  </div>
+                  {enrollment?.status === "completed" && !hasReviewed ? (
+                    <Button variant="secondary" onClick={() => { reviewMutation.reset(); setShowReview(true); }}>
+                      Escribir reseña
+                    </Button>
+                  ) : null}
+                </div>
                 <div className="mt-6 divide-y divide-white/10">
                   {course.reviews.length ? (
                     course.reviews.map((review) => (
@@ -188,6 +213,14 @@ export default function CourseDetailPage() {
                     <p className="text-slate-400">Este curso todavía no tiene reseñas publicadas.</p>
                   )}
                 </div>
+                {enrollment?.status === "completed" && hasReviewed ? (
+                  <p className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    Gracias por compartir tu experiencia con la comunidad.
+                  </p>
+                ) : null}
+                {isEnrolled && enrollment?.status !== "completed" ? (
+                  <p className="mt-5 text-sm text-slate-500">Completa el curso para poder publicar una reseña.</p>
+                ) : null}
               </section>
             </div>
 
@@ -237,6 +270,15 @@ export default function CourseDetailPage() {
             error={enrollmentMutation.isError ? "No pudimos completar la inscripción. Intenta nuevamente." : undefined}
             onClose={() => setShowEnrollment(false)}
             onConfirm={() => void confirmEnrollment()}
+          />
+        ) : null}
+        {showReview ? (
+          <ReviewDialog
+            courseTitle={course.title}
+            isPending={reviewMutation.isPending}
+            serverError={reviewMutation.isError ? (reviewMutation.error instanceof Error ? reviewMutation.error.message : "No pudimos publicar la reseña.") : undefined}
+            onClose={() => setShowReview(false)}
+            onSubmit={(input) => void publishReview(input)}
           />
         ) : null}
     </PublicLayout>

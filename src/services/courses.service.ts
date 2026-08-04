@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { courseMocks } from "../data/courseMocks";
+import { mergeCourseReviewMocks } from "../data/reviewMocks";
 import type {
   CourseDetail,
   CourseFilters,
@@ -33,7 +34,7 @@ async function listMockCourses(filters: CourseFilters): Promise<CourseListResult
   const page = filters.page ?? 1;
   const limit = filters.limit ?? 12;
 
-  const filtered = courseMocks.filter((course) => {
+  const filtered = courseMocks.map(mergeCourseReviewMocks).filter((course) => {
     const matchesSearch =
       !normalizedSearch ||
       [course.title, course.shortDescription, course.instructor.name, course.category.name]
@@ -88,7 +89,7 @@ export async function getCourse(courseId: string): Promise<CourseDetail> {
     throw new Error("No encontramos el curso solicitado.");
   }
 
-  return course;
+  return mergeCourseReviewMocks(course);
 }
 
 export async function getRelatedCourses(course: CourseDetail): Promise<CourseSummary[]> {
@@ -99,5 +100,6 @@ export async function getRelatedCourses(course: CourseDetail): Promise<CourseSum
   await waitForMocks();
   return course.relatedCourseIds
     .map((courseId) => courseMocks.find((item) => item.id === courseId))
-    .filter((item): item is CourseDetail => Boolean(item));
+    .filter((item): item is CourseDetail => Boolean(item))
+    .map(mergeCourseReviewMocks);
 }

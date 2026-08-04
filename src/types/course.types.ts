@@ -45,10 +45,16 @@ export interface CourseModule {
 
 export interface CourseReview {
   id: string;
+  authorId?: string;
   authorName: string;
   rating: number;
   comment: string;
   createdAt: string;
+}
+
+export interface CreateReviewInput {
+  rating: number;
+  comment: string;
 }
 
 export interface CourseDetail extends CourseSummary {
