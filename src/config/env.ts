@@ -17,11 +17,14 @@ interface AppEnv {
   apiUrl: string;
   /** Token público de Mapbox, usado en la sección de ubicación de /contacto. */
   mapboxToken: string;
+  /** Fuente temporal del catálogo: mocks durante frontend-only, API al conectar el backend. */
+  dataSource: "mock" | "api";
 }
 
 function readEnv(): AppEnv {
   const apiUrl = import.meta.env.VITE_API_URL ?? "";
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
+  const dataSource = import.meta.env.VITE_DATA_SOURCE === "api" ? "api" : "mock";
 
   if (import.meta.env.DEV) {
     if (!apiUrl) {
@@ -37,7 +40,7 @@ function readEnv(): AppEnv {
     }
   }
 
-  return { apiUrl, mapboxToken };
+  return { apiUrl, mapboxToken, dataSource };
 }
 
 export const env: AppEnv = readEnv();

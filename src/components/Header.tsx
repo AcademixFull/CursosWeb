@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
+import { MAIN_NAVIGATION, type NavigationKey } from "../config/navigation";
+import { ROUTES } from "../config/routes";
 
 interface HeaderProps {
-  active?: "inicio" | "cursos" | "nosotros" | "contacto";
+  active?: NavigationKey;
 }
 
 export default function Header({ active }: HeaderProps) {
@@ -22,7 +24,7 @@ export default function Header({ active }: HeaderProps) {
     setShowLogin(false);
     setEmail("");
     setPassword("");
-    navigate("/dashboard");
+    navigate(ROUTES.dashboard);
   }
 
   return (
@@ -30,7 +32,7 @@ export default function Header({ active }: HeaderProps) {
       <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur sticky top-0 z-40">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link
-            to="/"
+            to={ROUTES.home}
             className="text-lg font-extrabold tracking-tight text-white"
           >
             <span className="bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-fuchsia-400">
@@ -39,18 +41,11 @@ export default function Header({ active }: HeaderProps) {
           </Link>
 
           <div className="hidden items-center gap-6 text-sm font-medium sm:flex">
-            <Link to="/" className={linkClasses("inicio")}>
-              Inicio
-            </Link>
-            <Link to="/cursos" className={linkClasses("cursos")}>
-              Cursos
-            </Link>
-            <Link to="/nosotros" className={linkClasses("nosotros")}>
-              Nosotros
-            </Link>
-            <Link to="/contacto" className={linkClasses("contacto")}>
-              Contacto
-            </Link>
+            {MAIN_NAVIGATION.map((item) => (
+              <Link key={item.key} to={item.to} className={linkClasses(item.key)}>
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <div className="flex items-center gap-3 text-sm font-medium">

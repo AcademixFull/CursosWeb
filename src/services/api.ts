@@ -17,6 +17,19 @@ import { env } from "../config/env";
 interface ApiSuccessEnvelope<T> {
   success: true;
   data: T;
+  pagination?: ApiPagination;
+}
+
+export interface ApiPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages?: number;
+}
+
+export interface ApiPage<T> {
+  items: T[];
+  pagination: ApiPagination;
 }
 
 /** Forma de respuesta de error que devuelve academix-backend (sección 11/19 de la doc.). */
@@ -102,10 +115,10 @@ function buildUrl(path: string): string {
   return `${base}${cleanPath}`;
 }
 
-async function parseEnvelope<T>(response: Response): Promise<T> {
+async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<T>> {
   // 204 No Content: no hay body que parsear.
   if (response.status === 204) {
-    return undefined as T;
+    return { success: true, data: undefined as T };
   }
 
   let payload: unknown;
@@ -121,7 +134,7 @@ async function parseEnvelope<T>(response: Response): Promise<T> {
   const envelope = payload as Partial<ApiEnvelope<T>>;
 
   if (envelope.success === true) {
-    return envelope.data as T;
+    return envelope as ApiSuccessEnvelope<T>;
   }
 
   if (envelope.success === false) {
@@ -146,7 +159,11 @@ async function parseEnvelope<T>(response: Response): Promise<T> {
   });
 }
 
-async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
+async function requestEnvelope<T>(
+  method: string,
+  path: string,
+  options: RequestOptions = {}
+): Promise<ApiSuccessEnvelope<T>> {
   const url = buildUrl(path);
 
   const headers = new Headers(options.headers);
@@ -183,10 +200,30 @@ async function request<T>(method: string, path: string, options: RequestOptions 
   return parseEnvelope<T>(response);
 }
 
+async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
+  const envelope = await requestEnvelope<T>(method, path, options);
+  return envelope.data;
+}
+
+async function requestPage<T>(path: string, options: Omit<RequestOptions, "body"> = {}): Promise<ApiPage<T>> {
+  const envelope = await requestEnvelope<T[]>("GET", path, options);
+
+  if (!envelope.pagination) {
+    throw new ApiError("La respuesta paginada no incluye sus metadatos.", {
+      status: 200,
+      code: "INVALID_RESPONSE",
+    });
+  }
+
+  return { items: envelope.data, pagination: envelope.pagination };
+}
+
 /** Cliente HTTP central. Todos los `*.service.ts` deben usar esto, nunca `fetch` directo. */
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, "body">) =>
     request<T>("GET", path, options),
+  getPage: <T>(path: string, options?: Omit<RequestOptions, "body">) =>
+    requestPage<T>(path, options),
   post: <T>(path: string, body?: JsonBody, options?: Omit<RequestOptions, "body">) =>
     request<T>("POST", path, { ...options, body }),
   patch: <T>(path: string, body?: JsonBody, options?: Omit<RequestOptions, "body">) =>
