@@ -1,101 +1,101 @@
-/* index.css */
-
-/* Tailwind v4 */
 @import "tailwindcss";
 
-/* Tema personalizado */
 @theme {
-  --color-cyber-bg: #1a1f2c;
-  --color-cyber-card: #232936;
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+  --color-brand-950: #2e1065;
+
+  --color-cyber-bg: #020617;
+  --color-cyber-card: #0f172a;
   --color-neon-rose: #e23b56;
+
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Reset global */
+:root {
+  color-scheme: dark;
+  background: #020617;
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 * {
   box-sizing: border-box;
 }
 
-html,
+html {
+  min-width: 320px;
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
 body,
 #root {
   margin: 0;
-  padding: 0;
-  width: 100%;
+  min-width: 320px;
   min-height: 100vh;
-  background-color: #1a1f2c;
-  color: white;
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
-p {
-  margin: 0;
+body {
+  overflow-x: hidden;
+  background: #020617;
+  color: #f8fafc;
 }
 
-/* =========================
-   GRID CENTRADO 2x2
-========================= */
-
-.portfolio-grid {
-  width: 100%;
-
-  display: grid;
-
-  /* 2 columnas */
-  grid-template-columns: repeat(2, minmax(320px, 420px));
-
-  gap: 2rem;
-
-  justify-content: center;
-
-  margin-top: 2.5rem;
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-/* Tablets */
-@media (max-width: 900px) {
-  .portfolio-grid {
-    grid-template-columns: repeat(1, minmax(320px, 500px));
+button,
+a,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+summary {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.45);
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-}
 
-/* =========================
-   CARDS
-========================= */
-
-.course-card {
-  background-color: #232936;
-
-  border: 1px solid #2e3545;
-
-  border-radius: 0.75rem;
-
-  padding: 2rem;
-
-  min-height: 320px;
-
-  width: 100%;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: space-between;
-
-  box-shadow:
-    rgba(0, 0, 0, 0.3) 0px 19px 38px,
-    rgba(0, 0, 0, 0.22) 0px 15px 12px;
-
-  transition:
-    transform 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.course-card:hover {
-  border-color: rgba(226, 59, 86, 0.8);
-
-  transform: translateY(-6px);
-
-  box-shadow:
-    rgba(226, 59, 86, 0.15) 0px 20px 25px -5px,
-    rgba(0, 0, 0, 0.3) 0px 19px 38px;
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

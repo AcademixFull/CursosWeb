@@ -1,9 +1,12 @@
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
+import { Badge } from "../components/ui/Badge";
+import { Button, ButtonLink } from "../components/ui/Button";
+import { ErrorState } from "../components/ui/ErrorState";
+import { PageLoader } from "../components/ui/PageLoader";
 import { ROUTES } from "../config/routes";
 import { useCourse, useRelatedCourses } from "../hooks/useCourse";
+import PublicLayout from "../layouts/PublicLayout";
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("es-MX", {
@@ -20,46 +23,44 @@ export default function CourseDetailPage() {
 
   if (courseQuery.isPending) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white">
-        <Header active="cursos" />
-        <main className="mx-auto max-w-6xl px-6 py-20">
-          <div className="h-96 animate-pulse rounded-3xl bg-slate-900" />
-        </main>
-      </div>
+      <PublicLayout active="cursos" showFooter={false}>
+        <PageLoader label="Cargando curso" />
+      </PublicLayout>
     );
   }
 
   if (courseQuery.isError) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white">
-        <Header active="cursos" />
-        <main className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <h1 className="text-3xl font-extrabold">Curso no disponible</h1>
-          <p className="mt-4 text-slate-400">
-            {courseQuery.error instanceof Error ? courseQuery.error.message : "No fue posible consultarlo."}
-          </p>
-          <Link to={ROUTES.courses} className="mt-8 inline-flex rounded-lg bg-violet-600 px-6 py-3 font-semibold">
+      <PublicLayout active="cursos">
+        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <ErrorState
+            title="Curso no disponible"
+            description={
+              courseQuery.error instanceof Error
+                ? courseQuery.error.message
+                : "No fue posible consultarlo."
+            }
+            onRetry={() => void courseQuery.refetch()}
+          />
+          <ButtonLink to={ROUTES.courses} variant="secondary" className="mt-6">
             Volver al catálogo
-          </Link>
-        </main>
-      </div>
+          </ButtonLink>
+        </div>
+      </PublicLayout>
     );
   }
 
   const course = courseQuery.data;
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="cursos" />
-
-      <main>
+    <PublicLayout active="cursos">
         <section className="relative overflow-hidden border-b border-violet-500/20 bg-violet-950/70 px-6 py-16">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(124,58,237,0.4),transparent_35%)]" />
           <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-200">
+              <Badge>
                 {course.category.name}
-              </span>
+              </Badge>
               <h1 className="mt-5 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
                 {course.title}
               </h1>
@@ -161,12 +162,12 @@ export default function CourseDetailPage() {
 
             <aside className="h-fit rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl shadow-black/30 lg:sticky lg:top-28">
               <p className="text-3xl font-extrabold text-white">{formatPrice(course.price)}</p>
-              <button type="button" className="mt-5 w-full rounded-lg bg-violet-600 px-5 py-3 font-semibold text-white transition hover:bg-violet-500">
+              <Button size="lg" fullWidth className="mt-5">
                 Inscribirme ahora
-              </button>
-              <button type="button" className="mt-3 w-full rounded-lg border border-slate-600 px-5 py-3 font-semibold text-white transition hover:bg-slate-800">
+              </Button>
+              <Button variant="secondary" size="lg" fullWidth className="mt-3">
                 Añadir al carrito
-              </button>
+              </Button>
               <div className="mt-6 border-t border-white/10 pt-5 text-sm text-slate-400">
                 <p>Este curso incluye:</p>
                 <ul className="mt-3 space-y-2">
@@ -190,9 +191,6 @@ export default function CourseDetailPage() {
             </div>
           </section>
         ) : null}
-      </main>
-
-      <Footer />
-    </div>
+    </PublicLayout>
   );
 }

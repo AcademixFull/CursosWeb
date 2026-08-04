@@ -2,8 +2,8 @@ import { type FormEvent, useState } from 'react';
 import Map, { Marker } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Link } from 'react-router';
-import Header from './components/Header';
 import { env } from './config/env';
+import PublicLayout from './layouts/PublicLayout';
 
 interface ContactForm {
   nombre: string;
@@ -295,10 +295,7 @@ export default function Contacto() {
   // El envío se implementará mediante contact.service.ts
   // y POST /api/v1/contact cuando academix-backend esté disponible.
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="contacto" />
-
-      <main>
+    <PublicLayout active="contacto">
         <section className="relative overflow-hidden px-6 py-20 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.38),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.22),transparent_28%)]" />
           <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
@@ -627,24 +624,6 @@ export default function Contacto() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-white/10 px-6 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-400 sm:flex-row">
-          <p>Academix. Formacion moderna para equipos y profesionales.</p>
-          <div className="flex gap-4">
-            <Link to="/" className="transition hover:text-white">
-              Inicio
-            </Link>
-            <Link to="/cursos" className="transition hover:text-white">
-              Cursos
-            </Link>
-            <Link to="/contacto" className="transition hover:text-white">
-              Contacto
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }

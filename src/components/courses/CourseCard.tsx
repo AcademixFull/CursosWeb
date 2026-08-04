@@ -1,6 +1,7 @@
-import { Link } from "react-router";
 import { courseDetailRoute } from "../../config/routes";
 import type { CourseLevel, CourseSummary } from "../../types/course.types";
+import { Badge } from "../ui/Badge";
+import { ButtonLink } from "../ui/Button";
 
 const levelLabels: Record<CourseLevel, string> = {
   beginner: "Principiante",
@@ -31,9 +32,9 @@ export default function CourseCard({ course }: CourseCardProps) {
             {course.category.name}
           </span>
         )}
-        <span className="absolute left-4 top-4 rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white">
+        <Badge className="absolute left-4 top-4 bg-brand-700/90 text-white">
           {course.category.name}
-        </span>
+        </Badge>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -51,12 +52,13 @@ export default function CourseCard({ course }: CourseCardProps) {
 
         <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-5">
           <span className="text-xl font-extrabold text-violet-400">{formatPrice(course.price)}</span>
-          <Link
+          <ButtonLink
             to={courseDetailRoute(course.id)}
-            className="rounded-lg border border-violet-500/70 px-4 py-2 text-sm font-semibold text-violet-200 transition hover:bg-violet-600 hover:text-white"
+            variant="secondary"
+            size="sm"
           >
             Ver curso
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </article>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import Header from './components/Header';
+import PublicLayout from './layouts/PublicLayout';
 
 interface ValueItem {
   icon: IconName;
@@ -148,10 +148,7 @@ function initials(name: string) {
 
 export default function Nosotros() {
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="nosotros" />
-
-      <main>
+    <PublicLayout active="nosotros">
         <section className="relative overflow-hidden px-6 py-20 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.38),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.22),transparent_28%)]" />
           <div className="relative mx-auto max-w-4xl text-center">
@@ -294,24 +291,6 @@ export default function Nosotros() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-white/10 px-6 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-400 sm:flex-row">
-          <p>Academix. Formación moderna para equipos y profesionales.</p>
-          <div className="flex gap-4">
-            <Link to="/" className="transition hover:text-white">
-              Inicio
-            </Link>
-            <Link to="/cursos" className="transition hover:text-white">
-              Cursos
-            </Link>
-            <Link to="/contacto" className="transition hover:text-white">
-              Contacto
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }

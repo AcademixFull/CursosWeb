@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import Header from '../components/Header';
+import PublicLayout from '../layouts/PublicLayout';
 
 const stats = [
   { value: '1000+', label: 'Estudiantes activos' },
@@ -48,10 +48,7 @@ const testimonials = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="inicio" />
-
-      <main>
+    <PublicLayout active="inicio">
         {/* Hero */}
         <section className="relative overflow-hidden px-6 py-20 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.35),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.2),transparent_28%)]" />
@@ -253,31 +250,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-white/10 px-6 py-10">
-        <div className="mx-auto max-w-6xl text-center text-sm text-slate-400">
-          <p className="text-base font-bold text-white">Academix</p>
-          <p className="mt-2">
-            Democratizando el acceso a la educación digital con cursos de alta calidad
-            impartidos por expertos.
-          </p>
-          <div className="mt-6 flex justify-center gap-6 text-sm">
-            <Link to="/" className="transition hover:text-white">
-              Inicio
-            </Link>
-            <Link to="/cursos" className="transition hover:text-white">
-              Cursos
-            </Link>
-            <Link to="/contacto" className="transition hover:text-white">
-              Contacto
-            </Link>
-          </div>
-          <p className="mt-8 text-xs text-slate-500">
-            © 2026 Academix. Todos los derechos reservados.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }

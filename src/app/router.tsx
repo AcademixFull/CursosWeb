@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router";
+import { PageLoader } from "../components/ui/PageLoader";
 import { ROUTES } from "../config/routes";
 
 const HomePage = lazy(() => import("../pages/HomePage"));
@@ -11,8 +12,8 @@ const Dashboard = lazy(() => import("../pages/Dashboard"));
 
 function RouteFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-300">
-      Cargando Academix...
+    <div className="min-h-screen bg-slate-950 text-slate-300">
+      <PageLoader label="Cargando Academix" />
     </div>
   );
 }

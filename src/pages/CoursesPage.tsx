@@ -1,10 +1,14 @@
 import { useDeferredValue, useState } from "react";
 import CourseFilters from "../components/courses/CourseFilters";
 import CourseGrid from "../components/courses/CourseGrid";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ErrorState } from "../components/ui/ErrorState";
+import { SectionHeader } from "../components/ui/SectionHeader";
 import { courseCategories } from "../data/courseMocks";
 import { useCourses } from "../hooks/useCourses";
+import PublicLayout from "../layouts/PublicLayout";
 import type { CourseFilters as Filters } from "../types/course.types";
 
 const initialFilters: Filters = {
@@ -21,16 +25,13 @@ export default function CoursesPage() {
   const query = useCourses({ ...filters, search: deferredSearch });
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="cursos" />
-
-      <main>
+    <PublicLayout active="cursos">
         <section className="relative overflow-hidden border-b border-white/10 px-6 py-16 sm:py-20">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.28),transparent_45%),radial-gradient(circle_at_85%_30%,rgba(14,116,144,0.12),transparent_30%)]" />
           <div className="relative mx-auto max-w-4xl text-center">
-            <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-violet-300">
+            <Badge className="uppercase tracking-wider">
               Catálogo Academix
-            </span>
+            </Badge>
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
               Explora nuestros cursos y domina el{" "}
               <span className="text-violet-400">futuro digital</span>
@@ -65,31 +66,17 @@ export default function CoursesPage() {
                   ))}
                 </div>
               ) : query.isError ? (
-                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
-                  <h2 className="font-bold text-white">No pudimos cargar el catálogo</h2>
-                  <p className="mt-2 text-sm text-red-200">
-                    {query.error instanceof Error ? query.error.message : "Intenta de nuevo."}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void query.refetch()}
-                    className="mt-5 rounded-lg bg-red-500 px-5 py-2 text-sm font-semibold text-white"
-                  >
-                    Reintentar
-                  </button>
-                </div>
+                <ErrorState
+                  title="No pudimos cargar el catálogo"
+                  description={query.error instanceof Error ? query.error.message : "Intenta de nuevo."}
+                  onRetry={() => void query.refetch()}
+                />
               ) : query.data.items.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 p-12 text-center">
-                  <h2 className="text-lg font-bold text-white">No encontramos coincidencias</h2>
-                  <p className="mt-2 text-sm text-slate-400">Prueba con otro término o elimina los filtros.</p>
-                  <button
-                    type="button"
-                    onClick={() => setFilters(initialFilters)}
-                    className="mt-5 rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white"
-                  >
-                    Limpiar filtros
-                  </button>
-                </div>
+                <EmptyState
+                  title="No encontramos coincidencias"
+                  description="Prueba con otro término o elimina los filtros."
+                  action={<Button onClick={() => setFilters(initialFilters)}>Limpiar filtros</Button>}
+                />
               ) : (
                 <CourseGrid courses={query.data.items} />
               )}
@@ -99,7 +86,11 @@ export default function CoursesPage() {
 
         <section className="border-y border-white/10 bg-slate-900/60 px-6 py-16">
           <div className="mx-auto max-w-6xl text-center">
-            <h2 className="text-3xl font-extrabold text-white">¿Por qué estudiar en Academix?</h2>
+            <SectionHeader
+              title="¿Por qué estudiar en Academix?"
+              description="Aprendizaje flexible, acompañado y orientado a resultados profesionales."
+              align="center"
+            />
             <div className="mt-10 grid gap-5 md:grid-cols-3">
               {[
                 ["Aprende a tu ritmo", "Acceso desde cualquier dispositivo y sin fechas límite estrictas."],
@@ -114,9 +105,6 @@ export default function CoursesPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </PublicLayout>
   );
 }
