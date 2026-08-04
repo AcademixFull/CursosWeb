@@ -7,13 +7,13 @@
  *  - se pueda advertir en desarrollo si falta alguna;
  *  - agregar/quitar variables no obligue a tocar componentes.
  *
- * IMPORTANTE: en Fase 1 todavía no existe academix-backend, por lo que
+ * IMPORTANTE: durante las fases de frontend todavía no existe academix-backend, por lo que
  * VITE_API_URL puede estar vacía sin que la app deje de funcionar.
  * No se lanza ningún error aquí: solo se avisa por consola en desarrollo.
  */
 
 interface AppEnv {
-  /** Base URL de academix-backend, ej. http://localhost:3000/api/v1 (aún no se usa en Fase 1). */
+  /** Base URL de academix-backend, ej. http://localhost:3000/api/v1. */
   apiUrl: string;
   /** Token público de Mapbox, usado en la sección de ubicación de /contacto. */
   mapboxToken: string;
@@ -30,7 +30,7 @@ function readEnv(): AppEnv {
     if (!apiUrl) {
       // Esperado en Fase 1: todavía no existe academix-backend.
       console.info(
-        "[env] VITE_API_URL no está configurada todavía (esperado hasta que exista academix-backend)."
+        "[env] VITE_API_URL no está configurada todavía (se utilizarán servicios de demostración)."
       );
     }
     if (!mapboxToken) {

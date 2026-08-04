@@ -1,4 +1,5 @@
 import { env } from "../config/env";
+import { getAuthToken } from "../utils/authSessionStore";
 
 /**
  * Cliente HTTP central de academix-frontend.
@@ -74,7 +75,7 @@ export class ApiError extends Error {
   }
 }
 
-type JsonBody = Record<string, unknown> | unknown[];
+type JsonBody = object;
 
 interface RequestOptions {
   /** Cuerpo de la petición; se serializa a JSON automáticamente. */
@@ -83,19 +84,6 @@ interface RequestOptions {
   headers?: HeadersInit;
   /** Señal para cancelar la petición (ej. AbortController desde React Query). */
   signal?: AbortSignal;
-}
-
-/**
- * Punto de extensión para autenticación (Fase 9 — Supabase Auth).
- *
- * Hoy siempre devuelve `undefined` porque todavía no hay sesión real ni
- * token que adjuntar. Cuando implementemos Supabase Auth, esta función
- * leerá el token de sesión (desde un AuthContext/store) y `request()`
- * ya está preparado para agregarlo como `Authorization: Bearer <token>`
- * sin que haya que tocar cada llamada existente.
- */
-function getAuthToken(): string | undefined {
-  return undefined;
 }
 
 function buildUrl(path: string): string {

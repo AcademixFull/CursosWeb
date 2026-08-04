@@ -1,12 +1,12 @@
 import { type ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "../contexts/AuthProvider";
 
 /**
  * Punto central para los providers globales de la aplicación.
  *
- * Hoy solo envuelve React Query, pero es el lugar donde en fases
- * posteriores agregaremos, por ejemplo, un AuthProvider (Fase 9) sin
- * tener que seguir apilando providers manualmente en App.tsx.
+ * Centraliza React Query y la sesión del frontend para evitar apilar
+ * providers manualmente desde App.tsx.
  */
 
 /**
@@ -56,7 +56,7 @@ export function AppProviders({ children }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <AuthProvider>{children}</AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -3,6 +3,9 @@ export const ROUTES = {
   courses: "/cursos",
   about: "/nosotros",
   contact: "/contacto",
+  login: "/iniciar-sesion",
+  register: "/registro",
+  forgotPassword: "/recuperar-contrasena",
   dashboard: "/dashboard",
 } as const;
 

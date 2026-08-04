@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { ROUTES } from '../config/routes';
 import PublicLayout from '../layouts/PublicLayout';
 
 const stats = [
@@ -70,7 +71,7 @@ export default function HomePage() {
               </p>
               <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
                 <Link
-                  to="/cursos"
+                  to={ROUTES.courses}
                   className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-violet-600/25 transition hover:bg-violet-500"
                 >
                   Explorar Cursos
@@ -128,7 +129,7 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="text-sm font-semibold text-violet-300 transition hover:text-violet-200"
               >
                 Ver todos los cursos →
@@ -156,7 +157,7 @@ export default function HomePage() {
                         {course.price}
                       </span>
                       <Link
-                        to="/cursos"
+                        to={ROUTES.courses}
                         className="text-sm font-semibold text-white transition hover:text-violet-300"
                       >
                         Ver Curso →
@@ -236,13 +237,13 @@ export default function HomePage() {
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="inline-flex items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
               >
                 Explorar Catálogo
               </Link>
               <Link
-                to="/cursos"
+                to={ROUTES.register}
                 className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
               >
                 Crear Cuenta Gratis

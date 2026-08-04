@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router";
 import { PageLoader } from "../components/ui/PageLoader";
+import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 import { ROUTES } from "../config/routes";
 
 const HomePage = lazy(() => import("../pages/HomePage"));
@@ -9,6 +10,9 @@ const CourseDetailPage = lazy(() => import("../pages/CourseDetailPage"));
 const Nosotros = lazy(() => import("../nosotros"));
 const Contacto = lazy(() => import("../contacto"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 
 function RouteFallback() {
   return (
@@ -28,7 +32,17 @@ export function AppRouter() {
           <Route path={`${ROUTES.courses}/:courseId`} element={<CourseDetailPage />} />
           <Route path={ROUTES.about} element={<Nosotros />} />
           <Route path={ROUTES.contact} element={<Contacto />} />
-          <Route path={ROUTES.dashboard} element={<Dashboard />} />
+          <Route path={ROUTES.login} element={<LoginPage />} />
+          <Route path={ROUTES.register} element={<RegisterPage />} />
+          <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
+          <Route
+            path={ROUTES.dashboard}
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </Suspense>
