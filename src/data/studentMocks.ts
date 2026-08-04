@@ -1,6 +1,6 @@
 import { courseMocks } from "./courseMocks";
 import type { CertificateSummary, EnrollmentSummary } from "../types/student.types";
-import { MOCK_ENROLLMENTS_KEY } from "../utils/mockStudentStorage";
+import { MOCK_CERTIFICATE_DATES_KEY, MOCK_ENROLLMENTS_KEY } from "../utils/mockStudentStorage";
 
 function getCourse(index: number) {
   const course = courseMocks[index];
@@ -88,6 +88,30 @@ export function createEnrollmentMock(courseId: string): EnrollmentSummary | null
   extraCourseIds.add(enrollment.course.id);
   sessionStorage.setItem(MOCK_ENROLLMENTS_KEY, JSON.stringify([...extraCourseIds]));
   return enrollment;
+}
+
+export function getMockCertificateIssuedAt(courseId: string): string {
+  let dates: Record<string, string> = {};
+  try {
+    const storedValue = sessionStorage.getItem(MOCK_CERTIFICATE_DATES_KEY);
+    const parsed: unknown = storedValue ? JSON.parse(storedValue) : {};
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      dates = Object.fromEntries(
+        Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+      );
+    }
+  } catch {
+    dates = {};
+  }
+
+  if (dates[courseId]) return dates[courseId];
+
+  const issuedAt = new Date().toISOString();
+  sessionStorage.setItem(
+    MOCK_CERTIFICATE_DATES_KEY,
+    JSON.stringify({ ...dates, [courseId]: issuedAt }),
+  );
+  return issuedAt;
 }
 
 export const certificateMocks: CertificateSummary[] = [

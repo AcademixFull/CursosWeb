@@ -1,9 +1,15 @@
 import { env } from "../config/env";
-import { certificateMocks, getEnrollmentMocks } from "../data/studentMocks";
+import { courseMocks } from "../data/courseMocks";
+import {
+  certificateMocks,
+  getEnrollmentMocks,
+  getMockCertificateIssuedAt,
+} from "../data/studentMocks";
 import { getLearningCourseMock } from "../data/learningMocks";
 import type { AuthUser } from "../types/auth.types";
 import type {
   CertificateSummary,
+  CertificateDetail,
   EnrollmentSummary,
   UpdateProfileInput,
   UserProfile,
@@ -26,6 +32,32 @@ function createMockProfile(user: AuthUser, changes?: Partial<UpdateProfileInput>
     country: changes?.country ?? "México",
     bio: changes?.bio ?? "",
   };
+}
+
+function buildMockCertificates(): CertificateSummary[] {
+  const certificatesByCourse = new Map(
+    certificateMocks.map((certificate) => [certificate.courseId, certificate]),
+  );
+
+  for (const enrollment of getEnrollmentMocks()) {
+    const learningCourse = getLearningCourseMock(enrollment.course.id);
+    if (
+      learningCourse?.progressPercentage === 100 &&
+      enrollment.course.certificateEnabled &&
+      !certificatesByCourse.has(enrollment.course.id)
+    ) {
+      const shortCode = enrollment.course.id.replace(/^course-/, "").toUpperCase().slice(0, 12);
+      certificatesByCourse.set(enrollment.course.id, {
+        id: `certificate-${enrollment.course.id}`,
+        courseId: enrollment.course.id,
+        courseTitle: enrollment.course.title,
+        issuedAt: getMockCertificateIssuedAt(enrollment.course.id),
+        credentialCode: `ACX-${shortCode}-2026`,
+      });
+    }
+  }
+
+  return [...certificatesByCourse.values()];
 }
 
 export async function listMyCourses(): Promise<EnrollmentSummary[]> {
@@ -54,7 +86,29 @@ export async function listMyCertificates(): Promise<CertificateSummary[]> {
   }
 
   await waitForMocks();
-  return certificateMocks;
+  return buildMockCertificates();
+}
+
+export async function getMyCertificate(
+  certificateId: string,
+  user: AuthUser,
+): Promise<CertificateDetail> {
+  if (env.dataSource === "api") {
+    return api.get<CertificateDetail>(`/users/me/certificates/${encodeURIComponent(certificateId)}`);
+  }
+
+  await waitForMocks();
+  const certificate = buildMockCertificates().find((item) => item.id === certificateId);
+  if (!certificate) throw new Error("No encontramos el certificado solicitado.");
+
+  const course = courseMocks.find((item) => item.id === certificate.courseId);
+  if (!course) throw new Error("No encontramos la información académica del certificado.");
+
+  return {
+    ...certificate,
+    recipientName: user.fullName,
+    durationHours: course.durationHours,
+  };
 }
 
 export async function getMyProfile(user: AuthUser): Promise<UserProfile> {

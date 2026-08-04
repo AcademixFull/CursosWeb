@@ -33,6 +33,9 @@ export function useCompleteLesson(courseId: string) {
             : enrollment,
         ),
       );
+      if (learningCourse.progressPercentage === 100) {
+        void queryClient.invalidateQueries({ queryKey: studentQueryKeys.certificates });
+      }
     },
   });
 }

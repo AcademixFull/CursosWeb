@@ -1,4 +1,5 @@
-import { courseDetailRoute } from "../../config/routes";
+import { Link } from "react-router";
+import { courseDetailRoute, instructorRoute } from "../../config/routes";
 import type { CourseLevel, CourseSummary } from "../../types/course.types";
 import { Badge } from "../ui/Badge";
 import { ButtonLink } from "../ui/Button";
@@ -38,7 +39,15 @@ export default function CourseCard({ course }: CourseCardProps) {
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-sm text-slate-400">Por {course.instructor.name}</p>
+        <p className="text-sm text-slate-400">
+          Por{" "}
+          <Link
+            to={instructorRoute(course.instructor.id)}
+            className="font-semibold text-violet-300 transition hover:text-violet-200 hover:underline"
+          >
+            {course.instructor.name}
+          </Link>
+        </p>
         <h2 className="mt-2 text-lg font-bold leading-6 text-white">{course.title}</h2>
         <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-400">
           {course.shortDescription}

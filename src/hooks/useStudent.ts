@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 import {
   getMyProfile,
+  getMyCertificate,
   listMyCertificates,
   listMyCourses,
   updateMyProfile,
@@ -11,6 +12,8 @@ import type { UpdateProfileInput } from "../types/student.types";
 export const studentQueryKeys = {
   courses: ["student", "courses"] as const,
   certificates: ["student", "certificates"] as const,
+  certificate: (certificateId: string, userId: string) =>
+    ["student", "certificates", certificateId, userId] as const,
   profile: (userId: string) => ["student", "profile", userId] as const,
 };
 
@@ -20,6 +23,19 @@ export function useMyCourses(enabled = true) {
 
 export function useMyCertificates() {
   return useQuery({ queryKey: studentQueryKeys.certificates, queryFn: listMyCertificates });
+}
+
+export function useMyCertificate(certificateId: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: studentQueryKeys.certificate(certificateId, user?.id ?? "anonymous"),
+    queryFn: () => {
+      if (!user) throw new Error("No existe una sesión activa.");
+      return getMyCertificate(certificateId, user);
+    },
+    enabled: Boolean(certificateId && user),
+  });
 }
 
 export function useMyProfile() {

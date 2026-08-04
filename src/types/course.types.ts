@@ -13,6 +13,13 @@ export interface InstructorSummary {
   avatarUrl?: string;
 }
 
+export interface InstructorDetail extends InstructorSummary {
+  biography: string;
+  experienceYears: number;
+  studentCount: number;
+  courseCount: number;
+}
+
 export interface CourseSummary {
   id: string;
   slug: string;

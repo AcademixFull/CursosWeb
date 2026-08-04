@@ -20,6 +20,11 @@ export interface CertificateSummary {
   credentialCode: string;
 }
 
+export interface CertificateDetail extends CertificateSummary {
+  recipientName: string;
+  durationHours: number;
+}
+
 export interface UserProfile {
   id: string;
   fullName: string;

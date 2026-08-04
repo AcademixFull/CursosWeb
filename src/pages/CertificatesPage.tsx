@@ -4,7 +4,7 @@ import { ButtonLink } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
-import { ROUTES } from "../config/routes";
+import { certificateRoute, ROUTES } from "../config/routes";
 import { useMyCertificates } from "../hooks/useStudent";
 
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
@@ -49,9 +49,9 @@ export default function CertificatesPage() {
                     <dd className="mt-1 font-mono text-brand-200">{certificate.credentialCode}</dd>
                   </div>
                 </dl>
-                <button type="button" disabled title="Disponible al conectar el backend" className="mt-6 rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-slate-500">
-                  Descargar próximamente
-                </button>
+                <ButtonLink to={certificateRoute(certificate.id)} variant="secondary" className="mt-6">
+                  Ver certificado
+                </ButtonLink>
               </div>
             </article>
           ))}

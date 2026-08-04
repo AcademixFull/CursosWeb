@@ -7,7 +7,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
-import { learningRoute, ROUTES } from "../config/routes";
+import { instructorRoute, learningRoute, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useCourse, useRelatedCourses } from "../hooks/useCourse";
 import { useEnrollCourse } from "../hooks/useEnrollment";
@@ -183,6 +183,14 @@ export default function CourseDetailPage() {
                   <p className="mt-4 text-sm leading-6 text-slate-400">
                     Especialista responsable de guiar el contenido, los ejercicios y el proyecto final del curso.
                   </p>
+                  <ButtonLink
+                    to={instructorRoute(course.instructor.id)}
+                    variant="secondary"
+                    size="sm"
+                    className="mt-5"
+                  >
+                    Ver perfil del instructor
+                  </ButtonLink>
                 </div>
               </section>
 

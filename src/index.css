@@ -99,3 +99,31 @@ button:disabled {
     animation-iteration-count: 1 !important;
   }
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body,
+  #root,
+  .certificate-print-shell {
+    min-height: auto;
+    background: #ffffff !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .certificate-print-shell main {
+    padding: 0 !important;
+  }
+
+  .certificate-document {
+    max-width: none !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}

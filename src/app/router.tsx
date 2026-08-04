@@ -18,6 +18,8 @@ const CertificatesPage = lazy(() => import("../pages/CertificatesPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const StudentLayout = lazy(() => import("../layouts/StudentLayout"));
 const LearningPage = lazy(() => import("../pages/LearningPage"));
+const CertificateDetailPage = lazy(() => import("../pages/CertificateDetailPage"));
+const InstructorPage = lazy(() => import("../pages/InstructorPage"));
 
 function RouteFallback() {
   return (
@@ -35,6 +37,7 @@ export function AppRouter() {
           <Route path={ROUTES.home} element={<HomePage />} />
           <Route path={ROUTES.courses} element={<CoursesPage />} />
           <Route path={`${ROUTES.courses}/:courseId`} element={<CourseDetailPage />} />
+          <Route path={`${ROUTES.instructors}/:instructorId`} element={<InstructorPage />} />
           <Route path={ROUTES.about} element={<Nosotros />} />
           <Route path={ROUTES.contact} element={<Contacto />} />
           <Route path={ROUTES.login} element={<LoginPage />} />
@@ -47,6 +50,7 @@ export function AppRouter() {
             <Route path={ROUTES.profile} element={<ProfilePage />} />
           </Route>
           <Route path={`${ROUTES.learning}/:courseId/:lessonId?`} element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
+          <Route path={`${ROUTES.certificates}/:certificateId`} element={<ProtectedRoute><CertificateDetailPage /></ProtectedRoute>} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </Suspense>

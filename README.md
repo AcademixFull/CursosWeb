@@ -67,6 +67,7 @@ Los componentes no llaman `fetch` ni Supabase directamente. Al conectar el backe
 - `/#/`
 - `/#/cursos`
 - `/#/cursos/:courseId`
+- `/#/instructores/:instructorId`
 - `/#/nosotros`
 - `/#/contacto`
 - `/#/dashboard`
@@ -79,6 +80,8 @@ Se usa `HashRouter` porque el despliegue actual está configurado para GitHub Pa
 GET /api/v1/courses?search=&category=&level=&page=1&limit=12
 GET /api/v1/courses/:id
 GET /api/v1/courses/:id/related
+GET /api/v1/instructors/:id
+GET /api/v1/instructors/:id/courses
 ```
 
 Las respuestas deben respetar el sobre común del backend:
