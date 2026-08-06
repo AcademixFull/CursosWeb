@@ -53,6 +53,10 @@ body {
   color: #f8fafc;
 }
 
+[id] {
+  scroll-margin-top: 5rem;
+}
+
 button,
 input,
 select,

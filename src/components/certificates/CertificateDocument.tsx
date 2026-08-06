@@ -25,13 +25,13 @@ export function CertificateDocument({ certificate }: CertificateDocumentProps) {
 
         <p className="mt-10 text-xs font-bold uppercase tracking-[0.35em] text-brand-700">Certificado de finalización</p>
         <p className="mt-7 text-sm text-slate-500">Se hace constar que</p>
-        <h1 className="mt-3 font-serif text-4xl font-bold text-slate-950 sm:text-5xl">{certificate.recipientName}</h1>
+        <h1 className="mt-3 max-w-full break-words font-serif text-4xl font-bold text-slate-950 sm:text-5xl">{certificate.recipientName}</h1>
         <div className="mt-4 h-px w-full max-w-xl bg-slate-300" />
 
         <p className="mt-7 max-w-2xl text-sm leading-7 text-slate-600">
           completó satisfactoriamente el curso profesional de {certificate.durationHours} horas
         </p>
-        <h2 className="mt-3 max-w-3xl text-2xl font-extrabold leading-9 text-brand-800 sm:text-3xl">
+        <h2 className="mt-3 max-w-3xl break-words text-2xl font-extrabold leading-9 text-brand-800 sm:text-3xl">
           {certificate.courseTitle}
         </h2>
 

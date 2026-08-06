@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { ROUTES } from './config/routes';
 import PublicLayout from './layouts/PublicLayout';
 
 interface ValueItem {
@@ -161,7 +162,7 @@ export default function Nosotros() {
                 educación digital
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-2xl text-lg leading-8 text-slate-300">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300">
               En Academix, creemos que el conocimiento es la herramienta más poderosa para dar
               forma al futuro. Estamos construyendo el ecosistema de aprendizaje más avanzado
               para la próxima generación de profesionales.
@@ -271,19 +272,19 @@ export default function Nosotros() {
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               ¿Listo para unirte a nuestra comunidad?
             </h2>
-            <p className="mx-auto mt-4 max-2xl text-violet-100">
+            <p className="mx-auto mt-4 max-w-2xl text-violet-100">
               Únete a miles de estudiantes que ya están transformando sus carreras profesionales
               con Academix.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
               >
                 Explorar Catálogo
               </Link>
               <Link
-                to="/contacto"
+                to={ROUTES.contact}
                 className="inline-flex items-center justify-center rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
               >
                 Contáctanos

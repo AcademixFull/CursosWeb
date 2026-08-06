@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router";
 import { PageLoader } from "../components/ui/PageLoader";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import { RouteAccessibility } from "../components/a11y/RouteAccessibility";
 import { ROUTES } from "../config/routes";
 
 const HomePage = lazy(() => import("../pages/HomePage"));
@@ -20,6 +21,7 @@ const StudentLayout = lazy(() => import("../layouts/StudentLayout"));
 const LearningPage = lazy(() => import("../pages/LearningPage"));
 const CertificateDetailPage = lazy(() => import("../pages/CertificateDetailPage"));
 const InstructorPage = lazy(() => import("../pages/InstructorPage"));
+const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 
 function RouteFallback() {
   return (
@@ -32,6 +34,7 @@ function RouteFallback() {
 export function AppRouter() {
   return (
     <HashRouter>
+      <RouteAccessibility />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path={ROUTES.home} element={<HomePage />} />
@@ -51,7 +54,7 @@ export function AppRouter() {
           </Route>
           <Route path={`${ROUTES.learning}/:courseId/:lessonId?`} element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
           <Route path={`${ROUTES.certificates}/:certificateId`} element={<ProtectedRoute><CertificateDetailPage /></ProtectedRoute>} />
-          <Route path="*" element={<HomePage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </HashRouter>

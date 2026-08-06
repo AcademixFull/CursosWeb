@@ -75,7 +75,7 @@ export default function Header({ active }: HeaderProps) {
       </nav>
 
       {mobileMenuOpen ? (
-        <div id="mobile-navigation" className="border-t border-white/10 bg-slate-950 px-4 py-4 lg:hidden">
+        <nav id="mobile-navigation" aria-label="Navegación móvil" className="border-t border-white/10 bg-slate-950 px-4 py-4 lg:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-1">
             {MAIN_NAVIGATION.map((item) => (
               <Link key={item.key} to={item.to} aria-current={active === item.key ? "page" : undefined} onClick={() => setMobileMenuOpen(false)} className={linkClasses(item.key)}>
@@ -86,7 +86,7 @@ export default function Header({ active }: HeaderProps) {
               {accountActions}
             </div>
           </div>
-        </div>
+        </nav>
       ) : null}
     </header>
   );

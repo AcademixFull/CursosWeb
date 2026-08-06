@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import BrandLogo from "../components/BrandLogo";
+import { SkipLink } from "../components/a11y/SkipLink";
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
@@ -32,6 +33,7 @@ export default function StudentLayout() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      <SkipLink />
       <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur-xl">
         <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <BrandLogo />
@@ -67,7 +69,7 @@ export default function StudentLayout() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl px-4 py-10 outline-none sm:px-6 sm:py-14">
         <Outlet />
       </main>
     </div>
