@@ -1,4 +1,5 @@
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 import type { CreateReviewInput } from "../../types/course.types";
 import { classNames } from "../../utils/classNames";
 import { Button } from "../ui/Button";
@@ -17,14 +18,8 @@ export function ReviewDialog({ courseTitle, isPending, serverError, onClose, onS
   const [validationError, setValidationError] = useState("");
   const titleId = useId();
   const commentId = useId();
-
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) onClose();
-    }
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isPending, onClose]);
+  const descriptionId = useId();
+  const dialogRef = useDialogFocus({ canClose: !isPending, onClose });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,10 +39,10 @@ export function ReviewDialog({ courseTitle, isPending, serverError, onClose, onS
         if (event.currentTarget === event.target && !isPending) onClose();
       }}
     >
-      <section role="dialog" aria-modal="true" aria-labelledby={titleId} className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-brand-950/40 sm:p-8">
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1} className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-brand-950/40 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">Tu experiencia</p>
         <h2 id={titleId} className="mt-3 text-2xl font-extrabold text-white">Valora este curso</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-400">{courseTitle}</p>
+        <p id={descriptionId} className="mt-2 text-sm leading-6 text-slate-400">{courseTitle}</p>
 
         <form onSubmit={handleSubmit} className="mt-6">
           <fieldset>

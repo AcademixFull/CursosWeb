@@ -14,6 +14,7 @@ import { useEnrollCourse } from "../hooks/useEnrollment";
 import { useCreateReview } from "../hooks/useReviews";
 import { useMyCourses } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
+import { locationPath } from "../utils/navigation";
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("es-MX", {
@@ -26,7 +27,7 @@ function formatPrice(price: number): string {
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const courseQuery = useCourse(courseId);
-  const relatedQuery = useRelatedCourses(courseId);
+  const relatedQuery = useRelatedCourses(courseQuery.data);
   const { isAuthenticated, user } = useAuth();
   const enrollmentsQuery = useMyCourses(isAuthenticated);
   const enrollmentMutation = useEnrollCourse();
@@ -72,7 +73,7 @@ export default function CourseDetailPage() {
 
   function startEnrollment() {
     if (!isAuthenticated) {
-      navigate(ROUTES.login, { state: { returnTo: location.pathname } });
+      navigate(ROUTES.login, { state: { returnTo: locationPath(location) } });
       return;
     }
     enrollmentMutation.reset();

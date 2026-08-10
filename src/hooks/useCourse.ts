@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCourse, getRelatedCourses } from "../services/courses.service";
+import type { CourseDetail } from "../types/course.types";
 
 export function useCourse(courseId: string | undefined) {
   return useQuery({
@@ -9,13 +10,10 @@ export function useCourse(courseId: string | undefined) {
   });
 }
 
-export function useRelatedCourses(courseId: string | undefined) {
+export function useRelatedCourses(course: CourseDetail | undefined) {
   return useQuery({
-    queryKey: ["courses", courseId, "related"],
-    queryFn: async () => {
-      const course = await getCourse(courseId ?? "");
-      return getRelatedCourses(course);
-    },
-    enabled: Boolean(courseId),
+    queryKey: ["courses", course?.id, "related"],
+    queryFn: () => getRelatedCourses(course as CourseDetail),
+    enabled: Boolean(course),
   });
 }

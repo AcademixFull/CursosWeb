@@ -1,6 +1,7 @@
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useRef, useState } from "react";
 import CourseFilters from "../components/courses/CourseFilters";
 import CourseGrid from "../components/courses/CourseGrid";
+import { CoursePagination } from "../components/courses/CoursePagination";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -23,6 +24,12 @@ export default function CoursesPage() {
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const deferredSearch = useDeferredValue(filters.search);
   const query = useCourses({ ...filters, search: deferredSearch });
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  function changePage(page: number) {
+    setFilters((current) => ({ ...current, page }));
+    window.requestAnimationFrame(() => resultsRef.current?.focus());
+  }
 
   return (
     <PublicLayout active="cursos">
@@ -47,7 +54,7 @@ export default function CoursesPage() {
             <CourseFilters categories={courseCategories} filters={filters} onChange={setFilters} />
 
             <div className="mt-8 flex items-center justify-between border-b border-white/10 pb-4">
-              <p className="text-sm text-slate-400" aria-live="polite">
+              <p id="course-results-summary" className="text-sm text-slate-400" aria-live="polite">
                 {query.data ? `${query.data.pagination.total} cursos encontrados` : "Consultando cursos..."}
               </p>
               {query.isFetching && !query.isPending ? (
@@ -55,7 +62,13 @@ export default function CoursesPage() {
               ) : null}
             </div>
 
-            <div className="mt-8">
+            <div
+              id="course-results"
+              ref={resultsRef}
+              tabIndex={-1}
+              aria-labelledby="course-results-summary"
+              className="mt-8 outline-none"
+            >
               {query.isPending ? (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" aria-label="Cargando cursos">
                   {Array.from({ length: 6 }, (_, index) => (
@@ -80,6 +93,14 @@ export default function CoursesPage() {
               ) : (
                 <CourseGrid courses={query.data.items} />
               )}
+
+              {query.data?.items.length ? (
+                <CoursePagination
+                  pagination={query.data.pagination}
+                  isFetching={query.isFetching}
+                  onPageChange={changePage}
+                />
+              ) : null}
             </div>
           </div>
         </section>

@@ -1,4 +1,5 @@
-import { useEffect, useId } from "react";
+import { useId } from "react";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 import { Button } from "../ui/Button";
 
 interface EnrollmentDialogProps {
@@ -19,14 +20,8 @@ export function EnrollmentDialog({
   onConfirm,
 }: EnrollmentDialogProps) {
   const titleId = useId();
-
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isPending) onClose();
-    }
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isPending, onClose]);
+  const descriptionId = useId();
+  const dialogRef = useDialogFocus({ canClose: !isPending, onClose });
 
   return (
     <div
@@ -36,15 +31,18 @@ export function EnrollmentDialog({
       }}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        tabIndex={-1}
         className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-brand-950/40 sm:p-8"
       >
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">Confirmar inscripción</p>
         <h2 id={titleId} className="mt-3 text-2xl font-extrabold text-white">{courseTitle}</h2>
         <p className="mt-4 text-3xl font-extrabold text-brand-200">{priceLabel}</p>
-        <p className="mt-4 text-sm leading-6 text-slate-400">
+        <p id={descriptionId} className="mt-4 text-sm leading-6 text-slate-400">
           Esta es una simulación del frontend. No se realizará ningún cargo y el curso se agregará temporalmente a tu biblioteca.
         </p>
 

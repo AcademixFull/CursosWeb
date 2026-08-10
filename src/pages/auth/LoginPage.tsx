@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import AuthLayout from "../../layouts/AuthLayout";
 import { ApiError } from "../../services/api";
 import type { LoginInput } from "../../types/auth.types";
+import { safeReturnTo } from "../../utils/navigation";
 import { hasValidationErrors, validateLogin } from "../../validations/auth.validation";
 
 interface LoginLocationState {
@@ -23,9 +24,11 @@ export default function LoginPage() {
   const { isAuthenticated, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const state = location.state as LoginLocationState | null;
+  const returnTo = safeReturnTo(state?.returnTo, ROUTES.dashboard);
 
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.dashboard} replace />;
+    return <Navigate to={returnTo} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -39,8 +42,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login({ email: form.email.trim(), password: form.password });
-      const state = location.state as LoginLocationState | null;
-      navigate(state?.returnTo || ROUTES.dashboard, { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (error) {
       setSubmitError(
         error instanceof ApiError ? error.message : "No pudimos iniciar tu sesión. Intenta nuevamente.",

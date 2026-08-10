@@ -14,6 +14,7 @@ import type {
   UpdateProfileInput,
   UserProfile,
 } from "../types/student.types";
+import { readMockProfile, saveMockProfile } from "../utils/mockStudentStorage";
 import { api } from "./api";
 
 const MOCK_DELAY_MS = 160;
@@ -117,7 +118,7 @@ export async function getMyProfile(user: AuthUser): Promise<UserProfile> {
   }
 
   await waitForMocks();
-  return createMockProfile(user);
+  return createMockProfile(user, readMockProfile(user.id));
 }
 
 export async function updateMyProfile(
@@ -129,5 +130,6 @@ export async function updateMyProfile(
   }
 
   await waitForMocks();
+  saveMockProfile(user.id, input);
   return createMockProfile(user, input);
 }

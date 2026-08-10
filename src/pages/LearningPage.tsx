@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from "react-router";
 import BrandLogo from "../components/BrandLogo";
+import { SkipLink } from "../components/a11y/SkipLink";
 import { LearningCurriculum } from "../components/learning/LearningCurriculum";
 import { ProgressBar } from "../components/student/ProgressBar";
 import { Badge } from "../components/ui/Badge";
@@ -43,6 +44,7 @@ export default function LearningPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      <SkipLink />
       <header className="border-b border-white/10 bg-slate-950/95">
         <div className="mx-auto flex min-h-16 max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6">
           <BrandLogo />
@@ -52,7 +54,7 @@ export default function LearningPage() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[90rem] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[21rem_minmax(0,1fr)]">
+      <main id="main-content" tabIndex={-1} className="mx-auto grid max-w-[90rem] gap-6 px-4 py-6 outline-none sm:px-6 lg:grid-cols-[21rem_minmax(0,1fr)]">
         <LearningCurriculum course={course} activeLessonId={activeLesson.id} />
 
         <div className="min-w-0">
