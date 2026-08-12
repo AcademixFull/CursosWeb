@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-function jsonResponse(payload: unknown, status = 200): Response {
+function jsonResponse(
+  payload: unknown,
+  status = 200,
+  headers: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
   });
 }
 
@@ -83,6 +87,65 @@ describe("central API client", () => {
 
     await expect(api.get("/health")).rejects.toMatchObject({
       code: "INVALID_RESPONSE",
+    });
+  });
+
+  it("clears the stored session and notifies the app after a 401", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            success: false,
+            error: { code: "UNAUTHORIZED", message: "La sesión expiró." },
+          },
+          401,
+        ),
+      ),
+    );
+    const { api, AUTH_SESSION_EXPIRED_EVENT } = await loadApi();
+    const { saveAuthSession } = await import("../src/utils/authSessionStore");
+    saveAuthSession({
+      accessToken: "expired-token",
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      user: {
+        id: "user-1",
+        email: "marco@academix.test",
+        fullName: "Marco Antonio",
+        role: "student",
+      },
+    });
+    const listener = vi.fn();
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+
+    await expect(api.get("/auth/me")).rejects.toMatchObject({ status: 401 });
+
+    expect(sessionStorage.length).toBe(0);
+    expect(listener).toHaveBeenCalledOnce();
+    window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+  });
+
+  it("exposes Retry-After and x-request-id when the backend limits requests", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            success: false,
+            error: { code: "RATE_LIMITED", message: "Intenta más tarde." },
+          },
+          429,
+          { "Retry-After": "30", "x-request-id": "request-429" },
+        ),
+      ),
+    );
+    const { api } = await loadApi();
+
+    await expect(api.post("/auth/login", {})).rejects.toMatchObject({
+      status: 429,
+      code: "RATE_LIMITED",
+      requestId: "request-429",
+      retryAfterSeconds: 30,
     });
   });
 });

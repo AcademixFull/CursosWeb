@@ -1,13 +1,23 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { courseMocks } from "../src/data/courseMocks";
-import { getCourse, listCourses } from "../src/services/courses.service";
+
+async function loadMockService() {
+  vi.stubEnv("VITE_DATA_SOURCE", "mock");
+  vi.resetModules();
+  return import("../src/services/courses.service");
+}
 
 describe("courses service in mock mode", () => {
   beforeEach(() => {
     sessionStorage.clear();
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("paginates the catalog", async () => {
+    const { listCourses } = await loadMockService();
     const result = await listCourses({ page: 2, limit: 2 });
 
     expect(result.items).toHaveLength(2);
@@ -20,6 +30,7 @@ describe("courses service in mock mode", () => {
   });
 
   it("combines search, category and level filters", async () => {
+    const { listCourses } = await loadMockService();
     const targetCourse = courseMocks[0];
     if (!targetCourse) throw new Error("Los mocks de cursos están vacíos.");
 
@@ -33,6 +44,7 @@ describe("courses service in mock mode", () => {
   });
 
   it("returns a course by id or slug", async () => {
+    const { getCourse } = await loadMockService();
     const targetCourse = courseMocks[0];
     if (!targetCourse) throw new Error("Los mocks de cursos están vacíos.");
 
@@ -41,6 +53,7 @@ describe("courses service in mock mode", () => {
   });
 
   it("rejects an unknown course", async () => {
+    const { getCourse } = await loadMockService();
     await expect(getCourse("curso-inexistente")).rejects.toThrow(
       "No encontramos el curso solicitado.",
     );

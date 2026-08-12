@@ -28,6 +28,11 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
         <p className="mt-3 text-xs text-slate-500">
           {enrollment.completedLessons} de {enrollment.totalLessons} lecciones completadas
         </p>
+        <p className="mt-2 text-xs text-slate-600">
+          Último acceso: {new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(
+            new Date(enrollment.lastAccessedAt),
+          )}
+        </p>
         <div className="mt-auto pt-6">
           <ButtonLink to={learningRoute(course.id)} variant={isCompleted ? "secondary" : "primary"} fullWidth>
             {isCompleted ? "Repasar curso" : "Continuar aprendiendo"}

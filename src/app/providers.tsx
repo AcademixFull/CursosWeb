@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../contexts/AuthProvider";
+import { ApiError } from "../services/api";
 
 /**
  * Punto central para los providers globales de la aplicación.
@@ -33,7 +34,10 @@ function createQueryClient(): QueryClient {
       queries: {
         staleTime: 60_000,
         refetchOnWindowFocus: false,
-        retry: 1,
+        retry: (failureCount, error) => {
+          if (error instanceof ApiError && error.status > 0 && error.status < 500) return false;
+          return failureCount < 1;
+        },
       },
       mutations: {
         // Los envíos (ej. formulario de contacto) no deben reintentarse

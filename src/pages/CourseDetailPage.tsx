@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
 import { EnrollmentDialog } from "../components/enrollment/EnrollmentDialog";
 import { ReviewDialog } from "../components/reviews/ReviewDialog";
+import { ReviewPagination } from "../components/reviews/ReviewPagination";
 import { Badge } from "../components/ui/Badge";
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -11,9 +12,10 @@ import { instructorRoute, learningRoute, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useCourse, useRelatedCourses } from "../hooks/useCourse";
 import { useEnrollCourse } from "../hooks/useEnrollment";
-import { useCreateReview } from "../hooks/useReviews";
+import { useCourseReviews, useCreateReview } from "../hooks/useReviews";
 import { useMyCourses } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
+import { ApiError } from "../services/api";
 import { locationPath } from "../utils/navigation";
 
 function formatPrice(price: number): string {
@@ -28,6 +30,8 @@ export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const courseQuery = useCourse(courseId);
   const relatedQuery = useRelatedCourses(courseQuery.data);
+  const [reviewPage, setReviewPage] = useState(1);
+  const reviewsQuery = useCourseReviews(courseQuery.data?.id, reviewPage);
   const { isAuthenticated, user } = useAuth();
   const enrollmentsQuery = useMyCourses(isAuthenticated);
   const enrollmentMutation = useEnrollCourse();
@@ -85,14 +89,18 @@ export default function CourseDetailPage() {
       await enrollmentMutation.mutateAsync(course.id);
       setShowEnrollment(false);
       navigate(learningRoute(course.id));
-    } catch {
-      // El mensaje de error se muestra dentro del diálogo.
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "ENROLLMENT_ALREADY_EXISTS") {
+        setShowEnrollment(false);
+        navigate(learningRoute(course.id));
+      }
     }
   }
 
   async function publishReview(input: { rating: number; comment: string }) {
     try {
       await reviewMutation.mutateAsync({ courseId: course.id, input });
+      setReviewPage(1);
       setShowReview(false);
     } catch {
       // El diálogo muestra el error de publicación.
@@ -207,21 +215,50 @@ export default function CourseDetailPage() {
                     </Button>
                   ) : null}
                 </div>
-                <div className="mt-6 divide-y divide-white/10">
-                  {course.reviews.length ? (
-                    course.reviews.map((review) => (
+                <div id="course-reviews" className="mt-6 divide-y divide-white/10">
+                  {reviewsQuery.isPending ? (
+                    <p className="py-5 text-sm text-slate-400" role="status">
+                      Cargando reseñas...
+                    </p>
+                  ) : null}
+                  {reviewsQuery.isError ? (
+                    <ErrorState
+                      title="No pudimos cargar las reseñas"
+                      description={
+                        reviewsQuery.error instanceof Error
+                          ? reviewsQuery.error.message
+                          : "Intenta nuevamente."
+                      }
+                      onRetry={() => void reviewsQuery.refetch()}
+                    />
+                  ) : null}
+                  {reviewsQuery.data?.items.length ? (
+                    reviewsQuery.data.items.map((review) => (
                       <article key={review.id} className="py-6 first:pt-0">
                         <div className="flex items-center justify-between gap-4">
                           <h3 className="font-bold text-white">{review.authorName}</h3>
                           <span className="text-sm text-amber-300">{"★".repeat(review.rating)}</span>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-slate-300">{review.comment}</p>
+                        <time dateTime={review.createdAt} className="mt-3 block text-xs text-slate-500">
+                          {new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(
+                            new Date(review.createdAt),
+                          )}
+                        </time>
                       </article>
                     ))
-                  ) : (
+                  ) : null}
+                  {reviewsQuery.isSuccess && reviewsQuery.data.items.length === 0 ? (
                     <p className="text-slate-400">Este curso todavía no tiene reseñas publicadas.</p>
-                  )}
+                  ) : null}
                 </div>
+                {reviewsQuery.data ? (
+                  <ReviewPagination
+                    pagination={reviewsQuery.data.pagination}
+                    isFetching={reviewsQuery.isFetching}
+                    onPageChange={setReviewPage}
+                  />
+                ) : null}
                 {enrollment?.status === "completed" && hasReviewed ? (
                   <p className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
                     Gracias por compartir tu experiencia con la comunidad.
@@ -276,7 +313,13 @@ export default function CourseDetailPage() {
             courseTitle={course.title}
             priceLabel={formatPrice(course.price)}
             isPending={enrollmentMutation.isPending}
-            error={enrollmentMutation.isError ? "No pudimos completar la inscripción. Intenta nuevamente." : undefined}
+            error={
+              enrollmentMutation.isError
+                ? enrollmentMutation.error instanceof ApiError
+                  ? enrollmentMutation.error.message
+                  : "No pudimos completar la inscripción. Intenta nuevamente."
+                : undefined
+            }
             onClose={() => setShowEnrollment(false)}
             onConfirm={() => void confirmEnrollment()}
           />

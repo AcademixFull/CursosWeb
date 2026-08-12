@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { env } from "../../config/env";
 import { useDialogFocus } from "../../hooks/useDialogFocus";
 import { Button } from "../ui/Button";
 
@@ -43,7 +44,9 @@ export function EnrollmentDialog({
         <h2 id={titleId} className="mt-3 text-2xl font-extrabold text-white">{courseTitle}</h2>
         <p className="mt-4 text-3xl font-extrabold text-brand-200">{priceLabel}</p>
         <p id={descriptionId} className="mt-4 text-sm leading-6 text-slate-400">
-          Esta es una simulación del frontend. No se realizará ningún cargo y el curso se agregará temporalmente a tu biblioteca.
+          {env.dataSource === "api"
+            ? "Al confirmar, el backend registrará el curso en tu biblioteca de Academix."
+            : "Esta demostración no realiza cargos y conserva la inscripción solo durante la sesión."}
         </p>
 
         {error ? (

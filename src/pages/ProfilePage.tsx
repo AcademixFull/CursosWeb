@@ -6,11 +6,18 @@ import { Button } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { useMyProfile, useUpdateMyProfile } from "../hooks/useStudent";
+import { ApiError } from "../services/api";
 import type { UpdateProfileInput, UserProfile } from "../types/student.types";
 
 interface ProfileFormProps {
   profile: UserProfile;
 }
+
+const roleLabels: Record<UserProfile["role"], string> = {
+  student: "Estudiante",
+  instructor: "Instructor",
+  admin: "Administrador",
+};
 
 function ProfileForm({ profile }: ProfileFormProps) {
   const [form, setForm] = useState<UpdateProfileInput>(() => ({
@@ -30,16 +37,29 @@ function ProfileForm({ profile }: ProfileFormProps) {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (form.fullName.trim().length < 3) {
-      setFormError("Escribe un nombre válido de al menos 3 caracteres.");
+    if (form.fullName.trim().length < 2) {
+      setFormError("Escribe un nombre válido de al menos 2 caracteres.");
       return;
     }
-    if (form.bio.length > 300) {
-      setFormError("La biografía no puede superar los 300 caracteres.");
+    if (form.phone.trim().length > 30) {
+      setFormError("El teléfono no puede superar los 30 caracteres.");
+      return;
+    }
+    if (form.country.trim().length > 100) {
+      setFormError("El país no puede superar los 100 caracteres.");
+      return;
+    }
+    if (form.bio.trim().length > 2000) {
+      setFormError("La biografía no puede superar los 2000 caracteres.");
       return;
     }
 
-    mutation.mutate({ ...form, fullName: form.fullName.trim() });
+    mutation.mutate({
+      fullName: form.fullName.trim(),
+      phone: form.phone.trim(),
+      country: form.country.trim(),
+      bio: form.bio.trim(),
+    });
   }
 
   return (
@@ -50,6 +70,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
             label="Nombre completo"
             autoComplete="name"
             value={form.fullName}
+            maxLength={160}
             onChange={(event) => updateField("fullName", event.target.value)}
           />
           <FormField label="Correo electrónico" type="email" value={profile.email} disabled hint="El correo se administra desde tu cuenta." />
@@ -58,6 +79,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
             type="tel"
             autoComplete="tel"
             value={form.phone}
+            maxLength={30}
             onChange={(event) => updateField("phone", event.target.value)}
             placeholder="+52 000 000 0000"
           />
@@ -65,6 +87,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
             label="País"
             autoComplete="country-name"
             value={form.country}
+            maxLength={100}
             onChange={(event) => updateField("country", event.target.value)}
           />
         </div>
@@ -74,17 +97,20 @@ function ProfileForm({ profile }: ProfileFormProps) {
           <textarea
             value={form.bio}
             onChange={(event) => updateField("bio", event.target.value)}
-            maxLength={300}
+            maxLength={2000}
             rows={5}
             placeholder="Cuéntanos brevemente qué quieres aprender."
             className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15"
           />
-          <span className="mt-2 block text-right text-xs text-slate-500">{form.bio.length}/300</span>
+          <span className="mt-2 block text-right text-xs text-slate-500">{form.bio.length}/2000</span>
         </label>
 
         {formError || mutation.isError ? (
           <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {formError || "No pudimos guardar tu perfil. Intenta nuevamente."}
+            {formError
+              || (mutation.error instanceof ApiError
+                ? mutation.error.message
+                : "No pudimos guardar tu perfil. Intenta nuevamente.")}
           </div>
         ) : null}
         {mutation.isSuccess ? (
@@ -104,9 +130,9 @@ function ProfileForm({ profile }: ProfileFormProps) {
         </div>
         <p className="mt-4 font-bold text-white">{profile.fullName}</p>
         <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
-        <Badge className="mt-4">Estudiante</Badge>
+        <Badge className="mt-4">{roleLabels[profile.role]}</Badge>
         <p className="mt-5 border-t border-white/10 pt-5 text-xs leading-5 text-slate-500">
-          La imagen de perfil estará disponible cuando conectemos Supabase Storage desde el backend.
+          La gestión de imagen estará disponible cuando exista un endpoint específico en el backend.
         </p>
       </aside>
     </form>
@@ -118,7 +144,12 @@ export default function ProfilePage() {
 
   if (query.isLoading) return <PageLoader label="Cargando tu perfil" />;
   if (query.isError || !query.data) {
-    return <ErrorState description="No pudimos cargar tu perfil." onRetry={() => void query.refetch()} />;
+    return (
+      <ErrorState
+        description={query.error instanceof Error ? query.error.message : "No pudimos cargar tu perfil."}
+        onRetry={() => void query.refetch()}
+      />
+    );
   }
 
   return (

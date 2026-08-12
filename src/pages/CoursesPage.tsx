@@ -1,4 +1,5 @@
-import { useDeferredValue, useRef, useState } from "react";
+import { useDeferredValue, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router";
 import CourseFilters from "../components/courses/CourseFilters";
 import CourseGrid from "../components/courses/CourseGrid";
 import { CoursePagination } from "../components/courses/CoursePagination";
@@ -7,10 +8,10 @@ import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { SectionHeader } from "../components/ui/SectionHeader";
-import { courseCategories } from "../data/courseMocks";
+import { useCategories } from "../hooks/useCategories";
 import { useCourses } from "../hooks/useCourses";
 import PublicLayout from "../layouts/PublicLayout";
-import type { CourseFilters as Filters } from "../types/course.types";
+import type { CourseFilters as Filters, CourseLevel } from "../types/course.types";
 
 const initialFilters: Filters = {
   search: "",
@@ -20,14 +21,49 @@ const initialFilters: Filters = {
   limit: 12,
 };
 
+const courseLevels = new Set<CourseLevel>(["beginner", "intermediate", "advanced"]);
+
+function positiveInteger(value: string | null, fallback: number, maximum?: number): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || (maximum && parsed > maximum)) return fallback;
+  return parsed;
+}
+
+function readFilters(params: URLSearchParams): Filters {
+  const level = params.get("level");
+  return {
+    search: params.get("search") ?? "",
+    category: params.get("category") ?? "all",
+    level: level && courseLevels.has(level as CourseLevel) ? level as CourseLevel : "all",
+    page: positiveInteger(params.get("page"), 1),
+    limit: positiveInteger(params.get("limit"), 12, 50),
+  };
+}
+
+function filterParams(filters: Filters): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.category && filters.category !== "all") params.set("category", filters.category);
+  if (filters.level && filters.level !== "all") params.set("level", filters.level);
+  params.set("page", String(filters.page ?? 1));
+  params.set("limit", String(filters.limit ?? 12));
+  return params;
+}
+
 export default function CoursesPage() {
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filters = useMemo(() => readFilters(searchParams), [searchParams]);
   const deferredSearch = useDeferredValue(filters.search);
   const query = useCourses({ ...filters, search: deferredSearch });
+  const categoriesQuery = useCategories();
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  function setFilters(nextFilters: Filters, replace = true) {
+    setSearchParams(filterParams(nextFilters), { replace });
+  }
+
   function changePage(page: number) {
-    setFilters((current) => ({ ...current, page }));
+    setFilters({ ...filters, page }, false);
     window.requestAnimationFrame(() => resultsRef.current?.focus());
   }
 
@@ -51,7 +87,33 @@ export default function CoursesPage() {
 
         <section className="px-6 py-12 sm:py-16">
           <div className="mx-auto max-w-6xl">
-            <CourseFilters categories={courseCategories} filters={filters} onChange={setFilters} />
+            <CourseFilters
+              categories={categoriesQuery.data ?? []}
+              filters={filters}
+              onChange={setFilters}
+            />
+            {categoriesQuery.isPending ? (
+              <p className="mt-3 text-xs text-slate-500" role="status">
+                Cargando categorías...
+              </p>
+            ) : null}
+            {categoriesQuery.isError ? (
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-amber-200" role="alert">
+                <span>No pudimos cargar las categorías; todavía puedes buscar todos los cursos.</span>
+                <button
+                  type="button"
+                  className="font-semibold underline decoration-amber-300/60 underline-offset-4"
+                  onClick={() => void categoriesQuery.refetch()}
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : null}
+            {categoriesQuery.isSuccess && categoriesQuery.data.length === 0 ? (
+              <p className="mt-3 text-xs text-slate-500">
+                Aún no hay categorías activas; se mostrarán todos los cursos publicados.
+              </p>
+            ) : null}
 
             <div className="mt-8 flex items-center justify-between border-b border-white/10 pb-4">
               <p id="course-results-summary" className="text-sm text-slate-400" aria-live="polite">

@@ -93,3 +93,8 @@ export interface CourseListResult {
   items: CourseSummary[];
   pagination: Pagination;
 }
+
+export interface ReviewListResult {
+  items: CourseReview[];
+  pagination: Pagination;
+}

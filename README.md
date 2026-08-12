@@ -17,18 +17,14 @@ cp .env.example .env
 npm run dev
 ```
 
-Mientras el backend de cursos no esté disponible, conserva:
-
-```env
-VITE_DATA_SOURCE=mock
-```
-
-Para consumir la API:
+La integración real local usa:
 
 ```env
 VITE_API_URL=http://localhost:3000/api/v1
 VITE_DATA_SOURCE=api
 ```
+
+`VITE_DATA_SOURCE=mock` queda disponible únicamente para demostraciones aisladas.
 
 ## Scripts
 
@@ -93,6 +89,7 @@ Los componentes no llaman `fetch` ni Supabase directamente. Al conectar el backe
 - `/#/iniciar-sesion`
 - `/#/registro`
 - `/#/recuperar-contrasena`
+- `/#/actualizar-contrasena` (destino de los enlaces de recuperación)
 
 Se usa `HashRouter` porque el despliegue actual está configurado para GitHub Pages.
 
@@ -115,7 +112,15 @@ npm audit --omit=dev
 ```
 
 La suite cubre validaciones de autenticación, navegación segura, paginación, persistencia mock,
-filtrado de cursos y el sobre común del cliente HTTP.
+filtrado de cursos, expiración de sesión, rate limiting, recuperación de contraseña y el sobre
+común del cliente HTTP.
+
+## Integración por etapas
+
+Las Etapas A, B y C conectan autenticación, catálogo público y área privada del alumno. El orden de
+los bloques restantes y su estado están en
+[`docs/frontend-integration-progress.md`](docs/frontend-integration-progress.md). Cada etapa se
+valida antes de conectar la siguiente para aislar errores entre UI, API y datos.
 
 ## Reglas de integración
 

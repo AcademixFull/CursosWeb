@@ -46,6 +46,16 @@ export function validateRegister(input: RegisterFormInput): ValidationErrors<Reg
   return errors;
 }
 
+export function validateNewPassword(
+  password: string,
+  confirmPassword: string,
+): { password?: string; confirmPassword?: string } {
+  const errors: { password?: string; confirmPassword?: string } = {};
+  if (password.length < 8) errors.password = "Usa al menos 8 caracteres.";
+  if (password !== confirmPassword) errors.confirmPassword = "Las contraseñas no coinciden.";
+  return errors;
+}
+
 export function hasValidationErrors(errors: object): boolean {
   return Object.keys(errors).length > 0;
 }

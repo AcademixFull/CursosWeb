@@ -7,9 +7,9 @@
  *  - se pueda advertir en desarrollo si falta alguna;
  *  - agregar/quitar variables no obligue a tocar componentes.
  *
- * IMPORTANTE: durante las fases de frontend todavía no existe academix-backend, por lo que
- * VITE_API_URL puede estar vacía sin que la app deje de funcionar.
- * No se lanza ningún error aquí: solo se avisa por consola en desarrollo.
+ * VITE_API_URL puede quedar vacía únicamente cuando VITE_DATA_SOURCE=mock.
+ * No se lanza aquí para conservar el modo de demostración; el cliente HTTP produce
+ * un error explícito si se intenta usar la API sin URL base.
  */
 
 interface AppEnv {
@@ -28,9 +28,8 @@ function readEnv(): AppEnv {
 
   if (import.meta.env.DEV) {
     if (!apiUrl) {
-      // Esperado en Fase 1: todavía no existe academix-backend.
       console.info(
-        "[env] VITE_API_URL no está configurada todavía (se utilizarán servicios de demostración)."
+        "[env] VITE_API_URL no está configurada (solo funcionará VITE_DATA_SOURCE=mock)."
       );
     }
     if (!mapboxToken) {

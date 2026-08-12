@@ -10,19 +10,29 @@ import {
 import type { UpdateProfileInput } from "../types/student.types";
 
 export const studentQueryKeys = {
-  courses: ["student", "courses"] as const,
-  certificates: ["student", "certificates"] as const,
+  courses: (userId: string) => ["student", userId, "courses"] as const,
+  certificates: (userId: string) => ["student", userId, "certificates"] as const,
   certificate: (certificateId: string, userId: string) =>
-    ["student", "certificates", certificateId, userId] as const,
-  profile: (userId: string) => ["student", "profile", userId] as const,
+    ["student", userId, "certificates", certificateId] as const,
+  profile: (userId: string) => ["student", userId, "profile"] as const,
 };
 
 export function useMyCourses(enabled = true) {
-  return useQuery({ queryKey: studentQueryKeys.courses, queryFn: listMyCourses, enabled });
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: studentQueryKeys.courses(user?.id ?? "anonymous"),
+    queryFn: listMyCourses,
+    enabled: enabled && Boolean(user),
+  });
 }
 
 export function useMyCertificates() {
-  return useQuery({ queryKey: studentQueryKeys.certificates, queryFn: listMyCertificates });
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: studentQueryKeys.certificates(user?.id ?? "anonymous"),
+    queryFn: listMyCertificates,
+    enabled: Boolean(user),
+  });
 }
 
 export function useMyCertificate(certificateId: string) {

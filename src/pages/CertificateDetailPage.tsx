@@ -52,6 +52,26 @@ export default function CertificateDetailPage() {
         </div>
 
         <CertificateDocument certificate={query.data} />
+
+        <section className="print-hidden mx-auto mt-7 max-w-5xl rounded-2xl border border-slate-700 bg-slate-900 p-5 sm:p-6">
+          <h2 className="font-bold text-white">Integridad del certificado</h2>
+          <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-slate-500">Emisor</dt>
+              <dd className="mt-1 text-slate-200">{query.data.issuerName}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">Algoritmo de firma</dt>
+              <dd className="mt-1 text-slate-200">{query.data.signatureAlgorithm}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-slate-500">Firma del sistema</dt>
+              <dd className="mt-1 break-all font-mono text-xs leading-5 text-brand-200">
+                {query.data.systemSignature}
+              </dd>
+            </div>
+          </dl>
+        </section>
       </main>
     </div>
   );

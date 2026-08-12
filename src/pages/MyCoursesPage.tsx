@@ -24,7 +24,12 @@ export default function MyCoursesPage() {
 
   if (query.isLoading) return <PageLoader label="Cargando tus cursos" />;
   if (query.isError) {
-    return <ErrorState description="No pudimos cargar tus cursos." onRetry={() => void query.refetch()} />;
+    return (
+      <ErrorState
+        description={query.error instanceof Error ? query.error.message : "No pudimos cargar tus cursos."}
+        onRetry={() => void query.refetch()}
+      />
+    );
   }
 
   const courses = query.data ?? [];
@@ -66,7 +71,15 @@ export default function MyCoursesPage() {
         </div>
       ) : (
         <div className="mt-7">
-          <EmptyState title="No hay cursos en esta sección" description="Cambia el filtro o explora nuevos cursos en el catálogo." />
+          <EmptyState
+            title={courses.length === 0 ? "Aún no tienes cursos" : "No hay cursos en esta sección"}
+            description={
+              courses.length === 0
+                ? "Explora el catálogo e inscríbete para comenzar tu biblioteca personal."
+                : "Cambia el filtro para consultar el resto de tu biblioteca."
+            }
+            action={courses.length === 0 ? <ButtonLink to={ROUTES.courses}>Explorar catálogo</ButtonLink> : undefined}
+          />
         </div>
       )}
     </div>

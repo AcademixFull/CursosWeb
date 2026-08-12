@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
+import { PageLoader } from "../ui/PageLoader";
 import { ROUTES } from "../../config/routes";
 import { useAuth } from "../../hooks/useAuth";
 import { locationPath } from "../../utils/navigation";
@@ -9,8 +10,12 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
   const location = useLocation();
+
+  if (isInitializing) {
+    return <PageLoader label="Validando tu sesión" />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.login} replace state={{ returnTo: locationPath(location) }} />;

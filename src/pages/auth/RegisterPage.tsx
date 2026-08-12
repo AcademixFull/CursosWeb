@@ -22,6 +22,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [submitError, setSubmitError] = useState("");
+  const [submitNotice, setSubmitNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, register } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export default function RegisterPage() {
     const validationErrors = validateRegister(form);
     setErrors(validationErrors);
     setSubmitError("");
+    setSubmitNotice("");
 
     if (hasValidationErrors(validationErrors)) return;
 
@@ -47,6 +49,11 @@ export default function RegisterPage() {
       });
       navigate(ROUTES.dashboard, { replace: true });
     } catch (error) {
+      if (error instanceof ApiError && error.code === "EMAIL_CONFIRMATION_REQUIRED") {
+        setSubmitNotice(error.message);
+        setForm((current) => ({ ...current, password: "", confirmPassword: "" }));
+        return;
+      }
       setSubmitError(
         error instanceof ApiError ? error.message : "No pudimos crear tu cuenta. Intenta nuevamente.",
       );
@@ -62,6 +69,11 @@ export default function RegisterPage() {
       description="Regístrate para organizar tus cursos y dar seguimiento a todo tu aprendizaje."
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        {submitNotice ? (
+          <div role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+            {submitNotice}
+          </div>
+        ) : null}
         {submitError ? (
           <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {submitError}

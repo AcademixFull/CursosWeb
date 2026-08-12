@@ -18,7 +18,14 @@ export default function CertificatesPage() {
 
   if (query.isLoading) return <PageLoader label="Cargando certificados" />;
   if (query.isError) {
-    return <ErrorState description="No pudimos cargar tus certificados." onRetry={() => void query.refetch()} />;
+    return (
+      <ErrorState
+        description={
+          query.error instanceof Error ? query.error.message : "No pudimos cargar tus certificados."
+        }
+        onRetry={() => void query.refetch()}
+      />
+    );
   }
 
   const certificates = query.data ?? [];
@@ -37,7 +44,7 @@ export default function CertificatesPage() {
             <article key={certificate.id} className="relative overflow-hidden rounded-2xl border border-brand-400/25 bg-slate-900 p-6 shadow-xl shadow-black/20 sm:p-8">
               <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-brand-600/15 blur-2xl" />
               <div className="relative">
-                <Badge tone="success">Certificado verificado</Badge>
+                <Badge tone="success">Emitido por Academix</Badge>
                 <h2 className="mt-5 text-xl font-bold leading-7 text-white">{certificate.courseTitle}</h2>
                 <dl className="mt-5 space-y-3 text-sm">
                   <div>

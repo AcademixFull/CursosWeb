@@ -109,6 +109,10 @@ export async function getMyCertificate(
     ...certificate,
     recipientName: user.fullName,
     durationHours: course.durationHours,
+    issuerName: "Academix",
+    systemSignature: "A".repeat(64),
+    signatureAlgorithm: "SHA-256",
+    verificationPath: `/api/v1/certificates/verify/${certificate.credentialCode}`,
   };
 }
 

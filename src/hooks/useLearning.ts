@@ -1,26 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { completeLearningLesson, getLearningCourse } from "../services/learning.service";
 import type { EnrollmentSummary } from "../types/student.types";
+import { useAuth } from "./useAuth";
 import { studentQueryKeys } from "./useStudent";
 
-const learningQueryKey = (courseId: string) => ["learning", courseId] as const;
+const learningQueryKey = (courseId: string, userId: string) =>
+  ["learning", userId, courseId] as const;
 
 export function useLearningCourse(courseId: string) {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: learningQueryKey(courseId),
+    queryKey: learningQueryKey(courseId, user?.id ?? "anonymous"),
     queryFn: () => getLearningCourse(courseId),
-    enabled: Boolean(courseId),
+    enabled: Boolean(courseId && user),
   });
 }
 
 export function useCompleteLesson(courseId: string) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const userId = user?.id ?? "anonymous";
 
   return useMutation({
     mutationFn: (lessonId: string) => completeLearningLesson(courseId, lessonId),
     onSuccess: (learningCourse) => {
-      queryClient.setQueryData(learningQueryKey(courseId), learningCourse);
-      queryClient.setQueryData<EnrollmentSummary[]>(studentQueryKeys.courses, (enrollments) =>
+      queryClient.setQueryData(learningQueryKey(courseId, userId), learningCourse);
+      queryClient.setQueryData<EnrollmentSummary[]>(studentQueryKeys.courses(userId), (enrollments) =>
         enrollments?.map((enrollment) =>
           enrollment.course.id === learningCourse.id
             ? {
@@ -34,7 +39,7 @@ export function useCompleteLesson(courseId: string) {
         ),
       );
       if (learningCourse.progressPercentage === 100) {
-        void queryClient.invalidateQueries({ queryKey: studentQueryKeys.certificates });
+        void queryClient.invalidateQueries({ queryKey: studentQueryKeys.certificates(userId) });
       }
     },
   });

@@ -70,17 +70,41 @@ Auth antes de toda operación protegida y nunca debe confiar en el rol enviado p
 | POST | `/auth/login` | No | `AuthSession` |
 | POST | `/auth/register` | No | `AuthSession` |
 | POST | `/auth/logout` | Sí | `null` o `204` |
+| GET | `/auth/me` | Sí | `{ user: AuthUser }` |
 | POST | `/auth/password-reset` | No | `null` o `204` |
+| PATCH | `/auth/password` | Token de recuperación | `null` o `204` |
+
+Al iniciar la aplicación, una sesión almacenada se valida con `GET /auth/me`. Una respuesta `401`
+elimina el token y los datos privados en caché; una falla temporal de red no destruye la sesión.
+El backend actual no expone refresh token, por lo que al expirar el JWT el usuario inicia sesión de
+nuevo.
+
+Supabase redirige la recuperación a `http://localhost:5173/CursosWeb/`. Antes de iniciar
+`HashRouter`, React captura `type=recovery` y `access_token`, borra esos parámetros visibles y abre
+`/#/actualizar-contrasena`. Ese token queda aislado en `sessionStorage` y solo se envía a
+`PATCH /auth/password`; el frontend nunca crea un cliente de Supabase.
+
+El cliente también conserva `x-request-id` y `Retry-After` dentro de `ApiError`. Los errores `429`
+no se reintentan automáticamente para evitar agravar el límite del backend.
 
 ## Catálogo e instructores
 
+Con `VITE_DATA_SOURCE=api`, las categorías, cursos, instructores y reseñas públicas proceden de
+Express. Los filtros con valor se reflejan en la URL de `/#/cursos`; `page` y `limit` siempre se
+envían al backend. El frontend no utiliza categorías mock como respaldo silencioso ante errores.
+
 | Método | Ruta | Auth | Respuesta `data` |
 |---|---|---:|---|
+| GET | `/categories` | No | `CourseCategory[]` |
 | GET | `/courses?search=&category=&level=&page=1&limit=12` | No | `CourseSummary[]` + paginación |
 | GET | `/courses/:courseId` | No | `CourseDetail` |
 | GET | `/courses/:courseId/related` | No | `CourseSummary[]` |
 | GET | `/instructors/:instructorId` | No | `InstructorDetail` |
 | GET | `/instructors/:instructorId/courses` | No | `CourseSummary[]` |
+| GET | `/courses/:courseId/reviews?page=1&limit=5` | No | `CourseReview[]` + paginación |
+
+Después de `POST /courses/:courseId/reviews`, React invalida el detalle, el listado paginado de
+reseñas y el catálogo para volver a obtener el promedio y el conteo calculados por el backend.
 
 ## Estudiante y perfil
 
@@ -93,6 +117,11 @@ Auth antes de toda operación protegida y nunca debe confiar en el rol enviado p
 
 Una inscripción duplicada responde `409 ENROLLMENT_ALREADY_EXISTS`. El backend determina el
 usuario desde el token y aplica una restricción única por `user_id + course_id`.
+
+Las consultas privadas de React Query incluyen el identificador del usuario en su clave. Así, los
+cursos, certificados, perfil y datos del aula de una cuenta no se reutilizan al iniciar otra sesión.
+Ante `ENROLLMENT_ALREADY_EXISTS`, React refresca la biblioteca y permite continuar al aula sin
+crear una relación duplicada.
 
 ## Aula y progreso
 
@@ -121,6 +150,10 @@ Body de progreso:
 
 Solo un estudiante que cumpla la regla de finalización puede publicar una reseña. El backend emite
 el certificado al alcanzar los criterios del curso y genera un `credentialCode` único.
+
+`CertificateDetail` incorpora `issuerName`, `systemSignature`, `signatureAlgorithm` y
+`verificationPath`. El frontend presenta esos valores emitidos y verificados por Express; nunca
+genera ni recalcula la firma en el navegador.
 
 ## Códigos esperados
 

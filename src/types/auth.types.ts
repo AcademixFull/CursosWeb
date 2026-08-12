@@ -27,3 +27,7 @@ export interface RegisterInput {
 export interface PasswordResetInput {
   email: string;
 }
+
+export interface UpdatePasswordInput {
+  password: string;
+}

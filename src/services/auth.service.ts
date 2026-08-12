@@ -4,6 +4,7 @@ import type {
   LoginInput,
   PasswordResetInput,
   RegisterInput,
+  UpdatePasswordInput,
 } from "../types/auth.types";
 import { api } from "./api";
 import { clearMockStudentStorage } from "../utils/mockStudentStorage";
@@ -56,5 +57,14 @@ export const authService = {
     if (env.dataSource === "api") {
       await api.post<void>("/auth/password-reset", input);
     }
+  },
+
+  async getCurrentUser(): Promise<AuthSession["user"]> {
+    const result = await api.get<{ user: AuthSession["user"] }>("/auth/me");
+    return result.user;
+  },
+
+  async updatePassword(input: UpdatePasswordInput, recoveryToken: string): Promise<void> {
+    await api.patch<void>("/auth/password", input, { authToken: recoveryToken });
   },
 };

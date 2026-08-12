@@ -1,5 +1,7 @@
 import { env } from "../config/env";
-import { getAuthToken } from "../utils/authSessionStore";
+import { clearAuthSession, getAuthToken } from "../utils/authSessionStore";
+
+export const AUTH_SESSION_EXPIRED_EVENT = "academix:auth-session-expired";
 
 /**
  * Cliente HTTP central de academix-frontend.
@@ -62,16 +64,26 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: ApiErrorCode;
   readonly fields?: Record<string, string | string[]>;
+  readonly requestId?: string;
+  readonly retryAfterSeconds?: number;
 
   constructor(
     message: string,
-    options: { status: number; code: ApiErrorCode; fields?: Record<string, string | string[]> }
+    options: {
+      status: number;
+      code: ApiErrorCode;
+      fields?: Record<string, string | string[]>;
+      requestId?: string;
+      retryAfterSeconds?: number;
+    }
   ) {
     super(message);
     this.name = "ApiError";
     this.status = options.status;
     this.code = options.code;
     this.fields = options.fields;
+    this.requestId = options.requestId;
+    this.retryAfterSeconds = options.retryAfterSeconds;
   }
 }
 
@@ -84,6 +96,34 @@ interface RequestOptions {
   headers?: HeadersInit;
   /** Señal para cancelar la petición (ej. AbortController desde React Query). */
   signal?: AbortSignal;
+  /** Token puntual, usado por el flujo de recuperación sin crear una sesión normal. */
+  authToken?: string;
+}
+
+function retryAfterSeconds(response: Response): number | undefined {
+  const value = response.headers.get("Retry-After");
+  if (!value) return undefined;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds);
+
+  const retryDate = Date.parse(value);
+  if (Number.isNaN(retryDate)) return undefined;
+  return Math.max(0, Math.ceil((retryDate - Date.now()) / 1000));
+}
+
+function responseMetadata(response: Response) {
+  return {
+    requestId: response.headers.get("x-request-id") ?? undefined,
+    retryAfterSeconds: retryAfterSeconds(response),
+  };
+}
+
+function notifyExpiredSession(): void {
+  clearAuthSession();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
+  }
 }
 
 function buildUrl(path: string): string {
@@ -116,6 +156,7 @@ async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<
     throw new ApiError("La respuesta del servidor no es JSON válido.", {
       status: response.status,
       code: "INVALID_RESPONSE",
+      ...responseMetadata(response),
     });
   }
 
@@ -130,6 +171,7 @@ async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<
       status: response.status,
       code: (envelope.error?.code as ApiErrorCode) ?? "UNKNOWN_ERROR",
       fields: envelope.error?.fields,
+      ...responseMetadata(response),
     });
   }
 
@@ -138,12 +180,14 @@ async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<
     throw new ApiError(`Error HTTP ${response.status}`, {
       status: response.status,
       code: "UNKNOWN_ERROR",
+      ...responseMetadata(response),
     });
   }
 
   throw new ApiError("La respuesta del servidor no tiene el formato esperado.", {
     status: response.status,
     code: "INVALID_RESPONSE",
+    ...responseMetadata(response),
   });
 }
 
@@ -160,7 +204,9 @@ async function requestEnvelope<T>(
   }
   headers.set("Accept", "application/json");
 
-  const token = getAuthToken();
+  const sessionToken = getAuthToken();
+  const usesSessionToken = options.authToken === undefined;
+  const token = options.authToken ?? sessionToken;
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -183,6 +229,10 @@ async function requestEnvelope<T>(
       status: 0,
       code: "NETWORK_ERROR",
     });
+  }
+
+  if (response.status === 401 && usesSessionToken && sessionToken) {
+    notifyExpiredSession();
   }
 
   return parseEnvelope<T>(response);

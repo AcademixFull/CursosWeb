@@ -12,6 +12,7 @@ import { hasValidationErrors, validateLogin } from "../../validations/auth.valid
 
 interface LoginLocationState {
   returnTo?: string;
+  notice?: string;
 }
 
 const initialForm: LoginInput = { email: "", password: "" };
@@ -59,6 +60,11 @@ export default function LoginPage() {
       description="Continúa con tus cursos, revisa tu progreso y consulta tus certificados."
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        {state?.notice ? (
+          <div role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+            {state.notice}
+          </div>
+        ) : null}
         {submitError ? (
           <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {submitError}

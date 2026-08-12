@@ -1,5 +1,7 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { env } from "../config/env";
+import { ApiError, AUTH_SESSION_EXPIRED_EVENT } from "../services/api";
 import { authService } from "../services/auth.service";
 import type { AuthSession, LoginInput, RegisterInput } from "../types/auth.types";
 import { clearAuthSession, readAuthSession, saveAuthSession } from "../utils/authSessionStore";
@@ -10,13 +12,54 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<AuthSession | null>(readAuthSession);
+  const [initialSession] = useState<AuthSession | null>(readAuthSession);
+  const [session, setSession] = useState<AuthSession | null>(initialSession);
+  const [isInitializing, setIsInitializing] = useState(
+    Boolean(initialSession && env.dataSource === "api"),
+  );
   const queryClient = useQueryClient();
+
+  const clearLocalSession = useCallback(() => {
+    clearAuthSession();
+    queryClient.removeQueries({ queryKey: ["student"] });
+    queryClient.removeQueries({ queryKey: ["learning"] });
+    setSession(null);
+  }, [queryClient]);
+
+  useEffect(() => {
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, clearLocalSession);
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, clearLocalSession);
+  }, [clearLocalSession]);
+
+  useEffect(() => {
+    if (!initialSession || env.dataSource !== "api") return;
+
+    let cancelled = false;
+    authService.getCurrentUser()
+      .then((user) => {
+        if (cancelled) return;
+        const validatedSession = { ...initialSession, user };
+        saveAuthSession(validatedSession);
+        setSession(validatedSession);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === 401) clearLocalSession();
+      })
+      .finally(() => {
+        if (!cancelled) setIsInitializing(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clearLocalSession, initialSession]);
 
   const value = useMemo<AuthContextValue>(() => ({
     session,
     user: session?.user ?? null,
     isAuthenticated: Boolean(session),
+    isInitializing,
     async login(input: LoginInput) {
       const nextSession = await authService.login(input);
       saveAuthSession(nextSession);
@@ -31,13 +74,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         await authService.logout();
       } finally {
-        clearAuthSession();
-        queryClient.removeQueries({ queryKey: ["student"] });
-        queryClient.removeQueries({ queryKey: ["learning"] });
-        setSession(null);
+        clearLocalSession();
       }
     },
     requestPasswordReset: authService.requestPasswordReset,
+    updatePassword: authService.updatePassword,
+    clearSession: clearLocalSession,
     updateUser(changes) {
       setSession((currentSession) => {
         if (!currentSession) return currentSession;
@@ -50,7 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return nextSession;
       });
     },
-  }), [queryClient, session]);
+  }), [clearLocalSession, isInitializing, session]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

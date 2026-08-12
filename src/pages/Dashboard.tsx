@@ -18,9 +18,14 @@ export default function Dashboard() {
   }
 
   if (coursesQuery.isError || certificatesQuery.isError) {
+    const error = coursesQuery.error ?? certificatesQuery.error;
     return (
       <ErrorState
-        description="No pudimos consultar tu información de aprendizaje."
+        description={
+          error instanceof Error
+            ? error.message
+            : "No pudimos consultar tu información de aprendizaje."
+        }
         onRetry={() => {
           void coursesQuery.refetch();
           void certificatesQuery.refetch();

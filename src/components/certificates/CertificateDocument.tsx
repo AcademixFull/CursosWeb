@@ -38,10 +38,10 @@ export function CertificateDocument({ certificate }: CertificateDocumentProps) {
         <div className="mt-10 grid w-full max-w-3xl gap-8 text-sm sm:grid-cols-2">
           <div>
             <div className="flex h-9 items-end justify-center">
-              <p className="font-serif text-2xl font-bold italic text-brand-800">Academix</p>
+              <p className="font-serif text-2xl font-bold italic text-brand-800">{certificate.issuerName}</p>
             </div>
             <div className="mx-auto h-px max-w-56 bg-slate-400" />
-            <p className="mt-3 text-xs font-semibold text-slate-600">Certificado de Academix</p>
+            <p className="mt-3 text-xs font-semibold text-slate-600">Firma del sistema</p>
           </div>
           <div>
             <div className="flex h-9 items-end justify-center">

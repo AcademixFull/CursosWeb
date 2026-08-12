@@ -6,6 +6,7 @@ export const ROUTES = {
   login: "/iniciar-sesion",
   register: "/registro",
   forgotPassword: "/recuperar-contrasena",
+  updatePassword: "/actualizar-contrasena",
   dashboard: "/dashboard",
   myCourses: "/mis-cursos",
   certificates: "/certificados",

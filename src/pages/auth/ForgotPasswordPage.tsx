@@ -41,11 +41,11 @@ export default function ForgotPasswordPage() {
     <AuthLayout
       eyebrow="Recupera tu acceso"
       title="Restablece tu contraseña"
-      description="Escribe el correo de tu cuenta. Cuando conectemos el backend, recibirás allí las instrucciones de recuperación."
+      description="Escribe el correo de tu cuenta y recibirás allí las instrucciones de recuperación."
     >
       {isSent ? (
         <div role="status" className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5 text-sm leading-6 text-emerald-100">
-          Solicitud registrada para <strong>{email.trim()}</strong>. En modo frontend no se envía ningún correo real.
+          Si existe una cuenta para <strong>{email.trim()}</strong>, recibirás un enlace para crear una contraseña nueva.
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="space-y-5">

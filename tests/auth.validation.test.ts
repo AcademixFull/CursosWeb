@@ -3,6 +3,7 @@ import {
   hasValidationErrors,
   validateEmail,
   validateLogin,
+  validateNewPassword,
   validateRegister,
 } from "../src/validations/auth.validation";
 
@@ -50,5 +51,13 @@ describe("auth validation", () => {
 
     expect(errors).toEqual({});
     expect(hasValidationErrors(errors)).toBe(false);
+  });
+
+  it("requires a strong and matching replacement password", () => {
+    expect(validateNewPassword("123", "456")).toEqual({
+      password: "Usa al menos 8 caracteres.",
+      confirmPassword: "Las contraseñas no coinciden.",
+    });
+    expect(validateNewPassword("segura123", "segura123")).toEqual({});
   });
 });
