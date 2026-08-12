@@ -2,18 +2,19 @@ import { Link, Navigate, useParams } from "react-router";
 import BrandLogo from "../components/BrandLogo";
 import { SkipLink } from "../components/a11y/SkipLink";
 import { LearningCurriculum } from "../components/learning/LearningCurriculum";
+import { LessonResources } from "../components/learning/LessonResources";
 import { ProgressBar } from "../components/student/ProgressBar";
 import { Badge } from "../components/ui/Badge";
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { learningRoute, ROUTES } from "../config/routes";
-import { useCompleteLesson, useLearningCourse } from "../hooks/useLearning";
+import { useLearningCourse, useSetLessonProgress } from "../hooks/useLearning";
 
 export default function LearningPage() {
   const { courseId = "", lessonId } = useParams<{ courseId: string; lessonId?: string }>();
   const query = useLearningCourse(courseId);
-  const completeMutation = useCompleteLesson(courseId);
+  const progressMutation = useSetLessonProgress(courseId);
 
   if (query.isLoading) {
     return <div className="min-h-screen bg-slate-950 text-slate-100"><PageLoader label="Preparando tu lección" /></div>;
@@ -31,6 +32,16 @@ export default function LearningPage() {
 
   const course = query.data;
   const lessons = course.modules.flatMap((module) => module.lessons);
+  if (!lessons.length) {
+    return (
+      <main className="min-h-screen bg-slate-950 px-4 py-16 text-slate-100">
+        <div className="mx-auto max-w-2xl">
+          <ErrorState description="Este curso todavía no tiene lecciones publicadas." />
+          <div className="mt-6 text-center"><ButtonLink to={ROUTES.myCourses} variant="secondary">Volver a mis cursos</ButtonLink></div>
+        </div>
+      </main>
+    );
+  }
   const defaultLesson = lessons.find((lesson) => !lesson.isCompleted) ?? lessons[0];
   const activeLesson = lessons.find((lesson) => lesson.id === lessonId);
 
@@ -58,15 +69,6 @@ export default function LearningPage() {
         <LearningCurriculum course={course} activeLessonId={activeLesson.id} />
 
         <div className="min-w-0">
-          <section className="overflow-hidden rounded-2xl border border-slate-700/70 bg-black shadow-2xl shadow-black/30">
-            <div className="flex aspect-video items-center justify-center bg-[radial-gradient(circle_at_center,rgba(124,58,237,0.35),transparent_40%),linear-gradient(135deg,#020617,#0f172a)]">
-              <div className="text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-600 text-2xl text-white shadow-2xl shadow-brand-600/30" aria-hidden="true">▶</div>
-                <p className="mt-5 text-sm font-semibold text-slate-300">Reproductor disponible al conectar el contenido de video</p>
-              </div>
-            </div>
-          </section>
-
           <section className="mt-6 rounded-2xl border border-slate-700/70 bg-slate-900 p-6 sm:p-8">
             <div className="flex flex-wrap items-center gap-3">
               <Badge>{activeLesson.durationMinutes} minutos</Badge>
@@ -76,10 +78,15 @@ export default function LearningPage() {
             <p className="mt-5 text-sm font-medium text-brand-300">{course.title}</p>
             <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{activeLesson.title}</h1>
             <p className="mt-4 max-w-3xl leading-7 text-slate-400">{activeLesson.description}</p>
+            {activeLesson.content ? (
+              <div className="mt-6 whitespace-pre-wrap rounded-xl border border-white/10 bg-slate-950/60 p-5 leading-7 text-slate-300">
+                {activeLesson.content}
+              </div>
+            ) : null}
 
-            {completeMutation.isError ? (
+            {progressMutation.isError ? (
               <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                No pudimos guardar tu progreso. Intenta nuevamente.
+                {progressMutation.error instanceof Error ? progressMutation.error.message : "No pudimos guardar tu progreso."}
               </div>
             ) : null}
 
@@ -91,10 +98,14 @@ export default function LearningPage() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
-                  onClick={() => completeMutation.mutate(activeLesson.id)}
-                  disabled={activeLesson.isCompleted || completeMutation.isPending}
+                  onClick={() => progressMutation.mutate({ lessonId: activeLesson.id, completed: !activeLesson.isCompleted })}
+                  disabled={progressMutation.isPending}
                 >
-                  {activeLesson.isCompleted ? "Lección completada" : completeMutation.isPending ? "Guardando..." : "Marcar como completada"}
+                  {progressMutation.isPending
+                    ? "Guardando..."
+                    : activeLesson.isCompleted
+                      ? "Marcar como pendiente"
+                      : "Marcar como completada"}
                 </Button>
                 {nextLesson ? (
                   <ButtonLink to={learningRoute(course.id, nextLesson.id)} variant="secondary">Siguiente lección →</ButtonLink>
@@ -102,6 +113,8 @@ export default function LearningPage() {
               </div>
             </div>
           </section>
+
+          <LessonResources resources={activeLesson.resources} />
 
           <section className="mt-6 rounded-2xl border border-slate-700/70 bg-slate-900 p-6">
             <ProgressBar value={course.progressPercentage} label="Progreso total del curso" />

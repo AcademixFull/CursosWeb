@@ -4,7 +4,7 @@ import { ButtonLink } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
-import { certificateRoute, ROUTES } from "../config/routes";
+import { certificateRoute, certificateVerificationRoute, ROUTES } from "../config/routes";
 import { useMyCertificates } from "../hooks/useStudent";
 
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
@@ -56,9 +56,10 @@ export default function CertificatesPage() {
                     <dd className="mt-1 font-mono text-brand-200">{certificate.credentialCode}</dd>
                   </div>
                 </dl>
-                <ButtonLink to={certificateRoute(certificate.id)} variant="secondary" className="mt-6">
-                  Ver certificado
-                </ButtonLink>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <ButtonLink to={certificateRoute(certificate.id)} variant="secondary">Ver certificado</ButtonLink>
+                  <ButtonLink to={certificateVerificationRoute(certificate.credentialCode)} variant="ghost">Verificar públicamente</ButtonLink>
+                </div>
               </div>
             </article>
           ))}

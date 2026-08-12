@@ -1,0 +1,86 @@
+import { type FormEvent, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useParams } from "react-router";
+import { Button } from "../components/ui/Button";
+import { useCourseContent, useInvalidateCourseContent, useResourceOptions } from "../hooks/useManagement";
+import { managementService } from "../services/management.service";
+import type { AuthoringLesson } from "../types/management.types";
+
+function LessonResourceForm({ courseId, lesson, refresh, resourceTypes }: { courseId: string; lesson: AuthoringLesson; refresh: () => Promise<unknown>; resourceTypes: Array<{ id: number; name: string }> }) {
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [typeId, setTypeId] = useState("");
+  const save = useMutation({
+    mutationFn: async () => {
+      const uploaded = file ? await managementService.uploadCourseFile(courseId, file) : null;
+      return managementService.createResource(lesson.id, { typeId: Number(typeId), title, description: "", url: file ? null : url, fileId: uploaded?.id ?? null, required: false, position: lesson.resources.length + 1 });
+    },
+    onSuccess: async () => { setTitle(""); setUrl(""); setFile(null); await refresh(); },
+  });
+  function submit(event: FormEvent) { event.preventDefault(); save.mutate(); }
+  return (
+    <form onSubmit={submit} className="mt-4 grid gap-3 rounded-xl border border-white/10 bg-slate-950/50 p-4 sm:grid-cols-2">
+      <input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título del recurso" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2" />
+      <select required value={typeId} onChange={(e) => setTypeId(e.target.value)} className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2"><option value="">Tipo de recurso</option>{resourceTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}</select>
+      <input value={url} onChange={(e) => setUrl(e.target.value)} disabled={Boolean(file)} type="url" placeholder="https://... (recurso externo)" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2" />
+      <label className="text-xs text-slate-400">O sube un archivo (máximo 25 MB)<input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="mt-1 block w-full text-sm" /></label>
+      <Button type="submit" size="sm" disabled={save.isPending || (!url && !file)}>{save.isPending ? "Guardando..." : "Agregar recurso"}</Button>
+      {save.error ? <p role="alert" className="text-sm text-red-300 sm:col-span-2">{save.error instanceof Error ? save.error.message : "No se pudo agregar el recurso."}</p> : null}
+    </form>
+  );
+}
+
+export default function AuthoringPage() {
+  const { courseId = "" } = useParams();
+  const content = useCourseContent(courseId);
+  const resourceOptions = useResourceOptions();
+  const refresh = useInvalidateCourseContent(courseId);
+  const [moduleTitle, setModuleTitle] = useState("");
+  const [lessonTitles, setLessonTitles] = useState<Record<string, string>>({});
+  const createModule = useMutation({ mutationFn: () => managementService.createModule(courseId, { title: moduleTitle, description: "", position: (content.data?.modules.length ?? 0) + 1 }), onSuccess: async () => { setModuleTitle(""); await refresh(); } });
+  const createLesson = useMutation({
+    mutationFn: ({ moduleId, title, position }: { moduleId: string; title: string; position: number }) => managementService.createLesson(moduleId, { title, description: "", content: "", durationMinutes: 0, position, isPreview: false }),
+    onSuccess: async (_, variables) => { setLessonTitles((current) => ({ ...current, [variables.moduleId]: "" })); await refresh(); },
+  });
+  const toggle = useMutation({
+    mutationFn: async ({ kind, id, active }: { kind: "module" | "lesson" | "resource"; id: string; active: boolean }) => {
+      if (kind === "module") await managementService.updateModule(id, { active });
+      else if (kind === "lesson") await managementService.updateLesson(id, { active });
+      else await managementService.updateResource(id, { active });
+    },
+    onSuccess: refresh,
+  });
+
+  return (
+    <section aria-labelledby="authoring-title">
+      <p className="text-sm font-semibold text-brand-300">Aula virtual</p><h1 id="authoring-title" className="mt-2 text-3xl font-bold">Contenido del curso</h1>
+      <p className="mt-2 text-slate-400">Organiza módulos, lecciones y recursos. Los archivos se envían al backend y nunca directamente a Supabase.</p>
+      {content.isPending ? <p className="mt-8 text-slate-400">Cargando contenido...</p> : null}
+      {content.error ? <p role="alert" className="mt-8 text-red-300">{content.error instanceof Error ? content.error.message : "No se pudo cargar el contenido."}</p> : null}
+      {content.data ? <p className="mt-5 text-sm text-slate-400">Estado del curso: <strong className="text-slate-200">{content.data.status}</strong></p> : null}
+      <form onSubmit={(e) => { e.preventDefault(); createModule.mutate(); }} className="mt-8 flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-5 sm:flex-row">
+        <label className="sr-only" htmlFor="module-title">Título del módulo</label><input id="module-title" required value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="Nuevo módulo" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-4 py-2.5" />
+        <Button type="submit" disabled={createModule.isPending}>Crear módulo</Button>
+      </form>
+      <div className="mt-6 space-y-5">
+        {content.data?.modules.map((module) => (
+          <article key={module.id} className="rounded-2xl border border-white/10 bg-slate-900/60 p-5">
+            <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-semibold">{module.position}. {module.title}</h2><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "module", id: module.id, active: !module.active })}>{module.active ? "Desactivar" : "Activar"}</Button></div>
+            <div className="mt-4 space-y-4">{module.lessons.map((lesson) => (
+              <section key={lesson.id} className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
+                <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{lesson.position}. {lesson.title}</h3><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "lesson", id: lesson.id, active: !lesson.active })}>{lesson.active ? "Desactivar" : "Activar"}</Button></div><p className="mt-1 text-xs text-slate-400">{lesson.durationMinutes} min · {lesson.isPreview ? "Vista previa" : "Solo inscritos"}</p>
+                <ul className="mt-3 space-y-1 text-sm text-slate-300">{lesson.resources.map((resource) => <li key={resource.id} className="flex items-center justify-between gap-3"><span>• {resource.title} <span className="text-slate-500">({resource.type})</span></span><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "resource", id: resource.id, active: !resource.active })}>{resource.active ? "Desactivar" : "Activar"}</Button></li>)}</ul>
+                <LessonResourceForm courseId={courseId} lesson={lesson} refresh={refresh} resourceTypes={resourceOptions.data ?? []} />
+              </section>
+            ))}</div>
+            <form onSubmit={(e) => { e.preventDefault(); createLesson.mutate({ moduleId: module.id, title: lessonTitles[module.id] ?? "", position: module.lessons.length + 1 }); }} className="mt-4 flex gap-3">
+              <input required value={lessonTitles[module.id] ?? ""} onChange={(e) => setLessonTitles((current) => ({ ...current, [module.id]: e.target.value }))} placeholder="Nueva lección" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2" />
+              <Button type="submit" size="sm" variant="secondary" disabled={createLesson.isPending}>Agregar lección</Button>
+            </form>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}

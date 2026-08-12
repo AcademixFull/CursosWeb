@@ -21,7 +21,12 @@ const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const StudentLayout = lazy(() => import("../layouts/StudentLayout"));
 const LearningPage = lazy(() => import("../pages/LearningPage"));
 const CertificateDetailPage = lazy(() => import("../pages/CertificateDetailPage"));
+const CertificateVerificationPage = lazy(() => import("../pages/CertificateVerificationPage"));
 const InstructorPage = lazy(() => import("../pages/InstructorPage"));
+const ManagementLayout = lazy(() => import("../layouts/ManagementLayout"));
+const InstructorDashboardPage = lazy(() => import("../pages/InstructorDashboardPage"));
+const AdminDashboardPage = lazy(() => import("../pages/AdminDashboardPage"));
+const AuthoringPage = lazy(() => import("../pages/AuthoringPage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 
 function RouteFallback() {
@@ -48,14 +53,20 @@ export function AppRouter() {
           <Route path={ROUTES.register} element={<RegisterPage />} />
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
           <Route path={ROUTES.updatePassword} element={<UpdatePasswordPage />} />
-          <Route element={<ProtectedRoute><StudentLayout /></ProtectedRoute>}>
+          <Route path={`${ROUTES.verifyCertificate}/:credentialCode?`} element={<CertificateVerificationPage />} />
+          <Route element={<ProtectedRoute roles={["student"]}><StudentLayout /></ProtectedRoute>}>
             <Route path={ROUTES.dashboard} element={<Dashboard />} />
             <Route path={ROUTES.myCourses} element={<MyCoursesPage />} />
             <Route path={ROUTES.certificates} element={<CertificatesPage />} />
             <Route path={ROUTES.profile} element={<ProfilePage />} />
           </Route>
-          <Route path={`${ROUTES.learning}/:courseId/:lessonId?`} element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
-          <Route path={`${ROUTES.certificates}/:certificateId`} element={<ProtectedRoute><CertificateDetailPage /></ProtectedRoute>} />
+          <Route path={`${ROUTES.learning}/:courseId/:lessonId?`} element={<ProtectedRoute roles={["student"]}><LearningPage /></ProtectedRoute>} />
+          <Route path={`${ROUTES.certificates}/:certificateId`} element={<ProtectedRoute roles={["student"]}><CertificateDetailPage /></ProtectedRoute>} />
+          <Route element={<ProtectedRoute roles={["admin", "instructor"]}><ManagementLayout /></ProtectedRoute>}>
+            <Route path={ROUTES.instructorPanel} element={<ProtectedRoute roles={["instructor"]}><InstructorDashboardPage /></ProtectedRoute>} />
+            <Route path={ROUTES.admin} element={<ProtectedRoute roles={["admin"]}><AdminDashboardPage /></ProtectedRoute>} />
+            <Route path={`${ROUTES.authoring}/:courseId`} element={<AuthoringPage />} />
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

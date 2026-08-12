@@ -148,4 +148,66 @@ describe("central API client", () => {
       retryAfterSeconds: 30,
     });
   });
+
+  it("downloads protected binary content with the current Bearer token", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(new Blob(["PDF"], { type: "application/pdf" }), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": "inline; filename*=UTF-8''gu%C3%ADa.pdf",
+        },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { api } = await loadApi();
+    const { saveAuthSession } = await import("../src/utils/authSessionStore");
+    saveAuthSession({
+      accessToken: "student-token",
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      user: { id: "user-1", email: "student@academix.test", fullName: "Estudiante", role: "student" },
+    });
+
+    const file = await api.getBinary("/lessons/lesson-1/resources/resource-1/content");
+
+    expect(file.contentType).toBe("application/pdf");
+    expect(file.fileName).toBe("guía.pdf");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.academix.test/api/v1/lessons/lesson-1/resources/resource-1/content",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.any(Headers),
+      }),
+    );
+    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
+    expect(headers.get("Authorization")).toBe("Bearer student-token");
+  });
+
+  it("maps JSON errors returned by a protected binary endpoint", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      success: false,
+      error: { code: "RESOURCE_ACCESS_DENIED", message: "No tienes acceso a este recurso." },
+    }, 403)));
+    const { api } = await loadApi();
+
+    await expect(api.getBinary("/lessons/lesson-1/resources/resource-1/content")).rejects.toMatchObject({
+      status: 403,
+      code: "RESOURCE_ACCESS_DENIED",
+    });
+  });
+
+  it("uploads a private course file through Express with its metadata", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { id: "file-1" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { api } = await loadApi();
+    const file = new File(["lesson"], "guia.pdf", { type: "application/pdf" });
+
+    await expect(api.postBinary("/authoring/courses/course-1/files", file, {
+      headers: { "Content-Type": file.type, "x-file-name": file.name },
+    })).resolves.toEqual({ id: "file-1" });
+
+    const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(request.method).toBe("POST");
+    expect(request.body).toBe(file);
+    expect((request.headers as Headers).get("x-file-name")).toBe("guia.pdf");
+  });
 });

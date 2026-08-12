@@ -38,6 +38,7 @@ export default function CourseDetailPage() {
   const reviewMutation = useCreateReview(courseId ?? "");
   const [showEnrollment, setShowEnrollment] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -73,7 +74,8 @@ export default function CourseDetailPage() {
   const course = courseQuery.data;
   const isEnrolled = enrollmentsQuery.data?.some((enrollment) => enrollment.course.id === course.id) ?? false;
   const enrollment = enrollmentsQuery.data?.find((item) => item.course.id === course.id);
-  const hasReviewed = course.reviews.some((review) => review.authorId === user?.id);
+  const hasReviewed = reviewConfirmed || course.reviews.some((review) => review.authorId === user?.id)
+    || reviewsQuery.data?.items.some((review) => review.authorId === user?.id) === true;
 
   function startEnrollment() {
     if (!isAuthenticated) {
@@ -100,9 +102,15 @@ export default function CourseDetailPage() {
   async function publishReview(input: { rating: number; comment: string }) {
     try {
       await reviewMutation.mutateAsync({ courseId: course.id, input });
+      setReviewConfirmed(true);
       setReviewPage(1);
       setShowReview(false);
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "REVIEW_ALREADY_EXISTS") {
+        setReviewConfirmed(true);
+        setShowReview(false);
+        void reviewsQuery.refetch();
+      }
       // El diálogo muestra el error de publicación.
     }
   }
@@ -263,6 +271,9 @@ export default function CourseDetailPage() {
                   <p className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
                     Gracias por compartir tu experiencia con la comunidad.
                   </p>
+                ) : null}
+                {!isAuthenticated ? (
+                  <p className="mt-5 text-sm text-slate-500">Inicia sesión para consultar si puedes publicar una reseña.</p>
                 ) : null}
                 {isEnrolled && enrollment?.status !== "completed" ? (
                   <p className="mt-5 text-sm text-slate-500">Completa el curso para poder publicar una reseña.</p>

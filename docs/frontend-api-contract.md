@@ -133,12 +133,23 @@ progreso para evitar una cascada de solicitudes.
 |---|---|---:|---|
 | GET | `/users/me/courses/:courseId/learning` | Sí | `LearningCourse` |
 | PATCH | `/lessons/:lessonId/progress` | Sí | `null` o `204` |
+| GET | `/lessons/:lessonId/resources/:resourceId/content` | Sí | Archivo binario |
 
 Body de progreso:
 
 ```json
 { "completed": true }
 ```
+
+Cada lección incorpora `content` y `resources`. Los enlaces externos solo se abren si usan HTTP o
+HTTPS. Los archivos privados se solicitan a Express con el JWT y el `contentPath` devuelto por el
+backend; React nunca construye una URL de Storage ni recibe su ruta interna. Imágenes, audio, video
+y PDF se muestran desde un `Blob` temporal, que se revoca al cambiar de recurso o desmontar la
+vista. Otros formatos conservan una descarga autenticada.
+
+El progreso permite `{ "completed": true }` y `{ "completed": false }`. Después de actualizarlo,
+el frontend vuelve a consultar el aula y sincroniza biblioteca, dashboard y certificados con el
+estado calculado por el backend.
 
 ## Reseñas y certificados
 
@@ -147,13 +158,24 @@ Body de progreso:
 | POST | `/courses/:courseId/reviews` | Sí | `CourseReview` |
 | GET | `/users/me/certificates` | Sí | `CertificateSummary[]` |
 | GET | `/users/me/certificates/:certificateId` | Sí | `CertificateDetail` |
+| GET | `/certificates/verify/:credentialCode` | No | `VerifiedCertificate` |
 
 Solo un estudiante que cumpla la regla de finalización puede publicar una reseña. El backend emite
 el certificado al alcanzar los criterios del curso y genera un `credentialCode` único.
 
+La reseña contiene una calificación entera de 1 a 5 y un comentario de 10 a 2000 caracteres. Un
+duplicado responde `409 REVIEW_ALREADY_EXISTS`; React cierra el formulario, actualiza las reseñas y
+deja de ofrecer una segunda publicación. `403 COURSE_COMPLETION_REQUIRED` conserva el mensaje del
+backend para explicar por qué la operación no está disponible.
+
 `CertificateDetail` incorpora `issuerName`, `systemSignature`, `signatureAlgorithm` y
 `verificationPath`. El frontend presenta esos valores emitidos y verificados por Express; nunca
 genera ni recalcula la firma en el navegador.
+
+La ruta pública `/#/verificar-certificado/:credentialCode?` acepta únicamente el formato
+`ACX-AAAA-XXXXXXXXXXXX`, normaliza el código y consulta Express sin JWT. Solo presenta un documento
+cuando el backend devuelve `valid: true`; una credencial inexistente, revocada o con firma
+inconsistente muestra el error correspondiente y nunca expone correo ni identificadores internos.
 
 ## Códigos esperados
 
@@ -170,3 +192,27 @@ genera ni recalcula la firma en el navegador.
 
 Los tipos completos están en `src/types/`. Cualquier cambio futuro en este contrato debe actualizar
 los tipos, servicios, pruebas y documentación en el mismo pull request.
+
+## Instructor, autoría y administración
+
+Todas estas rutas requieren `Authorization: Bearer`. Express es la autoridad final del rol; ocultar
+una pantalla en React no otorga ni revoca permisos.
+
+| Rol | Método y ruta | Uso |
+|---|---|---|
+| Instructor | `GET /instructor/courses` | Cursos asignados |
+| Instructor | `PATCH /instructor/courses/:courseId` | Metadatos permitidos |
+| Instructor | `POST /instructor/courses/:courseId/submit` | Enviar borrador a revisión |
+| Admin/Instructor | `GET /authoring/courses/:courseId/content` | Árbol editable |
+| Admin/Instructor | `POST/PATCH /authoring/...` | Módulos, lecciones y recursos |
+| Admin/Instructor | `POST /authoring/courses/:courseId/files` | Archivo binario privado, máximo 25 MB |
+| Admin | `GET /admin/users` y `PATCH /admin/users/:userId/roles` | Usuarios y roles |
+| Admin | `GET /admin/instructors` y `PUT /admin/instructors/:userId` | Perfiles de instructor |
+| Admin | `POST/PATCH /admin/categories` | Categorías |
+| Admin | `GET/POST/PATCH /admin/courses` | Gestión de cursos |
+| Admin | `PUT /admin/courses/:courseId/instructor` | Asignación |
+| Admin | `POST /admin/courses/:courseId/publish|archive` | Flujo editorial |
+| Admin | `GET /admin/reviews` y `PATCH /admin/reviews/:reviewId/moderation` | Moderación |
+
+La carga binaria conserva el tipo MIME real y agrega `x-file-name`. La respuesta incluye un
+identificador de archivo, que luego se asocia al recurso mediante el endpoint de autoría.

@@ -24,8 +24,8 @@ export function ReviewDialog({ courseTitle, isPending, serverError, onClose, onS
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedComment = comment.trim();
-    if (normalizedComment.length < 10) {
-      setValidationError("Escribe al menos 10 caracteres sobre tu experiencia.");
+    if (normalizedComment.length < 10 || normalizedComment.length > 2000) {
+      setValidationError("El comentario debe contener entre 10 y 2000 caracteres.");
       return;
     }
     setValidationError("");
@@ -72,13 +72,13 @@ export function ReviewDialog({ courseTitle, isPending, serverError, onClose, onS
               id={commentId}
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              maxLength={500}
+              maxLength={2000}
               rows={5}
               autoFocus
               placeholder="¿Qué aprendiste y qué destacarías del curso?"
               className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15"
             />
-            <span className="mt-2 block text-right text-xs text-slate-500">{comment.length}/500</span>
+            <span className="mt-2 block text-right text-xs text-slate-500">{comment.length}/2000</span>
           </label>
 
           {validationError || serverError ? (

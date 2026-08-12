@@ -3,8 +3,21 @@ export interface LearningLesson {
   title: string;
   durationMinutes: number;
   description: string;
+  content: string;
   isPreview: boolean;
   isCompleted: boolean;
+  resources: LearningResource[];
+}
+
+export interface LearningResource {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  required: boolean;
+  position: number;
+  url: string | null;
+  contentPath: string | null;
 }
 
 export interface LearningModule {

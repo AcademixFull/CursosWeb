@@ -120,6 +120,6 @@ export const certificateMocks: CertificateSummary[] = [
     courseId: getCourse(1).id,
     courseTitle: getCourse(1).title,
     issuedAt: "2026-07-21T12:00:00.000Z",
-    credentialCode: "ACX-UI-2026-1842",
+    credentialCode: "ACX-2026-A1B2C3D4E5F6",
   },
 ];

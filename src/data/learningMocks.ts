@@ -50,7 +50,18 @@ function buildModules(course: CourseDetail, completedIds: Set<string>): Learning
     lessons: module.lessons.map<LearningLesson>((lesson) => ({
       ...lesson,
       description: lessonDescription(course, lesson),
+      content: `Contenido de demostración para ${lesson.title}.\n\nRevisa los conceptos principales y completa la actividad antes de avanzar.`,
       isCompleted: completedIds.has(lesson.id),
+      resources: [{
+        id: `${lesson.id}-resource-guide`,
+        type: "Enlace externo",
+        title: "Guía complementaria",
+        description: "Material adicional para practicar los contenidos de esta lección.",
+        required: false,
+        position: 1,
+        url: "https://developer.mozilla.org/es/",
+        contentPath: null,
+      }],
     })),
   }));
 }
@@ -81,9 +92,14 @@ export function getLearningCourseMock(courseId: string): LearningCourse | null {
   };
 }
 
-export function completeLearningLessonMock(courseId: string, lessonId: string): LearningCourse | null {
+export function setLearningLessonProgressMock(
+  courseId: string,
+  lessonId: string,
+  completed: boolean,
+): LearningCourse | null {
   const completedIds = readCompletedLessons();
-  completedIds.add(lessonId);
+  if (completed) completedIds.add(lessonId);
+  else completedIds.delete(lessonId);
   saveCompletedLessons(completedIds);
   return getLearningCourseMock(courseId);
 }

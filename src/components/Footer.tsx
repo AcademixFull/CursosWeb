@@ -29,7 +29,8 @@ export default function Footer() {
           <h2 className="text-sm font-semibold text-white">Estudiantes</h2>
           <div className="mt-4 flex flex-col gap-3 text-sm">
             <Link to={ROUTES.dashboard} className="w-fit transition hover:text-white">Mi aprendizaje</Link>
-            <span className="text-slate-500">Certificados · Próximamente</span>
+            <Link to={ROUTES.certificates} className="w-fit transition hover:text-white">Mis certificados</Link>
+            <Link to={ROUTES.verifyCertificate} className="w-fit transition hover:text-white">Verificar certificado</Link>
             <span className="text-slate-500">Membresías · Próximamente</span>
           </div>
         </div>

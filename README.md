@@ -84,12 +84,16 @@ Los componentes no llaman `fetch` ni Supabase directamente. Al conectar el backe
 - `/#/mis-cursos`
 - `/#/certificados`
 - `/#/certificados/:certificateId`
+- `/#/verificar-certificado/:credentialCode?`
 - `/#/perfil`
 - `/#/aprender/:courseId/:lessonId?`
 - `/#/iniciar-sesion`
 - `/#/registro`
 - `/#/recuperar-contrasena`
 - `/#/actualizar-contrasena` (destino de los enlaces de recuperación)
+- `/#/panel-instructor` (solo Instructor)
+- `/#/administracion` (solo Admin)
+- `/#/autor/:courseId` (Admin o Instructor autorizado)
 
 Se usa `HashRouter` porque el despliegue actual está configurado para GitHub Pages.
 
@@ -111,14 +115,14 @@ npm run build
 npm audit --omit=dev
 ```
 
-La suite cubre validaciones de autenticación, navegación segura, paginación, persistencia mock,
-filtrado de cursos, expiración de sesión, rate limiting, recuperación de contraseña y el sobre
-común del cliente HTTP.
+La suite cubre autenticación, navegación segura, paginación, persistencia mock, catálogo, área del
+alumno, aula, progreso, recursos binarios protegidos, expiración de sesión, rate limiting,
+recuperación de contraseña y el sobre común del cliente HTTP.
 
 ## Integración por etapas
 
-Las Etapas A, B y C conectan autenticación, catálogo público y área privada del alumno. El orden de
-los bloques restantes y su estado están en
+Las Etapas A–F conectan autenticación, catálogo, área privada, aula, reseñas, certificados,
+instructores y administración. El estado final está en
 [`docs/frontend-integration-progress.md`](docs/frontend-integration-progress.md). Cada etapa se
 valida antes de conectar la siguiente para aislar errores entre UI, API y datos.
 
@@ -129,3 +133,4 @@ valida antes de conectar la siguiente para aislar errores entre UI, API y datos.
 - Usar `src/services/api.ts` para toda comunicación HTTP.
 - Mantener validación de UX en frontend y validación definitiva en backend.
 - Mostrar estados de carga, error y resultados vacíos.
+- Tratar los controles por rol del frontend como UX; Express vuelve a autorizar cada petición.

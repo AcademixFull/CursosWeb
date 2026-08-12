@@ -29,6 +29,10 @@ export interface CertificateDetail extends CertificateSummary {
   verificationPath: string;
 }
 
+export interface VerifiedCertificate extends CertificateDetail {
+  valid: true;
+}
+
 export interface UserProfile {
   id: string;
   fullName: string;

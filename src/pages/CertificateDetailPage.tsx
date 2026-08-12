@@ -5,7 +5,7 @@ import { CertificateDocument } from "../components/certificates/CertificateDocum
 import { Button, ButtonLink } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
-import { ROUTES } from "../config/routes";
+import { certificateVerificationRoute, ROUTES } from "../config/routes";
 import { useMyCertificate } from "../hooks/useStudent";
 
 export default function CertificateDetailPage() {
@@ -54,7 +54,12 @@ export default function CertificateDetailPage() {
         <CertificateDocument certificate={query.data} />
 
         <section className="print-hidden mx-auto mt-7 max-w-5xl rounded-2xl border border-slate-700 bg-slate-900 p-5 sm:p-6">
-          <h2 className="font-bold text-white">Integridad del certificado</h2>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h2 className="font-bold text-white">Integridad del certificado</h2>
+            <ButtonLink to={certificateVerificationRoute(query.data.credentialCode)} variant="secondary" size="sm">
+              Abrir verificación pública
+            </ButtonLink>
+          </div>
           <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-slate-500">Emisor</dt>

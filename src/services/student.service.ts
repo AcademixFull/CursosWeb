@@ -47,13 +47,17 @@ function buildMockCertificates(): CertificateSummary[] {
       enrollment.course.certificateEnabled &&
       !certificatesByCourse.has(enrollment.course.id)
     ) {
-      const shortCode = enrollment.course.id.replace(/^course-/, "").toUpperCase().slice(0, 12);
+      const shortCode = enrollment.course.id
+        .replace(/[^a-f0-9]/gi, "")
+        .toUpperCase()
+        .padEnd(12, "0")
+        .slice(0, 12);
       certificatesByCourse.set(enrollment.course.id, {
         id: `certificate-${enrollment.course.id}`,
         courseId: enrollment.course.id,
         courseTitle: enrollment.course.title,
         issuedAt: getMockCertificateIssuedAt(enrollment.course.id),
-        credentialCode: `ACX-${shortCode}-2026`,
+        credentialCode: `ACX-${new Date().getFullYear()}-${shortCode}`,
       });
     }
   }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { MAIN_NAVIGATION, type NavigationKey } from "../config/navigation";
-import { ROUTES } from "../config/routes";
+import { roleHomeRoute, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { classNames } from "../utils/classNames";
 import BrandLogo from "./BrandLogo";
@@ -36,7 +36,7 @@ export default function Header({ active }: HeaderProps) {
   }
 
   const accountActions = isAuthenticated ? (
-    <ButtonLink to={ROUTES.dashboard} size="sm">
+    <ButtonLink to={roleHomeRoute(user?.role)} size="sm">
       {user?.fullName.split(" ")[0] || "Mi panel"}
     </ButtonLink>
   ) : (

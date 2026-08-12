@@ -35,6 +35,12 @@ export interface ApiPage<T> {
   pagination: ApiPagination;
 }
 
+export interface ApiBinary {
+  blob: Blob;
+  contentType: string;
+  fileName?: string;
+}
+
 /** Forma de respuesta de error que devuelve academix-backend (sección 11/19 de la doc.). */
 interface ApiErrorEnvelope {
   success: false;
@@ -256,14 +262,91 @@ async function requestPage<T>(path: string, options: Omit<RequestOptions, "body"
   return { items: envelope.data, pagination: envelope.pagination };
 }
 
+function contentDispositionFileName(value: string | null): string | undefined {
+  if (!value) return undefined;
+  const encoded = value.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      return encoded;
+    }
+  }
+  return value.match(/filename="([^"]+)"/i)?.[1];
+}
+
+async function requestBinary(
+  path: string,
+  options: Omit<RequestOptions, "body"> = {},
+): Promise<ApiBinary> {
+  const headers = new Headers(options.headers);
+  headers.set("Accept", "*/*");
+  const sessionToken = getAuthToken();
+  const token = options.authToken ?? sessionToken;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path), { method: "GET", headers, signal: options.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ApiError("No se pudo conectar con academix-backend.", {
+      status: 0,
+      code: "NETWORK_ERROR",
+    });
+  }
+
+  if (response.status === 401 && options.authToken === undefined && sessionToken) {
+    notifyExpiredSession();
+  }
+  if (!response.ok) {
+    await parseEnvelope<never>(response);
+  }
+
+  return {
+    blob: await response.blob(),
+    contentType: response.headers.get("Content-Type") ?? "application/octet-stream",
+    fileName: contentDispositionFileName(response.headers.get("Content-Disposition")),
+  };
+}
+
+async function requestRaw<T>(
+  method: string,
+  path: string,
+  body: BodyInit,
+  options: Omit<RequestOptions, "body"> = {},
+): Promise<T> {
+  const headers = new Headers(options.headers);
+  headers.set("Accept", "application/json");
+  const sessionToken = getAuthToken();
+  const token = options.authToken ?? sessionToken;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path), { method, headers, body, signal: options.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ApiError("No se pudo conectar con academix-backend.", { status: 0, code: "NETWORK_ERROR" });
+  }
+  if (response.status === 401 && options.authToken === undefined && sessionToken) notifyExpiredSession();
+  return (await parseEnvelope<T>(response)).data;
+}
+
 /** Cliente HTTP central. Todos los `*.service.ts` deben usar esto, nunca `fetch` directo. */
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, "body">) =>
     request<T>("GET", path, options),
   getPage: <T>(path: string, options?: Omit<RequestOptions, "body">) =>
     requestPage<T>(path, options),
+  getBinary: (path: string, options?: Omit<RequestOptions, "body">) =>
+    requestBinary(path, options),
   post: <T>(path: string, body?: JsonBody, options?: Omit<RequestOptions, "body">) =>
     request<T>("POST", path, { ...options, body }),
+  put: <T>(path: string, body?: JsonBody, options?: Omit<RequestOptions, "body">) =>
+    request<T>("PUT", path, { ...options, body }),
+  postBinary: <T>(path: string, body: Blob, options?: Omit<RequestOptions, "body">) =>
+    requestRaw<T>("POST", path, body, options),
   patch: <T>(path: string, body?: JsonBody, options?: Omit<RequestOptions, "body">) =>
     request<T>("PATCH", path, { ...options, body }),
   delete: <T>(path: string, options?: Omit<RequestOptions, "body">) =>
