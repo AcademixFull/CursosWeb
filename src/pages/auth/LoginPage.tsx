@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router";
 import { FormField } from "../../components/auth/FormField";
 import { Button } from "../../components/ui/Button";
@@ -17,16 +17,30 @@ interface LoginLocationState {
 
 const initialForm: LoginInput = { email: "", password: "" };
 
+function waitLabel(seconds: number): string {
+  if (seconds < 60) return `${seconds} segundos`;
+  return `${Math.ceil(seconds / 60)} minutos`;
+}
+
 export default function LoginPage() {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<Partial<Record<keyof LoginInput, string>>>({});
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [retrySeconds, setRetrySeconds] = useState(0);
   const { isAuthenticated, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LoginLocationState | null;
   const returnTo = safeReturnTo(state?.returnTo, ROUTES.dashboard);
+
+  useEffect(() => {
+    if (retrySeconds <= 0) return;
+    const timer = window.setInterval(() => {
+      setRetrySeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [retrySeconds]);
 
   if (isAuthenticated) {
     return <Navigate to={returnTo} replace />;
@@ -45,6 +59,12 @@ export default function LoginPage() {
       await login({ email: form.email.trim(), password: form.password });
       navigate(returnTo, { replace: true });
     } catch (error) {
+      if (error instanceof ApiError && error.status === 429) {
+        const seconds = error.retryAfterSeconds ?? 60;
+        setRetrySeconds(seconds);
+        setSubmitError(`Se alcanzó el límite de intentos. Espera ${waitLabel(seconds)} antes de volver a intentar.`);
+        return;
+      }
       setSubmitError(
         error instanceof ApiError ? error.message : "No pudimos iniciar tu sesión. Intenta nuevamente.",
       );
@@ -99,8 +119,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Button type="submit" size="lg" fullWidth disabled={isSubmitting}>
-          {isSubmitting ? "Iniciando sesión..." : "Entrar"}
+        <Button type="submit" size="lg" fullWidth disabled={isSubmitting || retrySeconds > 0}>
+          {isSubmitting ? "Iniciando sesión..." : retrySeconds > 0 ? `Intenta de nuevo en ${retrySeconds} s` : "Entrar"}
         </Button>
       </form>
 

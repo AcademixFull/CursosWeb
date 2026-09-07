@@ -12,6 +12,7 @@ import { instructorRoute, learningRoute, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { useCourse, useRelatedCourses } from "../hooks/useCourse";
 import { useEnrollCourse } from "../hooks/useEnrollment";
+import { useCart } from "../hooks/useCart";
 import { useCourseReviews, useCreateReview } from "../hooks/useReviews";
 import { useMyCourses } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
@@ -35,6 +36,7 @@ export default function CourseDetailPage() {
   const { isAuthenticated, user } = useAuth();
   const enrollmentsQuery = useMyCourses(isAuthenticated);
   const enrollmentMutation = useEnrollCourse();
+  const cart = useCart();
   const reviewMutation = useCreateReview(courseId ?? "");
   const [showEnrollment, setShowEnrollment] = useState(false);
   const [showReview, setShowReview] = useState(false);
@@ -287,14 +289,26 @@ export default function CourseDetailPage() {
                 <ButtonLink to={learningRoute(course.id)} size="lg" fullWidth className="mt-5">
                   Ir a mi curso
                 </ButtonLink>
+              ) : course.price > 0 ? (
+                <>
+                  <Button
+                    size="lg"
+                    fullWidth
+                    className="mt-5"
+                    disabled={cart.hasCourse(course.id)}
+                    onClick={() => cart.addCourse(course)}
+                  >
+                    {cart.hasCourse(course.id) ? "Ya está en tu carrito" : "Agregar al carrito"}
+                  </Button>
+                  <ButtonLink to={ROUTES.cart} variant="secondary" size="lg" fullWidth className="mt-3">
+                    Ver carrito
+                  </ButtonLink>
+                </>
               ) : (
                 <Button size="lg" fullWidth className="mt-5" onClick={startEnrollment} disabled={enrollmentsQuery.isLoading}>
                   {enrollmentsQuery.isLoading ? "Consultando..." : "Inscribirme ahora"}
                 </Button>
               )}
-              <Button variant="secondary" size="lg" fullWidth className="mt-3" disabled title="Disponible cuando se defina el proveedor de pagos">
-                Carrito próximamente
-              </Button>
               <div className="mt-6 border-t border-white/10 pt-5 text-sm text-slate-400">
                 <p>Este curso incluye:</p>
                 <ul className="mt-3 space-y-2">

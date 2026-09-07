@@ -14,7 +14,7 @@ export default function BrandLogo({ compact = false, className }: BrandLogoProps
       aria-label="Academix, ir al inicio"
       className={classNames("inline-flex items-center gap-2 font-extrabold text-white", className)}
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand-500 to-fuchsia-500 shadow-lg shadow-brand-950/40">
+      <span className="academix-logo-mark flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand-500 to-fuchsia-500 text-white shadow-lg shadow-brand-950/40">
         <span aria-hidden="true" className="text-sm">A</span>
       </span>
       {compact ? null : (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { locationPath, safeReturnTo } from "../src/utils/navigation";
-import { authoringRoute, certificateVerificationRoute, roleHomeRoute } from "../src/config/routes";
+import { authoringRoute, certificateVerificationRoute, roleHomeRoute, ROUTES } from "../src/config/routes";
 
 describe("navigation utilities", () => {
   it("preserves pathname, search and hash", () => {
@@ -37,5 +37,10 @@ describe("navigation utilities", () => {
     expect(roleHomeRoute("instructor")).toBe("/panel-instructor");
     expect(roleHomeRoute("admin")).toBe("/administracion");
     expect(authoringRoute("course 1")).toBe("/autor/course 1");
+    expect(ROUTES.managementProfile).toBe("/mi-informacion");
+    expect(ROUTES.organization).toBe("/organizacion");
+    expect(ROUTES.pricing).toBe("/precios");
+    expect(ROUTES.faq).toBe("/preguntas");
+    expect(ROUTES.cart).toBe("/carrito");
   });
 });

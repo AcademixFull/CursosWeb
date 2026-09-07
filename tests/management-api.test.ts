@@ -47,4 +47,29 @@ describe("management services", () => {
     const file = new File([new Uint8Array(25 * 1024 * 1024 + 1)], "large.bin");
     expect(() => service.uploadCourseFile("course-1", file)).toThrow("25 MB");
   });
+
+  it("loads inactive categories and submits instructor applications through Express", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(response([])));
+    vi.stubGlobal("fetch", fetchMock);
+    const service = await loadService();
+    await service.listCategories();
+    await service.submitInstructorApplication({ enrollmentId: "UTT-123", credentialReference: "FOLIO-123" });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "https://api.academix.test/api/v1/admin/categories", expect.objectContaining({ method: "GET" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "https://api.academix.test/api/v1/users/me/instructor-application", expect.objectContaining({ method: "POST" }));
+  });
+
+  it("restores archived courses and lets instructors create their own draft", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(response({ id: "course-1" })));
+    vi.stubGlobal("fetch", fetchMock);
+    const service = await loadService();
+    await service.restoreCourse("course-1");
+    await service.createInstructorCourse({
+      title: "Curso propio", shortDescription: "", description: "", learningOutcomes: [],
+      requirements: [], targetAudience: "Estudiantes", categoryId: 1, level: "beginner",
+      modality: "self_paced", language: "es", durationHours: null, price: 0,
+      certificateEnabled: true, requiresApproval: false,
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "https://api.academix.test/api/v1/admin/courses/course-1/restore", expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "https://api.academix.test/api/v1/instructor/courses", expect.objectContaining({ method: "POST" }));
+  });
 });

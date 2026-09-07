@@ -268,11 +268,11 @@ export default function Nosotros() {
         </section>
 
         <section className="px-6 py-16">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <div className="academix-cta-panel mx-auto max-w-6xl overflow-hidden rounded-2xl p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
+            <h2 className="academix-on-brand academix-cta-heading text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               ¿Listo para unirte a nuestra comunidad?
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-violet-100">
+            <p className="academix-on-brand academix-cta-body mx-auto mt-4 max-w-2xl text-violet-100">
               Únete a miles de estudiantes que ya están transformando sus carreras profesionales
               con Academix.
             </p>

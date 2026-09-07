@@ -93,6 +93,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return nextSession;
       });
     },
+    async refreshUser() {
+      const user = await authService.getCurrentUser();
+      setSession((currentSession) => {
+        if (!currentSession) return currentSession;
+        const nextSession = { ...currentSession, user };
+        saveAuthSession(nextSession);
+        return nextSession;
+      });
+      return user;
+    },
   }), [clearLocalSession, isInitializing, session]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

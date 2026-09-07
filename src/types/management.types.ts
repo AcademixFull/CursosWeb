@@ -21,6 +21,29 @@ export interface ManagedInstructor {
   active: boolean;
 }
 
+export interface ManagedCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  active: boolean;
+}
+
+export type InstructorApplicationStatus = "pending" | "approved" | "rejected";
+
+export interface InstructorApplication {
+  id: string;
+  userId: string;
+  applicantName: string;
+  applicantEmail: string;
+  enrollmentId: string;
+  credentialReference: string;
+  status: InstructorApplicationStatus;
+  observations: string;
+  requestedAt: string;
+  reviewedAt: string | null;
+}
+
 export interface ManagedCourse {
   id: string;
   slug: string;
@@ -38,6 +61,7 @@ export interface ManagedCourse {
   price: number;
   certificateEnabled: boolean;
   requiresApproval: boolean;
+  organization: { id: string; name: string } | null;
   status: CourseWorkflowStatus;
   active: boolean;
   instructor: { id: string; name: string } | null;
@@ -136,4 +160,5 @@ export interface CourseInput {
   price: number;
   certificateEnabled: boolean;
   requiresApproval: boolean;
+  organizationId?: string | null;
 }

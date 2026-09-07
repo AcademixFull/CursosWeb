@@ -13,12 +13,15 @@ function resolvePageTitle(pathname: string): string {
   if (pathname === ROUTES.register) return "Crear cuenta";
   if (pathname === ROUTES.forgotPassword) return "Recuperar contraseña";
   if (pathname === ROUTES.updatePassword) return "Actualizar contraseña";
+  if (pathname === ROUTES.emailConfirmed) return "Cuenta confirmada";
   if (pathname === ROUTES.verifyCertificate || pathname.startsWith(`${ROUTES.verifyCertificate}/`)) return "Verificar certificado";
   if (pathname === ROUTES.dashboard) return "Panel del estudiante";
   if (pathname === ROUTES.myCourses) return "Mis cursos";
   if (pathname === ROUTES.certificates) return "Mis certificados";
   if (pathname.startsWith(`${ROUTES.certificates}/`)) return "Certificado";
   if (pathname === ROUTES.profile) return "Mi perfil";
+  if (pathname === ROUTES.managementProfile) return "Mi información personal";
+  if (pathname === ROUTES.instructorApplication) return "Solicitud para enseñar";
   if (pathname.startsWith(`${ROUTES.learning}/`)) return "Aula virtual";
   if (pathname === ROUTES.instructorPanel) return "Panel del instructor";
   if (pathname === ROUTES.admin) return "Administración";

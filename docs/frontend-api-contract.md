@@ -179,6 +179,20 @@ inconsistente muestra el error correspondiente y nunca expone correo ni identifi
 
 ## Códigos esperados
 
+## Contacto y perfil compartido
+
+| Método | Ruta | Auth | Pantalla |
+|---|---|---:|---|
+| POST | `/contact/messages` | No | Formulario de contacto público |
+| GET | `/users/me` | Sí | Mi información personal |
+| PATCH | `/users/me` | Sí | Edición de información personal |
+
+El contacto envía `fullName`, `email`, `subject` y `message` únicamente a
+Express. La confirmación se muestra después de recibir `201`; al fallar se
+conservan los campos para reintentar. Instructores y administradores acceden a
+la misma información personal desde `/mi-informacion`, separada de los datos
+de sus cursos.
+
 - `200`: consulta o actualización correcta.
 - `201`: inscripción, registro o reseña creada.
 - `204`: operación correcta sin cuerpo.

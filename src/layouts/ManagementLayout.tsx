@@ -48,6 +48,12 @@ export default function ManagementLayout() {
           )}>
             {isAdmin ? "Administración" : "Mis cursos como instructor"}
           </NavLink>
+          <NavLink to={ROUTES.managementProfile} className={({ isActive }) => classNames(
+            "rounded-lg px-4 py-2.5 text-sm font-medium transition",
+            isActive ? "bg-brand-500/15 text-brand-200" : "text-slate-400 hover:bg-white/5 hover:text-white",
+          )}>
+            Mi información
+          </NavLink>
         </div>
       </nav>
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-10 outline-none sm:px-6">

@@ -132,7 +132,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
         <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
         <Badge className="mt-4">{roleLabels[profile.role]}</Badge>
         <p className="mt-5 border-t border-white/10 pt-5 text-xs leading-5 text-slate-500">
-          La gestión de imagen estará disponible cuando exista un endpoint específico en el backend.
+          Próximamente podrás personalizar también tu imagen de perfil.
         </p>
       </aside>
     </form>

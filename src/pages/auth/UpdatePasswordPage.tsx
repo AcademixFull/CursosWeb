@@ -57,7 +57,7 @@ export default function UpdatePasswordPage() {
     <AuthLayout
       eyebrow="Protege tu cuenta"
       title="Crea una contraseña nueva"
-      description="La contraseña se enviará únicamente a academix-backend y se cerrarán tus sesiones anteriores."
+      description="Tu contraseña se actualizará de forma segura y se cerrarán tus sesiones anteriores."
     >
       {recoveryError ? (
         <div className="space-y-5">

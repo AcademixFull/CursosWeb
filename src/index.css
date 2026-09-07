@@ -131,3 +131,171 @@ button:disabled {
     break-inside: avoid;
   }
 }
+
+/* Tema claro incremental: conserva las clases Tailwind existentes mientras
+   Academix migra a tokens semánticos. El selector vive en <html data-theme>. */
+html[data-theme="light"] {
+  color-scheme: light;
+  background: #f8fafc;
+}
+
+html[data-theme="light"] body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+html[data-theme="light"] .bg-slate-950 { background-color: #f8fafc !important; }
+html[data-theme="light"] .bg-slate-900 { background-color: #ffffff !important; }
+html[data-theme="light"] .bg-slate-950\/90 { background-color: rgb(248 250 252 / 0.94) !important; }
+html[data-theme="light"] .bg-slate-950\/80 { background-color: rgb(248 250 252 / 0.9) !important; }
+html[data-theme="light"] .bg-slate-950\/70 { background-color: rgb(248 250 252 / 0.88) !important; }
+html[data-theme="light"] .bg-slate-900\/90,
+html[data-theme="light"] .bg-slate-900\/80,
+html[data-theme="light"] .bg-slate-900\/70,
+html[data-theme="light"] .bg-slate-900\/60,
+html[data-theme="light"] .bg-slate-900\/50,
+html[data-theme="light"] .bg-slate-900\/40 { background-color: rgb(255 255 255 / 0.96) !important; }
+html[data-theme="light"] .bg-slate-950\/90,
+html[data-theme="light"] .bg-slate-950\/70,
+html[data-theme="light"] .bg-slate-950\/60,
+html[data-theme="light"] .bg-slate-950\/50,
+html[data-theme="light"] .bg-slate-950\/40 { background-color: rgb(248 250 252 / 0.96) !important; }
+html[data-theme="light"] .bg-white\/3,
+html[data-theme="light"] .bg-white\/4,
+html[data-theme="light"] .bg-white\/5,
+html[data-theme="light"] .bg-white\/6,
+html[data-theme="light"] .bg-white\/8 { background-color: rgb(124 58 237 / 0.055) !important; }
+html[data-theme="light"] .bg-white\/10,
+html[data-theme="light"] .bg-white\/20 { background-color: rgb(124 58 237 / 0.08) !important; }
+html[data-theme="light"] .text-white,
+html[data-theme="light"] .text-slate-100 { color: #0f172a !important; }
+html[data-theme="light"] .text-slate-200 { color: #1e293b !important; }
+html[data-theme="light"] .text-slate-300 { color: #334155 !important; }
+html[data-theme="light"] .text-slate-400 { color: #64748b !important; }
+html[data-theme="light"] .text-slate-500 { color: #64748b !important; }
+html[data-theme="light"] .border-white\/10,
+html[data-theme="light"] .border-white\/15,
+html[data-theme="light"] .border-slate-700\/70 { border-color: #e2e8f0 !important; }
+html[data-theme="light"] .shadow-black\/20 { --tw-shadow-color: rgb(15 23 42 / 0.08) !important; }
+html[data-theme="light"] select option { background: #ffffff; color: #0f172a; }
+
+
+/* Cobertura reforzada del tema claro para paneles, overlays y formularios. */
+html[data-theme="light"] .bg-slate-800 { background-color: #f1f5f9 !important; }
+html[data-theme="light"] .bg-slate-950\/95,
+html[data-theme="light"] .bg-slate-950\/60 { background-color: rgb(255 255 255 / .96) !important; }
+html[data-theme="light"] .bg-violet-950\/70 { background-color: #f5f3ff !important; }
+html[data-theme="light"] .border-slate-700,
+html[data-theme="light"] .border-slate-600 { border-color: #d8dee9 !important; }
+html[data-theme="light"] .text-slate-600 { color: #475569 !important; }
+html[data-theme="light"] .text-violet-100,
+html[data-theme="light"] .text-violet-200,
+html[data-theme="light"] .text-violet-300,
+html[data-theme="light"] .text-brand-100,
+html[data-theme="light"] .text-brand-200,
+html[data-theme="light"] .text-brand-300 { color: #6d28d9 !important; }
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select { color: #0f172a; }
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder { color: #94a3b8; }
+
+
+/* Superficies de marca para páginas públicas */
+.academix-brand-panel {
+  background-image: linear-gradient(135deg, rgba(91, 33, 182, 0.95), rgba(15, 23, 42, 0.96) 58%, rgba(30, 64, 175, 0.95));
+}
+
+.academix-soft-banner {
+  background-image: linear-gradient(135deg, rgba(109, 40, 217, 0.35), rgba(51, 65, 85, 0.16) 45%, rgba(15, 23, 42, 0.94));
+}
+
+.academix-cta-panel {
+  background-image: linear-gradient(90deg, #6d28d9 0%, #9333ea 48%, #2563eb 100%);
+}
+
+.academix-brand-badge {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  background-color: rgba(91, 33, 182, 0.92) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .academix-brand-panel {
+  background-image: linear-gradient(135deg, #4338ca 0%, #5b21b6 42%, #1d4ed8 100%) !important;
+}
+
+html[data-theme="light"] .academix-soft-banner {
+  background-image: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c7d2fe 100%) !important;
+}
+
+html[data-theme="light"] .academix-soft-banner,
+html[data-theme="light"] .academix-soft-banner .academix-soft-banner-text,
+html[data-theme="light"] .academix-soft-banner .text-violet-300,
+html[data-theme="light"] .academix-soft-banner .text-violet-200 {
+  color: #5b21b6 !important;
+}
+
+html[data-theme="light"] .academix-cta-panel {
+  background-image: linear-gradient(90deg, #7c3aed 0%, #9333ea 45%, #2563eb 100%) !important;
+}
+
+html[data-theme="light"] .academix-brand-panel .academix-on-brand,
+html[data-theme="light"] .academix-cta-panel .academix-on-brand {
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .academix-cta-panel .academix-cta-body {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+
+/* Contraste de controles y estados sobre fondos de marca en tema claro. */
+html[data-theme="light"] .bg-brand-400.text-white,
+html[data-theme="light"] .bg-brand-500.text-white,
+html[data-theme="light"] .bg-brand-600.text-white,
+html[data-theme="light"] .bg-brand-700.text-white,
+html[data-theme="light"] .bg-brand-700\/90.text-white,
+html[data-theme="light"] .bg-violet-500.text-white,
+html[data-theme="light"] .bg-violet-600.text-white,
+html[data-theme="light"] .bg-red-600.text-white {
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .text-red-100,
+html[data-theme="light"] .text-red-200,
+html[data-theme="light"] .text-red-300,
+html[data-theme="light"] .text-rose-200,
+html[data-theme="light"] .text-rose-300 { color: #b91c1c !important; }
+html[data-theme="light"] .text-emerald-100,
+html[data-theme="light"] .text-emerald-200,
+html[data-theme="light"] .text-emerald-300 { color: #047857 !important; }
+html[data-theme="light"] .text-amber-100,
+html[data-theme="light"] .text-amber-200,
+html[data-theme="light"] .text-amber-300 { color: #a16207 !important; }
+
+html[data-theme="light"] .auth-surface {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border-color: #dbe3ef !important;
+  box-shadow: 0 24px 65px rgba(76, 29, 149, 0.13) !important;
+}
+
+/* Evita desbordes en contenido dinámico y mantiene módulos utilizables en móvil. */
+main,
+article,
+section,
+form,
+fieldset {
+  min-width: 0;
+}
+
+p,
+li,
+dd,
+dt,
+label,
+button,
+a {
+  overflow-wrap: anywhere;
+}
+
+html[data-theme="light"] .academix-logo-mark { color: #ffffff !important; }

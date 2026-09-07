@@ -2,7 +2,8 @@ import { Link } from "react-router";
 import { courseDetailRoute, instructorRoute } from "../../config/routes";
 import type { CourseLevel, CourseSummary } from "../../types/course.types";
 import { Badge } from "../ui/Badge";
-import { ButtonLink } from "../ui/Button";
+import { Button, ButtonLink } from "../ui/Button";
+import { useCart } from "../../hooks/useCart";
 
 const levelLabels: Record<CourseLevel, string> = {
   beginner: "Principiante",
@@ -23,17 +24,18 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course }: CourseCardProps) {
+  const cart = useCart();
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/70">
-      <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-linear-to-br from-violet-800/50 via-fuchsia-900/25 to-slate-900">
+      <div className="academix-soft-banner relative flex aspect-video items-center justify-center overflow-hidden">
         {course.imageUrl ? (
           <img src={course.imageUrl} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="px-6 text-center text-sm font-bold uppercase tracking-[0.18em] text-violet-200">
+          <span className="academix-soft-banner-text px-6 text-center text-sm font-bold uppercase tracking-[0.18em] text-violet-200">
             {course.category.name}
           </span>
         )}
-        <Badge className="absolute left-4 top-4 bg-brand-700/90 text-white">
+        <Badge className="academix-brand-badge absolute left-4 top-4 bg-brand-700/90 text-white">
           {course.category.name}
         </Badge>
       </div>
@@ -61,13 +63,10 @@ export default function CourseCard({ course }: CourseCardProps) {
 
         <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-5">
           <span className="text-xl font-extrabold text-violet-400">{formatPrice(course.price)}</span>
-          <ButtonLink
-            to={courseDetailRoute(course.id)}
-            variant="secondary"
-            size="sm"
-          >
-            Ver curso
-          </ButtonLink>
+          <div className="flex gap-2">
+            {course.price > 0 ? <Button type="button" variant={cart.hasCourse(course.id) ? "ghost" : "secondary"} size="sm" disabled={cart.hasCourse(course.id)} onClick={() => cart.addCourse(course)}>{cart.hasCourse(course.id) ? "En carrito" : "Agregar"}</Button> : null}
+            <ButtonLink to={courseDetailRoute(course.id)} variant="secondary" size="sm">Ver curso</ButtonLink>
+          </div>
         </div>
       </div>
     </article>

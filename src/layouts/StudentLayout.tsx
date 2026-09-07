@@ -12,6 +12,7 @@ const studentNavigation = [
   { label: "Mis cursos", to: ROUTES.myCourses },
   { label: "Certificados", to: ROUTES.certificates },
   { label: "Mi perfil", to: ROUTES.profile },
+  { label: "Quiero enseñar", to: ROUTES.instructorApplication },
 ];
 
 export default function StudentLayout() {

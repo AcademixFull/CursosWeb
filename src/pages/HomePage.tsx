@@ -76,24 +76,23 @@ export default function HomePage() {
                 >
                   Explorar Cursos
                 </Link>
-                <span
-                  aria-disabled="true"
-                  title="Próximamente"
-                  className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-slate-400"
+                <Link
+                  to={ROUTES.instructorApplication}
+                  className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
                 >
                   Conviértete en Instructor
-                </span>
+                </Link>
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/6 p-3 shadow-2xl shadow-violet-950/40 backdrop-blur">
               <div className="overflow-hidden rounded-xl">
-                <div className="flex aspect-video w-full items-center justify-center bg-linear-to-br from-violet-900 via-slate-900 to-blue-900 text-center">
+                <div className="academix-brand-panel flex aspect-video w-full items-center justify-center text-center">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">
+                    <p className="academix-on-brand text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">
                       Cursos tecnología
                     </p>
-                    <p className="mt-2 text-lg font-bold text-white">Proximamente</p>
+                    <p className="academix-on-brand mt-2 text-lg font-bold text-white">Proximamente</p>
                   </div>
                 </div>
               </div>
@@ -147,7 +146,7 @@ export default function HomePage() {
                   key={course.title}
                   className="flex flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/60"
                 >
-                  <div className="flex h-32 items-center justify-center bg-linear-to-br from-violet-800/40 to-slate-800 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                  <div className="academix-soft-banner academix-soft-banner-text flex h-32 items-center justify-center text-xs font-semibold uppercase tracking-wider text-violet-300">
                     {course.tag}
                   </div>
                   <div className="flex flex-1 flex-col p-5">
@@ -227,11 +226,11 @@ export default function HomePage() {
 
         {/* CTA final */}
         <section className="px-6 py-20">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-12">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <div className="academix-cta-panel mx-auto max-w-6xl overflow-hidden rounded-2xl p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-12">
+            <h2 className="academix-on-brand academix-cta-heading text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Empieza hoy mismo tu transformación
             </h2>
-            <p className="mx-auto mt-4 max-x-2xl text-violet-100">
+            <p className="academix-on-brand academix-cta-body mx-auto mt-4 max-w-2xl text-violet-100">
               Únete a la comunidad de aprendizaje más vibrante de Latinoamérica. Sin cuotas
               mensuales obligatorias, paga solo por lo que aprendes.
             </p>

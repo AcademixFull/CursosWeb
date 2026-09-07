@@ -20,6 +20,7 @@ export interface AuthContextValue {
   updatePassword: (input: UpdatePasswordInput, recoveryToken: string) => Promise<void>;
   clearSession: () => void;
   updateUser: (changes: Partial<Pick<AuthUser, "fullName">>) => void;
+  refreshUser: () => Promise<AuthUser>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

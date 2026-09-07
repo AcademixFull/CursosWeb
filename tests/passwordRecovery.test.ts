@@ -3,6 +3,8 @@ import { ROUTES } from "../src/config/routes";
 import {
   clearPasswordRecoveryState,
   initializePasswordRecoveryRedirect,
+  initializeAuthRedirect,
+  readEmailConfirmationError,
   readPasswordRecoveryState,
 } from "../src/utils/passwordRecovery";
 
@@ -47,5 +49,18 @@ describe("Supabase password recovery redirect", () => {
 
     expect(initializePasswordRecoveryRedirect()).toBe(false);
     expect(readPasswordRecoveryState()).toBeNull();
+  });
+
+  it("routes signup confirmation before HashRouter can show a 404", () => {
+    window.history.replaceState(null, "", "/CursosWeb/#access_token=signup-token&type=signup");
+    expect(initializeAuthRedirect()).toBe(true);
+    expect(window.location.hash).toBe(`#${ROUTES.emailConfirmed}`);
+    expect(readEmailConfirmationError()).toBeUndefined();
+  });
+
+  it("shows an expired confirmation link as a confirmation error", () => {
+    window.history.replaceState(null, "", "/CursosWeb/?error=access_denied&error_code=otp_expired");
+    expect(initializeAuthRedirect()).toBe(true);
+    expect(readEmailConfirmationError()).toContain("confirmación");
   });
 });

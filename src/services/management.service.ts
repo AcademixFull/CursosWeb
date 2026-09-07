@@ -9,8 +9,11 @@ import type {
   CourseOptions,
   CourseWorkflowStatus,
   ManagedCourse,
+  ManagedCategory,
   ManagedInstructor,
   ManagedUser,
+  InstructorApplication,
+  InstructorApplicationStatus,
   Paged,
   UploadedCourseFile,
 } from "../types/management.types";
@@ -32,14 +35,24 @@ export const managementService = {
   },
   setUserRoles: (userId: string, roles: UserRole[]) =>
     api.patch<ManagedUser>(`/admin/users/${encodeURIComponent(userId)}/roles`, { roles }),
+  setUserStatus: (userId: string, active: boolean) =>
+    api.patch<ManagedUser>(`/admin/users/${encodeURIComponent(userId)}/status`, { active }),
   listInstructors: () => api.get<ManagedInstructor[]>("/admin/instructors"),
   upsertInstructor: (userId: string, input: { specialty: string; experienceYears: number }) =>
     api.put<ManagedInstructor>(`/admin/instructors/${encodeURIComponent(userId)}`, input),
+  listCategories: () => api.get<ManagedCategory[]>("/admin/categories"),
   createCategory: (input: { name: string; slug?: string; description?: string }) =>
     api.post<{ id: number; name: string; slug: string }>("/admin/categories", input),
   updateCategory: (categoryId: number, input: { name?: string; slug?: string; description?: string; active?: boolean }) =>
     api.patch(`/admin/categories/${categoryId}`, input),
   courseOptions: () => api.get<CourseOptions>("/admin/course-options"),
+  getMyInstructorApplication: () => api.get<InstructorApplication | null>("/users/me/instructor-application"),
+  submitInstructorApplication: (input: { enrollmentId: string; credentialReference: string }) =>
+    api.post<InstructorApplication>("/users/me/instructor-application", input),
+  listInstructorApplications: (status?: InstructorApplicationStatus) =>
+    api.get<InstructorApplication[]>(`/admin/instructor-applications${query({ status })}`),
+  resolveInstructorApplication: (applicationId: string, input: { decision: "approved" | "rejected"; observations?: string; specialty?: string; experienceYears?: number }) =>
+    api.patch<InstructorApplication>(`/admin/instructor-applications/${encodeURIComponent(applicationId)}`, input),
   listAdminCourses: async (filters: { search?: string; status?: CourseWorkflowStatus; page?: number; limit?: number } = {}): Promise<Paged<ManagedCourse>> =>
     api.getPage<ManagedCourse>(`/admin/courses${query(filters)}`),
   createCourse: (input: CourseInput) => api.post<ManagedCourse>("/admin/courses", input),
@@ -49,15 +62,18 @@ export const managementService = {
     api.put<ManagedCourse>(`/admin/courses/${encodeURIComponent(courseId)}/instructor`, { instructorId }),
   publishCourse: (courseId: string) => api.post<ManagedCourse>(`/admin/courses/${encodeURIComponent(courseId)}/publish`),
   archiveCourse: (courseId: string) => api.post<ManagedCourse>(`/admin/courses/${encodeURIComponent(courseId)}/archive`),
+  restoreCourse: (courseId: string) => api.post<ManagedCourse>(`/admin/courses/${encodeURIComponent(courseId)}/restore`),
   listReviews: async (filters: { visibility?: "all" | "visible" | "hidden"; courseId?: string; page?: number; limit?: number } = {}): Promise<Paged<AdminReview>> =>
     api.getPage<AdminReview>(`/admin/reviews${query(filters)}`),
   moderateReview: (reviewId: string, input: { visible: boolean; reason?: string }) =>
     api.patch<AdminReview>(`/admin/reviews/${encodeURIComponent(reviewId)}/moderation`, input),
   listInstructorCourses: async (filters: { search?: string; status?: CourseWorkflowStatus; page?: number; limit?: number } = {}): Promise<Paged<ManagedCourse>> =>
     api.getPage<ManagedCourse>(`/instructor/courses${query(filters)}`),
+  createInstructorCourse: (input: CourseInput) => api.post<ManagedCourse>("/instructor/courses", input),
   updateInstructorCourse: (courseId: string, input: Partial<CourseInput>) =>
     api.patch<ManagedCourse>(`/instructor/courses/${encodeURIComponent(courseId)}`, input),
   submitInstructorCourse: (courseId: string) => api.post<ManagedCourse>(`/instructor/courses/${encodeURIComponent(courseId)}/submit`),
+  archiveInstructorCourse: (courseId: string) => api.post<ManagedCourse>(`/instructor/courses/${encodeURIComponent(courseId)}/archive`),
   resourceOptions: () => api.get<Array<{ id: number; name: string }>>("/authoring/resource-options"),
   getCourseContent: (courseId: string) => api.get<AuthoringCourseContent>(`/authoring/courses/${encodeURIComponent(courseId)}/content`),
   createModule: (courseId: string, input: { title: string; description: string; position: number }) =>

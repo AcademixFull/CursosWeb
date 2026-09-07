@@ -9,6 +9,8 @@ export const managementQueryKeys = {
   courses: ["management", "courses"] as const,
   reviews: ["management", "reviews"] as const,
   options: ["management", "options"] as const,
+  categories: ["management", "categories"] as const,
+  applications: ["management", "instructor-applications"] as const,
   instructorCourses: ["management", "instructor-courses"] as const,
   content: (courseId: string) => ["management", "content", courseId] as const,
   resources: ["management", "resource-options"] as const,
@@ -21,6 +23,8 @@ export function useAdminData() {
     courses: useQuery({ queryKey: managementQueryKeys.courses, queryFn: () => managementService.listAdminCourses({ limit: 50 }) }),
     reviews: useQuery({ queryKey: managementQueryKeys.reviews, queryFn: () => managementService.listReviews({ limit: 50 }) }),
     options: useQuery({ queryKey: managementQueryKeys.options, queryFn: managementService.courseOptions }),
+    categories: useQuery({ queryKey: managementQueryKeys.categories, queryFn: managementService.listCategories }),
+    applications: useQuery({ queryKey: managementQueryKeys.applications, queryFn: () => managementService.listInstructorApplications() }),
   };
 }
 
@@ -32,6 +36,10 @@ export function useAdminActions() {
       mutationFn: ({ userId, roles }: { userId: string; roles: UserRole[] }) => managementService.setUserRoles(userId, roles),
       onSuccess: () => invalidate(managementQueryKeys.users, managementQueryKeys.instructors),
     }),
+    setUserStatus: useMutation({
+      mutationFn: ({ userId, active }: { userId: string; active: boolean }) => managementService.setUserStatus(userId, active),
+      onSuccess: () => invalidate(managementQueryKeys.users, managementQueryKeys.instructors),
+    }),
     upsertInstructor: useMutation({
       mutationFn: ({ userId, specialty, experienceYears }: { userId: string; specialty: string; experienceYears: number }) =>
         managementService.upsertInstructor(userId, { specialty, experienceYears }),
@@ -39,14 +47,18 @@ export function useAdminActions() {
     }),
     createCategory: useMutation({
       mutationFn: managementService.createCategory,
-      onSuccess: () => invalidate(managementQueryKeys.options),
+      onSuccess: () => invalidate(managementQueryKeys.options, managementQueryKeys.categories),
     }),
     updateCategory: useMutation({
       mutationFn: ({ categoryId, active }: { categoryId: number; active: boolean }) => managementService.updateCategory(categoryId, { active }),
-      onSuccess: () => invalidate(managementQueryKeys.options),
+      onSuccess: () => invalidate(managementQueryKeys.options, managementQueryKeys.categories),
     }),
     createCourse: useMutation({
       mutationFn: (input: CourseInput) => managementService.createCourse(input),
+      onSuccess: () => invalidate(managementQueryKeys.courses),
+    }),
+    updateCourse: useMutation({
+      mutationFn: ({ courseId, input }: { courseId: string; input: Partial<CourseInput> }) => managementService.updateAdminCourse(courseId, input),
       onSuccess: () => invalidate(managementQueryKeys.courses),
     }),
     assignInstructor: useMutation({
@@ -55,9 +67,15 @@ export function useAdminActions() {
     }),
     publish: useMutation({ mutationFn: managementService.publishCourse, onSuccess: () => invalidate(managementQueryKeys.courses) }),
     archive: useMutation({ mutationFn: managementService.archiveCourse, onSuccess: () => invalidate(managementQueryKeys.courses) }),
+    restore: useMutation({ mutationFn: managementService.restoreCourse, onSuccess: () => invalidate(managementQueryKeys.courses) }),
     moderate: useMutation({
       mutationFn: ({ reviewId, visible, reason }: { reviewId: string; visible: boolean; reason?: string }) => managementService.moderateReview(reviewId, { visible, reason }),
       onSuccess: () => invalidate(managementQueryKeys.reviews),
+    }),
+    resolveApplication: useMutation({
+      mutationFn: ({ applicationId, ...input }: { applicationId: string; decision: "approved" | "rejected"; observations?: string; specialty?: string; experienceYears?: number }) =>
+        managementService.resolveInstructorApplication(applicationId, input),
+      onSuccess: () => invalidate(managementQueryKeys.applications, managementQueryKeys.users, managementQueryKeys.instructors),
     }),
   };
 }
@@ -67,6 +85,10 @@ export function useInstructorCourses(status?: CourseWorkflowStatus) {
     queryKey: [...managementQueryKeys.instructorCourses, status ?? "all"],
     queryFn: () => managementService.listInstructorCourses({ status, limit: 50 }),
   });
+}
+
+export function useCourseOptions() {
+  return useQuery({ queryKey: managementQueryKeys.options, queryFn: managementService.courseOptions });
 }
 
 export function useCourseContent(courseId: string) {

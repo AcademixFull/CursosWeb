@@ -2,6 +2,8 @@ import { type ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../contexts/AuthProvider";
 import { ApiError } from "../services/api";
+import { ThemeProvider } from "../contexts/ThemeProvider";
+import { CartProvider } from "../contexts/CartProvider";
 
 /**
  * Punto central para los providers globales de la aplicación.
@@ -60,7 +62,9 @@ export function AppProviders({ children }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
+      <ThemeProvider>
+        <AuthProvider><CartProvider>{children}</CartProvider></AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

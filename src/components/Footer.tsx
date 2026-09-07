@@ -51,7 +51,6 @@ export default function Footer() {
 
       <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-6 text-center text-xs sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <p>© 2026 Academix. Todos los derechos reservados.</p>
-        <p>Frontend desacoplado · React + TypeScript</p>
       </div>
     </footer>
   );

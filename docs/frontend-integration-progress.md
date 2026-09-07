@@ -184,3 +184,14 @@ Comportamiento terminado:
 
 La validación está en [`docs/frontend-stage-f-validation.md`](frontend-stage-f-validation.md) y la
 salida a producción en [`docs/frontend-production-checklist.md`](frontend-production-checklist.md).
+# Etapa G
+
+Se estabilizaron categorías, autoría, confirmación de correo y solicitudes de instructor.
+
+## Corrección de contacto e información personal
+
+- El formulario público deja de ser una demostración y usa
+  `POST /contact/messages` con estados de envío, éxito y error.
+- El panel de instructor incorpora `Mi información`, que reutiliza
+  `GET/PATCH /users/me` sin mezclar datos personales con la administración de
+  cursos.

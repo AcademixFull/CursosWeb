@@ -45,7 +45,7 @@ export function EnrollmentDialog({
         <p className="mt-4 text-3xl font-extrabold text-brand-200">{priceLabel}</p>
         <p id={descriptionId} className="mt-4 text-sm leading-6 text-slate-400">
           {env.dataSource === "api"
-            ? "Al confirmar, el backend registrará el curso en tu biblioteca de Academix."
+            ? "Al confirmar, el curso aparecerá en tu biblioteca de Academix."
             : "Esta demostración no realiza cargos y conserva la inscripción solo durante la sesión."}
         </p>
 

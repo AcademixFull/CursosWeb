@@ -1,6 +1,7 @@
 import { ROUTES } from "../config/routes";
 
 const RECOVERY_KEY = "academix.password-recovery.v1";
+const EMAIL_CONFIRMATION_KEY = "academix.email-confirmation.v1";
 
 export interface PasswordRecoveryState {
   accessToken?: string;
@@ -59,6 +60,23 @@ export function initializePasswordRecoveryRedirect(): boolean {
   return true;
 }
 
+/** Captura confirmaciones de correo antes de que HashRouter trate el token como una ruta. */
+export function initializeEmailConfirmationRedirect(): boolean {
+  const params = readRedirectParams(window.location);
+  if (!params || params.get("type") === "recovery") return false;
+  const type = params.get("type");
+  const hasConfirmation = ["signup", "email"].includes(type ?? "") || params.has("error") || params.has("error_code");
+  if (!hasConfirmation) return false;
+  const error = recoveryError(params)?.replace("recuperación", "confirmación");
+  sessionStorage.setItem(EMAIL_CONFIRMATION_KEY, JSON.stringify({ error }));
+  window.history.replaceState(null, "", `${window.location.pathname}#${ROUTES.emailConfirmed}`);
+  return true;
+}
+
+export function initializeAuthRedirect(): boolean {
+  return initializeEmailConfirmationRedirect() || initializePasswordRecoveryRedirect();
+}
+
 export function readPasswordRecoveryState(): PasswordRecoveryState | null {
   try {
     const value = sessionStorage.getItem(RECOVERY_KEY);
@@ -74,4 +92,14 @@ export function readPasswordRecoveryState(): PasswordRecoveryState | null {
 
 export function clearPasswordRecoveryState(): void {
   sessionStorage.removeItem(RECOVERY_KEY);
+}
+
+export function readEmailConfirmationError(): string | undefined {
+  try {
+    const value = sessionStorage.getItem(EMAIL_CONFIRMATION_KEY);
+    return value ? (JSON.parse(value) as { error?: string }).error : undefined;
+  } catch {
+    sessionStorage.removeItem(EMAIL_CONFIRMATION_KEY);
+    return "No fue posible confirmar tu cuenta.";
+  }
 }
