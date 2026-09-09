@@ -1,7 +1,7 @@
 import type { UserRole } from "./auth.types";
 import type { CourseLevel } from "./course.types";
 
-export type CourseWorkflowStatus = "draft" | "review" | "published" | "archived";
+export type CourseWorkflowStatus = "draft" | "review" | "published" | "archived" | "moderated";
 export type CourseModality = "self_paced" | "live" | "blended";
 
 export interface ManagedUser {
@@ -33,6 +33,7 @@ export type InstructorApplicationStatus = "pending" | "approved" | "rejected";
 
 export interface InstructorApplication {
   id: string;
+  folio: string;
   userId: string;
   applicantName: string;
   applicantEmail: string;

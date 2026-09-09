@@ -1,9 +1,12 @@
-import { Link } from "react-router";
-import { courseDetailRoute, instructorRoute } from "../../config/routes";
+import { Link, useLocation, useNavigate } from "react-router";
+import { courseDetailRoute, instructorRoute, ROUTES } from "../../config/routes";
 import type { CourseLevel, CourseSummary } from "../../types/course.types";
 import { Badge } from "../ui/Badge";
 import { Button, ButtonLink } from "../ui/Button";
+import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
+import { formatMxn } from "../../utils/currency";
+import { locationPath } from "../../utils/navigation";
 
 const levelLabels: Record<CourseLevel, string> = {
   beginner: "Principiante",
@@ -11,20 +14,26 @@ const levelLabels: Record<CourseLevel, string> = {
   advanced: "Avanzado",
 };
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(price);
-}
-
 interface CourseCardProps {
   course: CourseSummary;
 }
 
 export default function CourseCard({ course }: CourseCardProps) {
   const cart = useCart();
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const ownsCourse = isAuthenticated && cart.ownsCourse(course.id);
+  const ownershipPending = isAuthenticated && !cart.ownershipReady;
+
+  function addToCart() {
+    if (!isAuthenticated) {
+      navigate(ROUTES.login, { state: { returnTo: locationPath(location) } });
+      return;
+    }
+    cart.addCourse(course);
+  }
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/70">
       <div className="academix-soft-banner relative flex aspect-video items-center justify-center overflow-hidden">
@@ -61,10 +70,28 @@ export default function CourseCard({ course }: CourseCardProps) {
           <span>{levelLabels[course.level]}</span>
         </div>
 
-        <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-5">
-          <span className="text-xl font-extrabold text-violet-400">{formatPrice(course.price)}</span>
-          <div className="flex gap-2">
-            {course.price > 0 ? <Button type="button" variant={cart.hasCourse(course.id) ? "ghost" : "secondary"} size="sm" disabled={cart.hasCourse(course.id)} onClick={() => cart.addCourse(course)}>{cart.hasCourse(course.id) ? "En carrito" : "Agregar"}</Button> : null}
+        <div className="mt-auto flex flex-col items-stretch gap-3 border-t border-white/10 pt-5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+          <span className="text-xl font-extrabold text-violet-400">{formatMxn(course.price)}</span>
+          <div className="flex flex-wrap gap-2 min-[420px]:justify-end">
+            {course.price > 0 ? (
+              <Button
+                type="button"
+                variant={ownershipPending || ownsCourse || (isAuthenticated && cart.hasCourse(course.id)) ? "ghost" : "secondary"}
+                size="sm"
+                disabled={ownershipPending || ownsCourse || (isAuthenticated && cart.hasCourse(course.id))}
+                onClick={addToCart}
+              >
+                {!isAuthenticated
+                  ? "Entrar para agregar"
+                  : ownershipPending
+                    ? "Consultando..."
+                    : ownsCourse
+                      ? "Ya lo tienes"
+                      : cart.hasCourse(course.id)
+                        ? "En carrito"
+                        : "Agregar"}
+              </Button>
+            ) : null}
             <ButtonLink to={courseDetailRoute(course.id)} variant="secondary" size="sm">Ver curso</ButtonLink>
           </div>
         </div>

@@ -26,7 +26,7 @@ export interface OrganizationMember {
 export interface OrganizationCourseSummary {
   id: string;
   title: string;
-  status: "draft" | "review" | "published" | "archived";
+  status: "draft" | "review" | "published" | "archived" | "moderated";
   active: boolean;
   instructor: { id: string; name: string } | null;
   updatedAt: string;

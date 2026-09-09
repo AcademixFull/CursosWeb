@@ -1,6 +1,11 @@
 import PublicLayout from "../layouts/PublicLayout";
 import { faqSections } from "../data/faqSections";
 
+function scrollToFaqSection(sectionId: string) {
+  const target = document.getElementById(sectionId);
+  target?.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
 export default function FaqPage() {
   return (
     <PublicLayout active="preguntas">
@@ -19,13 +24,14 @@ export default function FaqPage() {
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {faqSections.map((section) => (
-              <a
+              <button
                 key={section.id}
-                href={`#${section.id}`}
+                type="button"
+                onClick={() => scrollToFaqSection(section.id)}
                 className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-brand-400/50 hover:text-white"
               >
                 {section.title}
-              </a>
+              </button>
             ))}
           </div>
 

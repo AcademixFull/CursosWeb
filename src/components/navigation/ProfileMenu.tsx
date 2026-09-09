@@ -5,6 +5,7 @@ import { roleHomeRoute, ROUTES } from "../../config/routes";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { useTheme } from "../../hooks/useTheme";
+import type { UserRole } from "../../types/auth.types";
 import { classNames } from "../../utils/classNames";
 import { SidebarIcon, type SidebarIconName } from "./SidebarIcon";
 
@@ -24,8 +25,9 @@ const SECONDARY_ICON_BY_KEY: Record<string, SidebarIconName> = {
   contacto: "contact",
 };
 
-function roleLabel(role: "student" | "instructor" | "admin") {
+function roleLabel(role: UserRole) {
   if (role === "admin") return "Administrador Academix";
+  if (role === "moderator") return "Moderador Academix";
   if (role === "instructor") return "Instructor";
   return "Estudiante";
 }
@@ -63,16 +65,20 @@ export function ProfileMenu({ compact = false }: ProfileMenuProps) {
     if (!isAuthenticated) return [];
 
     const profileRoute = role === "student" ? ROUTES.profile : ROUTES.managementProfile;
-    const entries: MenuEntry[] = [
-      {
-        label: role === "admin" ? "Administración" : role === "instructor" ? "Panel de instructor" : "Mi aprendizaje",
-        to: roleHomeRoute(role),
-        icon: role === "admin" ? "admin" : role === "instructor" ? "teach" : "home",
-      },
-    ];
+    const primaryEntry: MenuEntry = role === "admin"
+      ? { label: "Administración", to: ROUTES.admin, icon: "admin" }
+      : role === "moderator"
+        ? { label: "Moderación", to: ROUTES.moderation, icon: "moderation" }
+        : role === "instructor"
+          ? { label: "Panel de instructor", to: ROUTES.instructorPanel, icon: "teach" }
+          : { label: "Mi aprendizaje", to: roleHomeRoute(role), icon: "home" };
+    const entries: MenuEntry[] = [primaryEntry];
 
     if (role !== "student") {
       entries.push({ label: "Mi aprendizaje", to: ROUTES.dashboard, icon: "home" });
+    }
+    if (role === "admin") {
+      entries.push({ label: "Moderación", to: ROUTES.moderation, icon: "moderation" });
     }
 
     entries.push(
@@ -81,7 +87,11 @@ export function ProfileMenu({ compact = false }: ProfileMenuProps) {
       { label: "Mis cursos", to: ROUTES.myCourses, icon: "courses" },
       { label: "Certificados", to: ROUTES.certificates, icon: "certificate" },
       { label: `Carrito${cart.count ? ` (${cart.count})` : ""}`, to: ROUTES.cart, icon: "cart" },
-      { label: "Quiero enseñar", to: ROUTES.instructorApplication, icon: "teach" },
+    );
+    if (role !== "moderator") {
+      entries.push({ label: "Quiero enseñar", to: ROUTES.instructorApplication, icon: "teach" });
+    }
+    entries.push(
       { label: "Catálogo de cursos", to: ROUTES.courses, icon: "catalog" },
       { label: "Precios", to: ROUTES.pricing, icon: "pricing" },
     );

@@ -6,6 +6,8 @@ export interface CartContextValue {
   items: CartItem[];
   count: number;
   total: number;
+  ownershipReady: boolean;
+  ownsCourse: (courseId: string) => boolean;
   addCourse: (course: CourseSummary) => void;
   removeCourse: (courseId: string) => void;
   clear: () => void;

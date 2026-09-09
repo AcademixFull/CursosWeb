@@ -12,7 +12,8 @@ export default function ManagementLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
-  const home = isAdmin ? ROUTES.admin : ROUTES.instructorPanel;
+  const isModerator = user?.role === "moderator";
+  const home = isAdmin ? ROUTES.admin : isModerator ? ROUTES.moderation : ROUTES.instructorPanel;
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -46,7 +47,7 @@ export default function ManagementLayout() {
             "rounded-lg px-4 py-2.5 text-sm font-medium transition",
             isActive ? "bg-brand-500/15 text-brand-200" : "text-slate-400 hover:bg-white/5 hover:text-white",
           )}>
-            {isAdmin ? "Administración" : "Mis cursos como instructor"}
+            {isAdmin ? "Administración" : isModerator ? "Moderación" : "Mis cursos como instructor"}
           </NavLink>
           <NavLink to={ROUTES.managementProfile} className={({ isActive }) => classNames(
             "rounded-lg px-4 py-2.5 text-sm font-medium transition",

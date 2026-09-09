@@ -57,7 +57,7 @@ export default function LearningPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <SkipLink />
       <header className="border-b border-white/10 bg-slate-950/95">
-        <div className="mx-auto flex min-h-16 max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex min-h-16 max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 sm:px-6">
           <BrandLogo />
           <Link to={ROUTES.myCourses} className="text-sm font-semibold text-slate-400 transition hover:text-white">
             Salir del curso
@@ -65,7 +65,7 @@ export default function LearningPage() {
         </div>
       </header>
 
-      <main id="main-content" tabIndex={-1} className="mx-auto grid max-w-[90rem] gap-6 px-4 py-6 outline-none sm:px-6 lg:grid-cols-[21rem_minmax(0,1fr)]">
+      <main id="main-content" tabIndex={-1} className="mx-auto grid min-w-0 max-w-[90rem] gap-6 px-4 py-6 outline-none sm:px-6 xl:grid-cols-[19rem_minmax(0,1fr)]">
         <LearningCurriculum course={course} activeLessonId={activeLesson.id} />
 
         <div className="min-w-0">

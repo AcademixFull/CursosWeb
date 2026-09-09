@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import InstructorApplicationPage from "../src/pages/InstructorApplicationPage";
 
 const authState = vi.hoisted(() => ({
-  user: null as null | { id: string; fullName: string; email: string; role: "student" | "instructor" | "admin" },
+  user: null as null | { id: string; fullName: string; email: string; role: "student" | "instructor" | "moderator" | "admin" },
   refreshUser: vi.fn(),
 }));
 
@@ -41,6 +41,15 @@ describe("InstructorApplicationPage", () => {
     expect(screen.getByRole("heading", { name: "Ya eres instructor de Academix" })).toBeInTheDocument();
     expect(screen.getByText(/No necesitas enviar otra solicitud/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ir a mi panel de instructor" })).toBeInTheDocument();
+  });
+
+  it("explica al moderador que su rol es de revisión y no envía solicitud de instructor", () => {
+    authState.user = { id: "m1", fullName: "Ana Moderadora", email: "moderador@example.com", role: "moderator" };
+    renderPage();
+
+    expect(screen.getByRole("heading", { name: "Tu cuenta tiene acceso de moderación" })).toBeInTheDocument();
+    expect(screen.getByText(/no puede publicar cursos con esos permisos/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Volver a moderación" })).toBeInTheDocument();
   });
 
   it("evita que un administrador envíe una solicitud de instructor", () => {

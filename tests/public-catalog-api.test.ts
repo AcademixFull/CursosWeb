@@ -55,6 +55,20 @@ describe("public catalog services in API mode", () => {
     );
   });
 
+  it("loads the real featured-course ranking from Express", async () => {
+    const courses = [{ id: "course-1", title: "Curso destacado" }];
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(courses));
+    vi.stubGlobal("fetch", fetchMock);
+    await useApiEnvironment();
+    const { listFeaturedCourses } = await import("../src/services/courses.service");
+
+    await expect(listFeaturedCourses()).resolves.toEqual(courses);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.academix.test/api/v1/courses/featured",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
   it("loads course detail and related courses through their public endpoints", async () => {
     const detail = {
       id: "course-1",

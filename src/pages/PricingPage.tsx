@@ -3,11 +3,10 @@ import { Link } from "react-router";
 import PublicLayout from "../layouts/PublicLayout";
 import { ROUTES } from "../config/routes";
 import { ACADEMIX_SUBSCRIPTION_PLANS } from "../config/pricing";
-
-const usd = (value: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD" }).format(value);
+import { formatMxn } from "../utils/currency";
 const personPlans = [
-  { name: "Academix Plus Mensual", eyebrow: "Acceso ilimitado", price: `${usd(ACADEMIX_SUBSCRIPTION_PLANS.monthly.priceUsd)} / mes`, description: "Durante un mes puedes estudiar todos los cursos incluidos en Academix Plus.", features: ["Cursos incluidos sin compra individual", "Progreso y recursos", "Certificados cuando correspondan", "Renovación mensual cuando se conecte la pasarela"], action: "Ver cursos", to: ROUTES.courses },
-  { name: "Academix Plus Anual", eyebrow: "Mejor valor", price: `${usd(ACADEMIX_SUBSCRIPTION_PLANS.annual.priceUsd)} / año`, description: "Acceso anual a todos los cursos incluidos en el plan con una sola suscripción.", features: ["12 meses de acceso", "Cursos incluidos ilimitados", "Progreso y certificados", "Ahorro frente al plan mensual"], action: "Ver cursos", to: ROUTES.courses },
+  { name: "Academix Plus Mensual", eyebrow: "Acceso ilimitado", price: `${formatMxn(ACADEMIX_SUBSCRIPTION_PLANS.monthly.priceMxn)} / mes`, description: "Durante un mes puedes estudiar todos los cursos incluidos en Academix Plus.", features: ["Cursos incluidos sin compra individual", "Progreso y recursos", "Certificados cuando correspondan", "Renovación mensual cuando se conecte la pasarela"], action: "Ver cursos", to: ROUTES.courses },
+  { name: "Academix Plus Anual", eyebrow: "Mejor valor", price: `${formatMxn(ACADEMIX_SUBSCRIPTION_PLANS.annual.priceMxn)} / año`, description: "Acceso anual a todos los cursos incluidos en el plan con una sola suscripción.", features: ["12 meses de acceso", "Cursos incluidos ilimitados", "Progreso y certificados", "Ahorro frente al plan mensual"], action: "Ver cursos", to: ROUTES.courses },
   { name: "Compra por curso", eyebrow: "Sin suscripción", price: "Paga solo lo que estudias", description: "Compra uno o varios cursos y consérvalos en tu cuenta según las condiciones de Academix.", features: ["Carrito de varios cursos", "Precio visible antes de comprar", "Acceso al curso adquirido", "Certificado cuando el curso lo incluya"], action: "Explorar cursos", to: ROUTES.courses },
   { name: "Publica en Academix", eyebrow: "Instructores independientes", price: "Ingresos por tus cursos", description: "Crea, envía una vez a revisión y, después de ser aprobado, edita o da de baja tu curso desde tu panel.", features: ["Panel de instructor", "Precio por curso", "Revisión inicial de Academix", "Notificación cuando el curso sea aprobado"], action: "Quiero enseñar", to: ROUTES.instructorApplication },
 ];

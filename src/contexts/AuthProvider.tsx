@@ -24,6 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     queryClient.removeQueries({ queryKey: ["student"] });
     queryClient.removeQueries({ queryKey: ["learning"] });
     queryClient.removeQueries({ queryKey: ["management"] });
+    queryClient.removeQueries({ queryKey: ["moderation"] });
     setSession(null);
   }, [queryClient]);
 

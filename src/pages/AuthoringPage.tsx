@@ -8,7 +8,7 @@ import type { AuthoringLesson } from "../types/management.types";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 
-const statusLabels = { draft: "Borrador", review: "En revisión", published: "Publicado", archived: "Archivado" } as const;
+const statusLabels = { draft: "Borrador", review: "En revisión", published: "Publicado", archived: "Archivado", moderated: "Dado de baja por moderación" } as const;
 
 function acceptedFiles(typeName: string): string | undefined {
   const value = typeName.toLowerCase();
@@ -74,7 +74,7 @@ export default function AuthoringPage() {
   });
 
   return (
-    <section aria-labelledby="authoring-title">
+    <section aria-labelledby="authoring-title" className="min-w-0">
       <p className="text-sm font-semibold text-brand-300">Editor del curso</p><h1 id="authoring-title" className="mt-2 text-3xl font-bold">Contenido del curso</h1>
       <p className="mt-2 text-slate-400">Organiza los módulos, lecciones y materiales que verán tus estudiantes.</p>
       {content.isPending ? <p className="mt-8 text-slate-400">Cargando contenido...</p> : null}
@@ -86,16 +86,16 @@ export default function AuthoringPage() {
       </form>
       <div className="mt-6 space-y-5">
         {content.data?.modules.map((module) => (
-          <article key={module.id} className="rounded-2xl border border-white/10 bg-slate-900/60 p-5">
-            <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-semibold">{module.position}. {module.title}</h2><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "module", id: module.id, active: !module.active })}>{module.active ? "Desactivar" : "Activar"}</Button></div>
+          <article key={module.id} className="min-w-0 rounded-2xl border border-white/10 bg-slate-900/60 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 className="text-xl font-semibold">{module.position}. {module.title}</h2><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "module", id: module.id, active: !module.active })}>{module.active ? "Desactivar" : "Activar"}</Button></div>
             <div className="mt-4 space-y-4">{module.lessons.map((lesson) => (
               <section key={lesson.id} className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-                <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{lesson.position}. {lesson.title}</h3><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "lesson", id: lesson.id, active: !lesson.active })}>{lesson.active ? "Desactivar" : "Activar"}</Button></div><p className="mt-1 text-xs text-slate-400">{lesson.durationMinutes} min · {lesson.isPreview ? "Vista previa" : "Solo inscritos"}</p>
-                <ul className="mt-3 space-y-1 text-sm text-slate-300">{lesson.resources.map((resource) => <li key={resource.id} className="flex items-center justify-between gap-3"><span>• {resource.title} <span className="text-slate-500">({resource.type})</span></span><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "resource", id: resource.id, active: !resource.active })}>{resource.active ? "Desactivar" : "Activar"}</Button></li>)}</ul>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h3 className="font-semibold">{lesson.position}. {lesson.title}</h3><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "lesson", id: lesson.id, active: !lesson.active })}>{lesson.active ? "Desactivar" : "Activar"}</Button></div><p className="mt-1 text-xs text-slate-400">{lesson.durationMinutes} min · {lesson.isPreview ? "Vista previa" : "Solo inscritos"}</p>
+                <ul className="mt-3 space-y-1 text-sm text-slate-300">{lesson.resources.map((resource) => <li key={resource.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><span>• {resource.title} <span className="text-slate-500">({resource.type})</span></span><Button size="sm" variant="ghost" onClick={() => toggle.mutate({ kind: "resource", id: resource.id, active: !resource.active })}>{resource.active ? "Desactivar" : "Activar"}</Button></li>)}</ul>
                 <LessonResourceForm courseId={courseId} lesson={lesson} refresh={refresh} resourceTypes={resourceOptions.data ?? []} />
               </section>
             ))}</div>
-            <form onSubmit={(e) => { e.preventDefault(); createLesson.mutate({ moduleId: module.id, title: lessonTitles[module.id] ?? "", position: module.lessons.length + 1 }); }} className="mt-4 flex gap-3">
+            <form onSubmit={(e) => { e.preventDefault(); createLesson.mutate({ moduleId: module.id, title: lessonTitles[module.id] ?? "", position: module.lessons.length + 1 }); }} className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input required value={lessonTitles[module.id] ?? ""} onChange={(e) => setLessonTitles((current) => ({ ...current, [module.id]: e.target.value }))} placeholder="Nueva lección" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2" />
               <Button type="submit" size="sm" variant="secondary" disabled={createLesson.isPending}>Agregar lección</Button>
             </form>

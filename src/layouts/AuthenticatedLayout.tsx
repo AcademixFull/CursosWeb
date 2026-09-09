@@ -35,14 +35,22 @@ export default function AuthenticatedLayout() {
     };
   }, [drawerOpen]);
 
+  const homeItem: MenuItem = role === "admin"
+    ? { label: "Administración", to: ROUTES.admin, icon: "admin", end: true }
+    : role === "moderator"
+      ? { label: "Moderación", to: ROUTES.moderation, icon: "moderation", end: true }
+      : role === "instructor"
+        ? { label: "Panel de instructor", to: ROUTES.instructorPanel, icon: "teach", end: true }
+        : { label: "Resumen", to: roleHomeRoute(role), icon: "home", end: true };
   const primary: MenuItem[] = [
-    { label: role === "admin" ? "Administración" : role === "instructor" ? "Panel de instructor" : "Resumen", to: roleHomeRoute(role), icon: role === "admin" ? "admin" : role === "instructor" ? "teach" : "home", end: true },
+    homeItem,
     ...(role !== "student" ? [{ label: "Mi aprendizaje", to: ROUTES.dashboard, icon: "home" as const }] : []),
+    ...(role === "admin" ? [{ label: "Moderación", to: ROUTES.moderation, icon: "moderation" as const }] : []),
     { label: "Mis cursos", to: ROUTES.myCourses, icon: "courses" },
     { label: "Certificados", to: ROUTES.certificates, icon: "certificate" },
     { label: "Organización", to: ROUTES.organization, icon: "organization" },
     { label: "Mi información", to: profileRoute, icon: "profile" },
-    { label: "Quiero enseñar", to: ROUTES.instructorApplication, icon: "teach" },
+    ...(role !== "moderator" ? [{ label: "Quiero enseñar", to: ROUTES.instructorApplication, icon: "teach" as const }] : []),
   ];
   const groups: MenuGroup[] = [
     { label: "MI ACADEMIX", items: primary },
@@ -63,7 +71,7 @@ export default function AuthenticatedLayout() {
   }
 
   const initials = user?.fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "A";
-  const roleLabel = role === "admin" ? "Administrador Academix" : role === "instructor" ? "Instructor" : "Estudiante";
+  const roleLabel = role === "admin" ? "Administrador Academix" : role === "moderator" ? "Moderador Academix" : role === "instructor" ? "Instructor" : "Estudiante";
 
   const sidebar = (
     <aside className="flex h-full w-[min(86vw,19rem)] flex-col border-r border-white/10 bg-slate-950 shadow-2xl lg:w-72 lg:shadow-none" aria-label="Navegación de cuenta">

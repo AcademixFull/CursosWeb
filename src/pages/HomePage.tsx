@@ -1,6 +1,8 @@
 import { Link } from 'react-router';
-import { ROUTES } from '../config/routes';
+import { courseDetailRoute, ROUTES } from '../config/routes';
+import { useFeaturedCourses } from '../hooks/useCourses';
 import PublicLayout from '../layouts/PublicLayout';
+import { formatMxn } from '../utils/currency';
 
 const stats = [
   { value: '1000+', label: 'Estudiantes activos' },
@@ -48,6 +50,8 @@ const testimonials = [
 ];
 
 export default function HomePage() {
+  const featuredCourses = useFeaturedCourses();
+
   return (
     <PublicLayout active="inicio">
         {/* Hero */}
@@ -102,7 +106,7 @@ export default function HomePage() {
 
         {/* Stats */}
         <section className="border-y border-white/10 bg-slate-900/40 px-6 py-12">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 text-center sm:grid-cols-4">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 text-center min-[420px]:grid-cols-2 sm:grid-cols-4 sm:gap-8">
             {stats.map((stat) => (
               <div key={stat.label}>
                 <p className="text-3xl font-extrabold text-white">{stat.value}</p>
@@ -124,7 +128,7 @@ export default function HomePage() {
                   Cursos Destacados
                 </h2>
                 <p className="mt-2 text-slate-400">
-                  Las habilidades más buscadas por las empresas líderes.
+                  Los cursos independientes más tomados por la comunidad de Academix.
                 </p>
               </div>
               <Link
@@ -135,37 +139,52 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { tag: 'Desarrollo Web', title: 'Master en Desarrollo Web Full Stack', price: '$49.99' },
-                { tag: 'Diseño UI/UX', title: 'Diseño de Interfaces (UI) y Experiencia de Usuario', price: '$34.99' },
-                { tag: 'Inteligencia Artificial', title: 'Introducción a la Inteligencia Artificial', price: '$59.99' },
-                { tag: 'Marketing Digital', title: 'Estrategias Avanzadas de Marketing', price: '$29.99' },
-              ].map((course) => (
-                <article
-                  key={course.title}
-                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/60"
-                >
-                  <div className="academix-soft-banner academix-soft-banner-text flex h-32 items-center justify-center text-xs font-semibold uppercase tracking-wider text-violet-300">
-                    {course.tag}
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-base font-bold text-white">{course.title}</h3>
-                    <div className="mt-auto flex items-center justify-between pt-5">
-                      <span className="text-lg font-extrabold text-violet-300">
-                        {course.price}
-                      </span>
-                      <Link
-                        to={ROUTES.courses}
-                        className="text-sm font-semibold text-white transition hover:text-violet-300"
-                      >
-                        Ver Curso →
-                      </Link>
+            <p className="-mt-6 mb-8 text-sm text-slate-500">
+              Se muestran hasta 5 cursos independientes, ordenados por el número de inscripciones. Los cursos de organizaciones no participan en este ranking.
+            </p>
+
+            {featuredCourses.isPending ? (
+              <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center text-slate-400">
+                Cargando cursos destacados...
+              </div>
+            ) : featuredCourses.isError ? (
+              <div className="rounded-2xl border border-dashed border-red-400/30 p-8 text-center">
+                <p className="text-sm text-red-200">No pudimos consultar los cursos destacados.</p>
+                <button type="button" onClick={() => void featuredCourses.refetch()} className="mt-3 text-sm font-semibold text-violet-300">
+                  Intentar de nuevo
+                </button>
+              </div>
+            ) : featuredCourses.data.length ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                {featuredCourses.data.map((course) => (
+                  <article
+                    key={course.id}
+                    className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/60"
+                  >
+                    <div className="academix-soft-banner academix-soft-banner-text flex h-32 items-center justify-center overflow-hidden text-xs font-semibold uppercase tracking-wider text-violet-300">
+                      {course.imageUrl ? <img src={course.imageUrl} alt="" className="h-full w-full object-cover" /> : course.category.name}
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <p className="text-xs text-slate-500">Por {course.instructor.name}</p>
+                      <h3 className="mt-2 break-words text-base font-bold text-white">{course.title}</h3>
+                      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+                        <span className="text-base font-extrabold text-violet-300">{formatMxn(course.price)}</span>
+                        <Link
+                          to={courseDetailRoute(course.id)}
+                          className="text-sm font-semibold text-white transition hover:text-violet-300"
+                        >
+                          Ver Curso →
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center text-slate-400">
+                Aún no hay cursos independientes publicados para destacar.
+              </div>
+            )}
           </div>
         </section>
 

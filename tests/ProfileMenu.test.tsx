@@ -5,7 +5,7 @@ import { ProfileMenu } from "../src/components/navigation/ProfileMenu";
 
 const authState = vi.hoisted(() => ({
   isAuthenticated: false,
-  user: null as null | { id: string; fullName: string; email: string; role: "student" | "instructor" | "admin" },
+  user: null as null | { id: string; fullName: string; email: string; role: "student" | "instructor" | "moderator" | "admin" },
   logout: vi.fn(async () => undefined),
 }));
 
@@ -46,6 +46,7 @@ describe("ProfileMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Mi información" })).toHaveAttribute("href", "/perfil");
     expect(screen.getByRole("menuitem", { name: "Mis cursos" })).toHaveAttribute("href", "/mis-cursos");
     expect(screen.getByRole("menuitem", { name: "Carrito (2)" })).toHaveAttribute("href", "/carrito");
+    expect(screen.getByRole("menuitem", { name: "Quiero enseñar" })).toHaveAttribute("href", "/solicitud-instructor");
   });
 
   it("muestra al instructor sus funciones de aprendizaje además del panel de enseñanza", () => {
@@ -74,6 +75,21 @@ describe("ProfileMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Certificados" })).toHaveAttribute("href", "/certificados");
     expect(screen.getByRole("menuitem", { name: "Carrito (2)" })).toHaveAttribute("href", "/carrito");
     expect(screen.getByRole("menuitem", { name: "Quiero enseñar" })).toHaveAttribute("href", "/solicitud-instructor");
+  });
+
+  it("muestra al moderador su panel y conserva las funciones de aprendizaje", () => {
+    authState.isAuthenticated = true;
+    authState.user = { id: "u4", fullName: "Ana Moderadora", email: "moderador@example.com", role: "moderator" };
+    renderMenu();
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menú de Ana Moderadora" }));
+
+    expect(screen.getByText("Moderador Academix")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Moderación" })).toHaveAttribute("href", "/moderacion");
+    expect(screen.getByRole("menuitem", { name: "Mi aprendizaje" })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("menuitem", { name: "Mis cursos" })).toHaveAttribute("href", "/mis-cursos");
+    expect(screen.getByRole("menuitem", { name: "Certificados" })).toHaveAttribute("href", "/certificados");
+    expect(screen.getByRole("menuitem", { name: "Carrito (2)" })).toHaveAttribute("href", "/carrito");
+    expect(screen.queryByRole("menuitem", { name: "Quiero enseñar" })).not.toBeInTheDocument();
   });
 
 });

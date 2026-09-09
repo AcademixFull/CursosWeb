@@ -17,15 +17,8 @@ import { useCourseReviews, useCreateReview } from "../hooks/useReviews";
 import { useMyCourses } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
 import { ApiError } from "../services/api";
+import { formatMxn } from "../utils/currency";
 import { locationPath } from "../utils/navigation";
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(price);
-}
 
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -78,6 +71,14 @@ export default function CourseDetailPage() {
   const enrollment = enrollmentsQuery.data?.find((item) => item.course.id === course.id);
   const hasReviewed = reviewConfirmed || course.reviews.some((review) => review.authorId === user?.id)
     || reviewsQuery.data?.items.some((review) => review.authorId === user?.id) === true;
+
+  function addToCart() {
+    if (!isAuthenticated) {
+      navigate(ROUTES.login, { state: { returnTo: locationPath(location) } });
+      return;
+    }
+    cart.addCourse(course);
+  }
 
   function startEnrollment() {
     if (!isAuthenticated) {
@@ -178,7 +179,7 @@ export default function CourseDetailPage() {
                         </summary>
                         <ul className="border-t border-white/10 px-5 py-3">
                           {module.lessons.map((lesson) => (
-                            <li key={lesson.id} className="flex items-center justify-between gap-4 py-3 text-sm text-slate-300">
+                            <li key={lesson.id} className="flex flex-col gap-2 py-3 text-sm text-slate-300 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                               <span>{lesson.title}{lesson.isPreview ? " · Vista previa" : ""}</span>
                               <span className="shrink-0 text-slate-500">{lesson.durationMinutes} min</span>
                             </li>
@@ -245,7 +246,7 @@ export default function CourseDetailPage() {
                   {reviewsQuery.data?.items.length ? (
                     reviewsQuery.data.items.map((review) => (
                       <article key={review.id} className="py-6 first:pt-0">
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                           <h3 className="font-bold text-white">{review.authorName}</h3>
                           <span className="text-sm text-amber-300">{"★".repeat(review.rating)}</span>
                         </div>
@@ -284,8 +285,12 @@ export default function CourseDetailPage() {
             </div>
 
             <aside className="h-fit rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl shadow-black/30 lg:sticky lg:top-28">
-              <p className="text-3xl font-extrabold text-white">{formatPrice(course.price)}</p>
-              {isEnrolled ? (
+              <p className="text-3xl font-extrabold text-white">{formatMxn(course.price)}</p>
+              {isAuthenticated && !cart.ownershipReady ? (
+                <Button size="lg" fullWidth className="mt-5" disabled>
+                  {enrollmentsQuery.isError ? "No pudimos verificar tus cursos" : "Consultando tus cursos..."}
+                </Button>
+              ) : isEnrolled ? (
                 <ButtonLink to={learningRoute(course.id)} size="lg" fullWidth className="mt-5">
                   Ir a mi curso
                 </ButtonLink>
@@ -295,14 +300,20 @@ export default function CourseDetailPage() {
                     size="lg"
                     fullWidth
                     className="mt-5"
-                    disabled={cart.hasCourse(course.id)}
-                    onClick={() => cart.addCourse(course)}
+                    disabled={isAuthenticated && cart.hasCourse(course.id)}
+                    onClick={addToCart}
                   >
-                    {cart.hasCourse(course.id) ? "Ya está en tu carrito" : "Agregar al carrito"}
+                    {!isAuthenticated
+                      ? "Iniciar sesión para agregar"
+                      : cart.hasCourse(course.id)
+                        ? "Ya está en tu carrito"
+                        : "Agregar al carrito"}
                   </Button>
-                  <ButtonLink to={ROUTES.cart} variant="secondary" size="lg" fullWidth className="mt-3">
-                    Ver carrito
-                  </ButtonLink>
+                  {isAuthenticated ? (
+                    <ButtonLink to={ROUTES.cart} variant="secondary" size="lg" fullWidth className="mt-3">
+                      Ver carrito
+                    </ButtonLink>
+                  ) : null}
                 </>
               ) : (
                 <Button size="lg" fullWidth className="mt-5" onClick={startEnrollment} disabled={enrollmentsQuery.isLoading}>
@@ -336,7 +347,7 @@ export default function CourseDetailPage() {
         {showEnrollment ? (
           <EnrollmentDialog
             courseTitle={course.title}
-            priceLabel={formatPrice(course.price)}
+            priceLabel={formatMxn(course.price)}
             isPending={enrollmentMutation.isPending}
             error={
               enrollmentMutation.isError

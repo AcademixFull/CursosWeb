@@ -58,4 +58,12 @@ describe("courses service in mock mode", () => {
       "No encontramos el curso solicitado.",
     );
   });
+  it("limits featured mocks to five courses", async () => {
+    const { listFeaturedCourses } = await loadMockService();
+    const result = await listFeaturedCourses();
+
+    expect(result.length).toBeLessThanOrEqual(5);
+    expect(result.map((course) => course.id)).toEqual(courseMocks.slice(0, 5).map((course) => course.id));
+  });
+
 });

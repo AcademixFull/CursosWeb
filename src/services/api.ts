@@ -3,6 +3,29 @@ import { clearAuthSession, getAuthToken } from "../utils/authSessionStore";
 
 export const AUTH_SESSION_EXPIRED_EVENT = "academix:auth-session-expired";
 
+const GENERIC_CONNECTIVITY_MESSAGE =
+  "No pudimos comunicarnos con Academix. Intenta nuevamente en unos momentos.";
+const GENERIC_OPERATION_MESSAGE =
+  "No pudimos completar la operación. Intenta nuevamente.";
+const TECHNICAL_MESSAGE_PATTERN =
+  /(?:academix-backend|\bbackend\b|\bapi\b|supabase|vite_api_url|fetch|network|cors|json|http\s*\d*|endpoint|authorization|x-file-name|sql|postgres|database|request[_ -]?id|p0001)/i;
+
+function publicErrorMessage(
+  message: string | undefined,
+  options: { status: number; code: ApiErrorCode },
+): string {
+  const value = message?.trim();
+  if (options.code === "NETWORK_ERROR") return GENERIC_CONNECTIVITY_MESSAGE;
+  if (!value) return GENERIC_OPERATION_MESSAGE;
+  if (options.status >= 500 || options.code === "INVALID_RESPONSE" || options.code === "UNKNOWN_ERROR") {
+    return GENERIC_OPERATION_MESSAGE;
+  }
+  if (TECHNICAL_MESSAGE_PATTERN.test(value) || /^[A-Z0-9_]{4,}$/.test(value)) {
+    return GENERIC_OPERATION_MESSAGE;
+  }
+  return value;
+}
+
 /**
  * Cliente HTTP central de academix-frontend.
  *
@@ -140,10 +163,10 @@ function buildUrl(path: string): string {
     // Todavía no existe academix-backend (o no se configuró VITE_API_URL).
     // Lanzamos un error claro en vez de hacer un fetch a una URL relativa
     // rota que fallaría de forma confusa.
-    throw new ApiError(
-      "VITE_API_URL no está configurada: academix-backend todavía no está disponible.",
-      { status: 0, code: "NETWORK_ERROR" }
-    );
+    throw new ApiError(GENERIC_CONNECTIVITY_MESSAGE, {
+      status: 0,
+      code: "NETWORK_ERROR",
+    });
   }
 
   return `${base}${cleanPath}`;
@@ -159,7 +182,7 @@ async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<
   try {
     payload = await response.json();
   } catch {
-    throw new ApiError("La respuesta del servidor no es JSON válido.", {
+    throw new ApiError(GENERIC_OPERATION_MESSAGE, {
       status: response.status,
       code: "INVALID_RESPONSE",
       ...responseMetadata(response),
@@ -173,24 +196,28 @@ async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<
   }
 
   if (envelope.success === false) {
-    throw new ApiError(envelope.error?.message ?? "Error desconocido del servidor.", {
-      status: response.status,
-      code: (envelope.error?.code as ApiErrorCode) ?? "UNKNOWN_ERROR",
-      fields: envelope.error?.fields,
-      ...responseMetadata(response),
-    });
+    const code = (envelope.error?.code as ApiErrorCode) ?? "UNKNOWN_ERROR";
+    throw new ApiError(
+      publicErrorMessage(envelope.error?.message, { status: response.status, code }),
+      {
+        status: response.status,
+        code,
+        fields: envelope.error?.fields,
+        ...responseMetadata(response),
+      },
+    );
   }
 
   // El backend respondió pero no con el formato { success, data|error } esperado.
   if (!response.ok) {
-    throw new ApiError(`Error HTTP ${response.status}`, {
+    throw new ApiError(GENERIC_OPERATION_MESSAGE, {
       status: response.status,
       code: "UNKNOWN_ERROR",
       ...responseMetadata(response),
     });
   }
 
-  throw new ApiError("La respuesta del servidor no tiene el formato esperado.", {
+  throw new ApiError(GENERIC_OPERATION_MESSAGE, {
     status: response.status,
     code: "INVALID_RESPONSE",
     ...responseMetadata(response),
@@ -231,7 +258,7 @@ async function requestEnvelope<T>(
     if (error instanceof DOMException && error.name === "AbortError") {
       throw error; // cancelación intencional (ej. React Query): se re-lanza tal cual
     }
-    throw new ApiError("No se pudo conectar con academix-backend.", {
+    throw new ApiError(GENERIC_CONNECTIVITY_MESSAGE, {
       status: 0,
       code: "NETWORK_ERROR",
     });
@@ -290,7 +317,7 @@ async function requestBinary(
     response = await fetch(buildUrl(path), { method: "GET", headers, signal: options.signal });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new ApiError("No se pudo conectar con academix-backend.", {
+    throw new ApiError(GENERIC_CONNECTIVITY_MESSAGE, {
       status: 0,
       code: "NETWORK_ERROR",
     });
@@ -327,7 +354,7 @@ async function requestRaw<T>(
     response = await fetch(buildUrl(path), { method, headers, body, signal: options.signal });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new ApiError("No se pudo conectar con academix-backend.", { status: 0, code: "NETWORK_ERROR" });
+    throw new ApiError(GENERIC_CONNECTIVITY_MESSAGE, { status: 0, code: "NETWORK_ERROR" });
   }
   if (response.status === 401 && options.authToken === undefined && sessionToken) notifyExpiredSession();
   return (await parseEnvelope<T>(response)).data;

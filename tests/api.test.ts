@@ -210,4 +210,35 @@ describe("central API client", () => {
     expect(request.body).toBe(file);
     expect((request.headers as Headers).get("x-file-name")).toBe("guia.pdf");
   });
+  it("uses a user-facing message when Academix cannot be reached", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    const { api } = await loadApi();
+
+    await expect(api.get("/courses")).rejects.toMatchObject({
+      code: "NETWORK_ERROR",
+      message: "No pudimos comunicarnos con Academix. Intenta nuevamente en unos momentos.",
+    });
+  });
+
+  it("does not expose technical provider messages to the user", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            success: false,
+            error: { code: "AUTH_PROVIDER_ERROR", message: "Supabase backend request failed" },
+          },
+          502,
+        ),
+      ),
+    );
+    const { api } = await loadApi();
+
+    await expect(api.post("/auth/login", {})).rejects.toMatchObject({
+      code: "AUTH_PROVIDER_ERROR",
+      message: "No pudimos completar la operación. Intenta nuevamente.",
+    });
+  });
+
 });

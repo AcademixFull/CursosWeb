@@ -23,6 +23,7 @@ export const ROUTES = {
   instructorPanel: "/panel-instructor",
   managementProfile: "/mi-informacion",
   admin: "/administracion",
+  moderation: "/moderacion",
   authoring: "/autor",
   organization: "/organizacion",
   cart: "/carrito",
@@ -57,6 +58,7 @@ export function authoringRoute(courseId: string): string {
 
 export function roleHomeRoute(role?: UserRole): string {
   if (role === "admin") return ROUTES.admin;
+  if (role === "moderator") return ROUTES.moderation;
   if (role === "instructor") return ROUTES.instructorPanel;
   return ROUTES.dashboard;
 }

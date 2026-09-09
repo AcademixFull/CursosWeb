@@ -37,7 +37,7 @@ export interface UserProfile {
   id: string;
   fullName: string;
   email: string;
-  role: "student" | "instructor" | "admin";
+  role: "student" | "instructor" | "moderator" | "admin";
   phone: string;
   country: string;
   bio: string;

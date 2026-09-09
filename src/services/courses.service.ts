@@ -77,6 +77,15 @@ export async function listCourses(filters: CourseFilters = {}): Promise<CourseLi
   return env.dataSource === "api" ? listApiCourses(filters) : listMockCourses(filters);
 }
 
+export async function listFeaturedCourses(): Promise<CourseSummary[]> {
+  if (env.dataSource === "api") {
+    return api.get<CourseSummary[]>("/courses/featured");
+  }
+
+  await waitForMocks();
+  return courseMocks.slice(0, 5).map(mergeCourseReviewMocks);
+}
+
 export async function getCourse(courseId: string): Promise<CourseDetail> {
   if (env.dataSource === "api") {
     return api.get<CourseDetail>(`/courses/${encodeURIComponent(courseId)}`);

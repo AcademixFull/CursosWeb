@@ -9,7 +9,7 @@ const roleLabels: Record<OrganizationRole, string> = {
   instructor: "Instructor",
   student: "Estudiante",
 };
-const statusLabels = { draft: "Borrador", review: "En revisión", published: "Publicado", archived: "Archivado" } as const;
+const statusLabels = { draft: "Borrador", review: "En revisión", published: "Publicado", archived: "Archivado", moderated: "Dado de baja por moderación" } as const;
 
 export default function OrganizationPage() {
   const organizations = useOrganizations();
@@ -59,16 +59,16 @@ export default function OrganizationPage() {
   );
 
   return (
-    <section aria-labelledby="organization-title">
+    <section aria-labelledby="organization-title" className="min-w-0">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-bold text-brand-300">Organizaciones</p>
-          <h1 id="organization-title" className="mt-2 text-3xl font-bold text-slate-100">Mi organización</h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-400">Crea el espacio de tu universidad o empresa, o únete con el código de la institución y tu matrícula.</p>
+          <h1 id="organization-title" className="mt-2 text-3xl font-bold text-slate-100">Mis organizaciones</h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-400">Puedes pertenecer a varias organizaciones al mismo tiempo. Crea el espacio de tu universidad o empresa, o únete con el código de cada institución y tu matrícula.</p>
         </div>
         {organizations.data && organizations.data.length > 0 ? (
-          <label className="text-sm text-slate-400">Organización
-            <select value={selected?.id ?? ""} onChange={(event) => setSelectedId(event.target.value)} className="ml-3 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100">
+          <label className="flex w-full flex-col gap-2 text-sm text-slate-400 sm:w-auto sm:flex-row sm:items-center">Organización
+            <select value={selected?.id ?? ""} onChange={(event) => setSelectedId(event.target.value)} className="w-full max-w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100 sm:w-auto">
               {organizations.data.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
             </select>
           </label>
@@ -98,8 +98,8 @@ export default function OrganizationPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <article className="rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5 sm:col-span-2">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+            <article className="rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5 lg:col-span-2">
               <p className="text-xs font-bold uppercase tracking-widest text-brand-300">{selected.type === "university" ? "Universidad" : selected.type === "company" ? "Empresa" : "Organización"}</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-100">{selected.name}</h2>
               <p className="mt-2 text-sm text-slate-400">{selected.description || "Sin descripción todavía."}</p>

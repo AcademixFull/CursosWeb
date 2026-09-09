@@ -16,6 +16,7 @@ interface ProfileFormProps {
 const roleLabels: Record<UserProfile["role"], string> = {
   student: "Estudiante",
   instructor: "Instructor",
+  moderator: "Moderador Academix",
   admin: "Administrador",
 };
 

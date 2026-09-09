@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-export type SidebarIconName = "home" | "courses" | "certificate" | "profile" | "teach" | "organization" | "catalog" | "pricing" | "admin" | "cart" | "info" | "help" | "contact" | "logout" | "moon" | "sun";
+export type SidebarIconName = "home" | "courses" | "certificate" | "profile" | "teach" | "organization" | "catalog" | "pricing" | "admin" | "moderation" | "cart" | "info" | "help" | "contact" | "logout" | "moon" | "sun";
 
 export function SidebarIcon({ name, ...props }: SVGProps<SVGSVGElement> & { name: SidebarIconName }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -14,6 +14,7 @@ export function SidebarIcon({ name, ...props }: SVGProps<SVGSVGElement> & { name
     catalog: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 8h10M7 12h10M7 16h6" /></>,
     pricing: <><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3s-5 1.3-5 3 2.2 3 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3" /></>,
     admin: <><path d="M12 3 4 7v5c0 5.2 3.4 8 8 9 4.6-1 8-3.8 8-9V7z" /><path d="m9 12 2 2 4-4" /></>,
+    moderation: <><path d="M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6z" /><path d="M8.5 12h7M12 8.5v7" /></>,
     cart: <><path d="M3 4h2l2.2 10h9.8l2-7H6"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></>,
     info: <><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></>,
     help: <><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 1 1 3.8 2.1c-.9.5-1.5 1.1-1.5 2.4M12 17h.01"/></>,
