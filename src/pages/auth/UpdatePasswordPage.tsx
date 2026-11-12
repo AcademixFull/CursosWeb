@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { ROUTES } from "../../config/routes";
 import { useAuth } from "../../hooks/useAuth";
 import AuthLayout from "../../layouts/AuthLayout";
-import { ApiError } from "../../services/api";
+import { userErrorMessage } from "../../services/api";
 import {
   clearPasswordRecoveryState,
   readPasswordRecoveryState,
@@ -41,9 +41,7 @@ export default function UpdatePasswordPage() {
       });
     } catch (error) {
       setSubmitError(
-        error instanceof ApiError
-          ? error.message
-          : "No pudimos actualizar tu contraseña. Solicita un enlace nuevo.",
+        userErrorMessage(error, "No pudimos actualizar tu contraseña. Solicita un enlace nuevo."),
       );
     } finally {
       setIsSubmitting(false);

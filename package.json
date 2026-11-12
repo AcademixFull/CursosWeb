@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run lint && npm run test && npm run build",
+    "prepreview": "npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -38,6 +39,7 @@
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "fake-indexeddb": "^6.2.7",
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.0",

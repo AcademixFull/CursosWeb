@@ -19,6 +19,21 @@ async function loadApi() {
 }
 
 describe("central API client", () => {
+  it("rejects a private response parsed after logout even when its headers arrived earlier", async () => {
+    let finish!: (payload: object) => void;
+    const payload = new Promise<object>((resolve) => { finish = resolve; });
+    const response = jsonResponse({ success: true, data: null });
+    response.json = () => payload;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+    const { api, abortSessionRequests } = await loadApi();
+    const { saveAuthSession } = await import("../src/utils/authSessionStore");
+    saveAuthSession({ user: { id: "old-account", email: "old@test.com", fullName: "Old", role: "student" }, accessToken: "test-token", expiresAt: new Date(Date.now() + 60_000).toISOString() });
+    const request = api.get("/users/me/courses");
+    await Promise.resolve(); await Promise.resolve();
+    abortSessionRequests();
+    finish({ success: true, data: ["private-response"] });
+    await expect(request).rejects.toMatchObject({ name: "AbortError" });
+  });
   beforeEach(() => {
     sessionStorage.clear();
     vi.unstubAllEnvs();
@@ -90,7 +105,7 @@ describe("central API client", () => {
     });
   });
 
-  it("clears the stored session and notifies the app after a 401", async () => {
+  it("removes API credentials after a 401 while preserving the offline identity", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -104,7 +119,7 @@ describe("central API client", () => {
       ),
     );
     const { api, AUTH_SESSION_EXPIRED_EVENT } = await loadApi();
-    const { saveAuthSession } = await import("../src/utils/authSessionStore");
+    const { saveAuthSession, getAuthToken, readAuthSession } = await import("../src/utils/authSessionStore");
     saveAuthSession({
       accessToken: "expired-token",
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
@@ -120,7 +135,9 @@ describe("central API client", () => {
 
     await expect(api.get("/auth/me")).rejects.toMatchObject({ status: 401 });
 
-    expect(sessionStorage.length).toBe(0);
+    expect(getAuthToken()).toBeUndefined();
+    expect(readAuthSession()).toMatchObject({ accessToken: "", user: { id: "user-1" } });
+    expect(sessionStorage.getItem("academix.demo-session.v1")).toBeNull();
     expect(listener).toHaveBeenCalledOnce();
     window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
   });
@@ -220,6 +237,39 @@ describe("central API client", () => {
     });
   });
 
+  it("sanitizes technical errors before they reach a rendered message", async () => {
+    const { ApiError, userErrorMessage } = await loadApi();
+
+    expect(
+      userErrorMessage(
+        new ApiError("La respuesta paginada no incluye sus metadatos.", {
+          status: 200,
+          code: "INVALID_RESPONSE",
+        }),
+        "No pudimos cargar los cursos. Intenta nuevamente.",
+      ),
+    ).toBe("No pudimos cargar los cursos. Intenta nuevamente.");
+
+    expect(
+      userErrorMessage(
+        new TypeError("Failed to fetch http://localhost:3000/api/v1/courses"),
+        "No pudimos cargar los cursos. Intenta nuevamente.",
+      ),
+    ).toBe("No pudimos cargar los cursos. Intenta nuevamente.");
+  });
+
+  it("keeps safe validation messages that help the user correct an action", async () => {
+    const { ApiError, userErrorMessage } = await loadApi();
+    const error = new ApiError("El precio debe ser mayor a cero.", {
+      status: 422,
+      code: "COURSE_PRICE_REQUIRED",
+    });
+
+    expect(userErrorMessage(error, "No pudimos guardar los cambios.")).toBe(
+      "El precio debe ser mayor a cero.",
+    );
+  });
+
   it("does not expose technical provider messages to the user", async () => {
     vi.stubGlobal(
       "fetch",
@@ -241,4 +291,19 @@ describe("central API client", () => {
     });
   });
 
+});
+
+
+it("encodes pagination and filters without losing existing parameters", async () => {
+  vi.stubEnv("VITE_API_URL", "https://api.academix.test/api/v1");
+  vi.resetModules();
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: [] }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { api } = await import("../src/services/api");
+  await api.get("/courses?scope=external", { params: { page: 2, search: "Diseño & datos", empty: undefined } });
+  const url = new URL(fetchMock.mock.calls[0][0]);
+  expect(url.searchParams.get("scope")).toBe("external");
+  expect(url.searchParams.get("page")).toBe("2");
+  expect(url.searchParams.get("search")).toBe("Diseño & datos");
+  expect(url.searchParams.has("empty")).toBe(false);
 });

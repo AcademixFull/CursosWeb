@@ -35,6 +35,7 @@ describe("CourseCard ownership", () => {
 
     expect(screen.getByRole("button", { name: "Ya lo tienes" })).toBeDisabled();
     expect(cartState.addCourse).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Ver material" })).toHaveAttribute("href", expect.stringContaining(course.id));
   });
 
   it("mantiene bloqueado un curso que ya está en el carrito", () => {
@@ -42,6 +43,13 @@ describe("CourseCard ownership", () => {
     render(<MemoryRouter><CourseCard course={course} /></MemoryRouter>);
 
     expect(screen.getByRole("button", { name: "En carrito" })).toBeDisabled();
+  });
+
+  it("identifica también el material gratuito que el usuario ya tiene", () => {
+    cartState.ownsCourse.mockReturnValue(true);
+    render(<MemoryRouter><CourseCard course={{ ...course, price: 0 }} /></MemoryRouter>);
+    expect(screen.getByRole("button", { name: "Ya lo tienes" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Ver material" })).toBeInTheDocument();
   });
 
   it("espera a verificar los cursos del usuario antes de habilitar la compra", () => {

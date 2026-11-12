@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getInstructor, listInstructorCourses } from "../services/instructors.service";
+import { getInstructor, listInstructorCoursesPage } from "../services/instructors.service";
 
 export function useInstructor(instructorId: string | undefined) {
   return useQuery({
@@ -9,10 +9,10 @@ export function useInstructor(instructorId: string | undefined) {
   });
 }
 
-export function useInstructorCourses(instructorId: string | undefined) {
+export function useInstructorCourses(instructorId: string | undefined, page = 1) {
   return useQuery({
-    queryKey: ["instructor", instructorId, "courses"],
-    queryFn: () => listInstructorCourses(instructorId ?? ""),
+    queryKey: ["instructor", instructorId, "courses", page],
+    queryFn: ({ signal }) => listInstructorCoursesPage(instructorId ?? "", page, signal),
     enabled: Boolean(instructorId),
   });
 }

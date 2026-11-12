@@ -1,3 +1,4 @@
+import { Pagination } from "../components/ui/Pagination";
 import { useState } from "react";
 import { EnrollmentCard } from "../components/student/EnrollmentCard";
 import { StudentPageHeader } from "../components/student/StudentPageHeader";
@@ -6,7 +7,8 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { ROUTES } from "../config/routes";
-import { useMyCourses } from "../hooks/useStudent";
+import { useMyCoursesPage } from "../hooks/useStudent";
+import { userErrorMessage } from "../services/api";
 import type { EnrollmentStatus } from "../types/student.types";
 import { classNames } from "../utils/classNames";
 
@@ -20,20 +22,22 @@ const views: Array<{ value: CourseView; label: string }> = [
 
 export default function MyCoursesPage() {
   const [view, setView] = useState<CourseView>("all");
-  const query = useMyCourses();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const query = useMyCoursesPage({ page, limit, ...(view !== "all" ? { status: view } : {}) });
 
   if (query.isLoading) return <PageLoader label="Cargando tus cursos" />;
   if (query.isError) {
     return (
       <ErrorState
-        description={query.error instanceof Error ? query.error.message : "No pudimos cargar tus cursos."}
+        description={userErrorMessage(query.error, "No pudimos cargar tus cursos.")}
         onRetry={() => void query.refetch()}
       />
     );
   }
 
-  const courses = query.data ?? [];
-  const visibleCourses = view === "all" ? courses : courses.filter((item) => item.status === view);
+  const courses = query.data?.items ?? [];
+  const visibleCourses = courses;
 
   return (
     <div>
@@ -50,7 +54,7 @@ export default function MyCoursesPage() {
             key={item.value}
             type="button"
             aria-pressed={view === item.value}
-            onClick={() => setView(item.value)}
+            onClick={() => { setView(item.value); setPage(1); }}
             className={classNames(
               "rounded-full px-4 py-2 text-sm font-semibold transition",
               view === item.value
@@ -63,6 +67,7 @@ export default function MyCoursesPage() {
         ))}
       </div>
 
+      {query.data ? <Pagination label="Mis cursos" pagination={query.data.pagination} onPageChange={setPage} onLimitChange={(value) => { setLimit(value); setPage(1); }} isPending={query.isFetching} /> : null}
       {visibleCourses.length ? (
         <div className="mt-7 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {visibleCourses.map((enrollment) => (

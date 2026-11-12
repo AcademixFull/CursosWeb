@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Pagination } from "../components/ui/Pagination";
 import { useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
 import { Badge } from "../components/ui/Badge";
@@ -8,6 +10,7 @@ import { PageLoader } from "../components/ui/PageLoader";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { ROUTES } from "../config/routes";
 import { useInstructor, useInstructorCourses } from "../hooks/useInstructor";
+import { userErrorMessage } from "../services/api";
 import PublicLayout from "../layouts/PublicLayout";
 
 const numberFormatter = new Intl.NumberFormat("es-MX");
@@ -25,7 +28,8 @@ function getInitials(name: string): string {
 export default function InstructorPage() {
   const { instructorId } = useParams<{ instructorId: string }>();
   const instructorQuery = useInstructor(instructorId);
-  const coursesQuery = useInstructorCourses(instructorId);
+  const [page, setPage] = useState(1);
+  const coursesQuery = useInstructorCourses(instructorId, page);
 
   if (instructorQuery.isPending) {
     return (
@@ -41,11 +45,7 @@ export default function InstructorPage() {
         <div className="mx-auto max-w-3xl px-6 py-24 text-center">
           <ErrorState
             title="Instructor no disponible"
-            description={
-              instructorQuery.error instanceof Error
-                ? instructorQuery.error.message
-                : "No fue posible consultar su perfil."
-            }
+            description={userErrorMessage(instructorQuery.error, "No pudimos consultar este perfil. Intenta nuevamente.")}
             onRetry={() => void instructorQuery.refetch()}
           />
           <ButtonLink to={ROUTES.courses} variant="secondary" className="mt-6">
@@ -125,8 +125,9 @@ export default function InstructorPage() {
                 onRetry={() => void coursesQuery.refetch()}
               />
             ) : null}
-            {coursesQuery.data?.length ? <CourseGrid courses={coursesQuery.data} /> : null}
-            {coursesQuery.isSuccess && coursesQuery.data.length === 0 ? (
+            {coursesQuery.data?.items.length ? <CourseGrid courses={coursesQuery.data.items} /> : null}
+            {coursesQuery.data ? <Pagination label="Cursos del instructor" pagination={coursesQuery.data.pagination} onPageChange={setPage} isPending={coursesQuery.isFetching} /> : null}
+            {coursesQuery.isSuccess && coursesQuery.data.items.length === 0 ? (
               <EmptyState
                 title="Todavía no hay cursos publicados"
                 description="El nuevo contenido del instructor aparecerá aquí."

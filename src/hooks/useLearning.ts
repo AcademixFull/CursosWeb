@@ -12,6 +12,7 @@ export function useLearningCourse(courseId: string) {
   return useQuery({
     queryKey: learningQueryKey(courseId, user?.id ?? "anonymous"),
     queryFn: () => getLearningCourse(courseId),
+    networkMode: "always",
     enabled: Boolean(courseId && user),
   });
 }
@@ -22,6 +23,7 @@ export function useSetLessonProgress(courseId: string) {
   const userId = user?.id ?? "anonymous";
 
   return useMutation({
+    networkMode: "always",
     mutationFn: ({ lessonId, completed }: { lessonId: string; completed: boolean }) =>
       setLearningLessonProgress(courseId, lessonId, completed),
     onSuccess: (learningCourse) => {

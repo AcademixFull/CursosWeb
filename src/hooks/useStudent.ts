@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
+import { api } from "../services/api";
+import { env } from "../config/env";
 import {
   getMyProfile,
   getMyCertificate,
   listMyCertificates,
-  listMyCourses,
+  listMyCoursesPage,
+  listMyCertificatesPage,
+  getCourseOwnership,
+  type LibraryFilters,
   updateMyProfile,
 } from "../services/student.service";
 import type { UpdateProfileInput } from "../types/student.types";
@@ -17,13 +22,44 @@ export const studentQueryKeys = {
   profile: (userId: string) => ["student", userId, "profile"] as const,
 };
 
+export function useLearningSummary() {
+  const { user } = useAuth();
+  return useQuery({ queryKey: ["student", user?.id ?? "anonymous", "learning-summary"],
+    queryFn: ({ signal }) => api.get<{ inProgress: number; completed: number; certificates: number; learningHours: number }>("/users/me/learning-summary", { signal }),
+    enabled: Boolean(user), staleTime: env.cache?.libraryTtlMs ?? 30_000 });
+}
+
 export function useMyCourses(enabled = true) {
   const { user } = useAuth();
   return useQuery({
     queryKey: studentQueryKeys.courses(user?.id ?? "anonymous"),
-    queryFn: listMyCourses,
+    queryFn: async ({ signal }) => (await listMyCoursesPage({}, signal)).items,
+    staleTime: env.cache?.libraryTtlMs ?? 30_000,
+    networkMode: "always",
     enabled: enabled && Boolean(user),
   });
+}
+
+
+export function useMyCoursesPage(filters: LibraryFilters = {}, enabled = true) {
+  const { user } = useAuth();
+  return useQuery({ queryKey: [...studentQueryKeys.courses(user?.id ?? "anonymous"), filters],
+    queryFn: ({ signal }) => listMyCoursesPage(filters, signal), networkMode: "always",
+    enabled: enabled && Boolean(user), staleTime: env.cache?.libraryTtlMs ?? 30_000 });
+}
+
+export function useCourseOwnership(courseIds: string[]) {
+  const { user } = useAuth();
+  const ids = [...new Set(courseIds)].sort();
+  return useQuery({ queryKey: ["student", user?.id ?? "anonymous", "ownership", ids],
+    queryFn: ({ signal }) => getCourseOwnership(ids, signal), enabled: Boolean(user) && ids.length > 0,
+    staleTime: env.cache?.libraryTtlMs ?? 30_000 });
+}
+
+export function useMyCertificatesPage(page = 1, limit = 10) {
+  const { user } = useAuth();
+  return useQuery({ queryKey: [...studentQueryKeys.certificates(user?.id ?? "anonymous"), { page, limit }],
+    queryFn: ({ signal }) => listMyCertificatesPage(page, limit, signal), enabled: Boolean(user) });
 }
 
 export function useMyCertificates() {

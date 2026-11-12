@@ -6,45 +6,38 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
-import { useMyCertificates, useMyCourses } from "../hooks/useStudent";
+import { useLearningSummary, useMyCoursesPage } from "../hooks/useStudent";
+import { userErrorMessage } from "../services/api";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const coursesQuery = useMyCourses();
-  const certificatesQuery = useMyCertificates();
+  const coursesQuery = useMyCoursesPage({ page: 1, limit: 2, status: "in_progress" });
+  const summaryQuery = useLearningSummary();
 
-  if (coursesQuery.isLoading || certificatesQuery.isLoading) {
+  if (coursesQuery.isLoading || summaryQuery.isLoading) {
     return <PageLoader label="Preparando tu panel" />;
   }
 
-  if (coursesQuery.isError || certificatesQuery.isError) {
-    const error = coursesQuery.error ?? certificatesQuery.error;
+  if (coursesQuery.isError || summaryQuery.isError) {
+    const error = coursesQuery.error ?? summaryQuery.error;
     return (
       <ErrorState
-        description={
-          error instanceof Error
-            ? error.message
-            : "No pudimos consultar tu información de aprendizaje."
-        }
+        description={userErrorMessage(error, "No pudimos consultar tu información de aprendizaje.")}
         onRetry={() => {
           void coursesQuery.refetch();
-          void certificatesQuery.refetch();
+          void summaryQuery.refetch();
         }}
       />
     );
   }
 
-  const courses = coursesQuery.data ?? [];
-  const inProgress = courses.filter((item) => item.status === "in_progress");
-  const completed = courses.filter((item) => item.status === "completed");
-  const learningHours = Math.round(
-    courses.reduce((total, item) => total + item.course.durationHours * (item.progressPercentage / 100), 0),
-  );
+  const inProgress = coursesQuery.data?.items ?? [];
+  const summary = summaryQuery.data;
   const metrics = [
-    { label: "Cursos en progreso", value: String(inProgress.length) },
-    { label: "Cursos completados", value: String(completed.length) },
-    { label: "Certificados obtenidos", value: String(certificatesQuery.data?.length ?? 0) },
-    { label: "Horas de aprendizaje", value: `${learningHours}h` },
+    { label: "Cursos en progreso", value: String(summary?.inProgress ?? 0) },
+    { label: "Cursos completados", value: String(summary?.completed ?? 0) },
+    { label: "Certificados obtenidos", value: String(summary?.certificates ?? 0) },
+    { label: "Horas de aprendizaje", value: `${summary?.learningHours ?? 0}h` },
   ];
 
   return (

@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import academixLearning from '../assets/home/academix-learning.png';
 import { courseDetailRoute, ROUTES } from '../config/routes';
 import { useFeaturedCourses } from '../hooks/useCourses';
 import PublicLayout from '../layouts/PublicLayout';
@@ -91,14 +92,14 @@ export default function HomePage() {
 
             <div className="rounded-2xl border border-white/10 bg-white/6 p-3 shadow-2xl shadow-violet-950/40 backdrop-blur">
               <div className="overflow-hidden rounded-xl">
-                <div className="academix-brand-panel flex aspect-video w-full items-center justify-center text-center">
-                  <div>
-                    <p className="academix-on-brand text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">
-                      Cursos tecnología
-                    </p>
-                    <p className="academix-on-brand mt-2 text-lg font-bold text-white">Proximamente</p>
-                  </div>
-                </div>
+                <img
+                  src={academixLearning}
+                  alt="Academix: tecnología, conocimiento y aprendizaje conectado"
+                  width={1536}
+                  height={1024}
+                  fetchPriority="high"
+                  className="aspect-[3/2] w-full bg-slate-950 object-cover"
+                />
               </div>
             </div>
           </div>

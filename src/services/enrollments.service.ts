@@ -7,7 +7,9 @@ const MOCK_DELAY_MS = 220;
 
 export async function enrollInCourse(courseId: string): Promise<EnrollmentSummary> {
   if (env.dataSource === "api") {
-    return api.post<EnrollmentSummary>(`/courses/${encodeURIComponent(courseId)}/enrollments`);
+    const enrollment = await api.post<EnrollmentSummary>(`/courses/${encodeURIComponent(courseId)}/enrollments`);
+    window.dispatchEvent(new Event("academix:enrolled"));
+    return enrollment;
   }
 
   await new Promise((resolve) => window.setTimeout(resolve, MOCK_DELAY_MS));

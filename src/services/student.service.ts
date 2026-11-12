@@ -15,7 +15,10 @@ import type {
   UserProfile,
 } from "../types/student.types";
 import { readMockProfile, saveMockProfile } from "../utils/mockStudentStorage";
-import { api } from "./api";
+import { api, type ApiPage } from "./api";
+import { cachedLibrary } from "../offline/downloads";
+import { currentOfflineUser, isConnectivityError } from "../offline/learning";
+import { offlineStore } from "../offline/store";
 
 const MOCK_DELAY_MS = 160;
 
@@ -65,33 +68,77 @@ function buildMockCertificates(): CertificateSummary[] {
   return [...certificatesByCourse.values()];
 }
 
-export async function listMyCourses(): Promise<EnrollmentSummary[]> {
+export interface LibraryFilters {
+  page?: number;
+  limit?: number;
+  status?: "in_progress" | "completed";
+  courseIds?: string[];
+}
+
+export async function listMyCoursesPage(filters: LibraryFilters = {}, signal?: AbortSignal): Promise<ApiPage<EnrollmentSummary>> {
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 10;
+  const user = currentOfflineUser();
+  const offlinePage = async () => {
+    const library = user ? await cachedLibrary(user) : null;
+    if (!library) throw new Error("Tu biblioteca aún no está descargada. Conéctate para prepararla.");
+    const records = library.filter((item) => (!filters.status || item.status === filters.status)
+      && (!filters.courseIds || filters.courseIds.includes(item.course.id)));
+    return { items: records.slice((page - 1) * limit, page * limit), pagination: { page, limit, total: records.length } };
+  };
   if (env.dataSource === "api") {
-    return api.get<EnrollmentSummary[]>("/users/me/courses");
+    if (!navigator.onLine) return offlinePage();
+    try {
+      const result = await api.getPage<EnrollmentSummary>("/users/me/courses", {
+        params: { page, limit, ...(filters.status ? { status: filters.status } : {}), ...(filters.courseIds ? { courseIds: filters.courseIds.join(",") } : {}) }, signal,
+      });
+      return result;
+    } catch (error) {
+      if (isConnectivityError(error)) return offlinePage();
+      throw error;
+    }
   }
-
   await waitForMocks();
-  return getEnrollmentMocks().map((enrollment) => {
-    const learningCourse = getLearningCourseMock(enrollment.course.id);
-    if (!learningCourse?.totalLessons) return enrollment;
+  const records = getEnrollmentMocks().filter((item) => (!filters.status || item.status === filters.status)
+    && (!filters.courseIds || filters.courseIds.includes(item.course.id)));
+  return { items: records.slice((page - 1) * limit, page * limit), pagination: { page, limit, total: records.length } };
+}
 
-    return {
-      ...enrollment,
-      progressPercentage: learningCourse.progressPercentage,
-      completedLessons: learningCourse.completedLessons,
-      totalLessons: learningCourse.totalLessons,
-      status: learningCourse.progressPercentage === 100 ? "completed" : "in_progress",
-    };
-  });
+// Only the offline downloader traverses the library, one bounded server page at a time.
+export async function listMyCourses(signal?: AbortSignal): Promise<EnrollmentSummary[]> {
+  const user = currentOfflineUser();
+  const revision = user ? offlineStore.generation(user) : undefined;
+  const records: EnrollmentSummary[] = [];
+  for (let page = 1; ; page++) {
+    if (signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+    const result = await listMyCoursesPage({ page, limit: 50 }, signal);
+    records.push(...result.items);
+    if (records.length >= result.pagination.total || result.items.length === 0) break;
+    if (currentOfflineUser() !== user) throw new DOMException("Account changed", "AbortError");
+  }
+  if (user && currentOfflineUser() === user && typeof indexedDB !== "undefined") {
+    try { await offlineStore.put(user, "library", "enrollments", records, revision); } catch { /* Download errors are reported separately. */ }
+  }
+  return records;
+}
+
+export async function getCourseOwnership(courseIds: string[], signal?: AbortSignal): Promise<string[]> {
+  if (!courseIds.length) return [];
+  if (env.dataSource === "api") {
+    return api.get<string[]>("/users/me/course-ownership", { params: { courseIds: courseIds.join(",") }, signal });
+  }
+  return getEnrollmentMocks().filter((item) => courseIds.includes(item.course.id)).map((item) => item.course.id);
+}
+
+export async function listMyCertificatesPage(page = 1, limit = 10, signal?: AbortSignal): Promise<ApiPage<CertificateSummary>> {
+  if (env.dataSource === "api") return api.getPage<CertificateSummary>("/users/me/certificates", { params: { page, limit }, signal });
+  await waitForMocks();
+  const records = buildMockCertificates();
+  return { items: records.slice((page - 1) * limit, page * limit), pagination: { page, limit, total: records.length } };
 }
 
 export async function listMyCertificates(): Promise<CertificateSummary[]> {
-  if (env.dataSource === "api") {
-    return api.get<CertificateSummary[]>("/users/me/certificates");
-  }
-
-  await waitForMocks();
-  return buildMockCertificates();
+  return (await listMyCertificatesPage()).items;
 }
 
 export async function getMyCertificate(

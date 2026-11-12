@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { useMyCourses } from "../hooks/useStudent";
+import { useMyCourses, useCourseOwnership } from "../hooks/useStudent";
 import type { CourseSummary } from "../types/course.types";
 import { CartContext, type CartItem } from "./cart-context";
 
@@ -29,14 +29,17 @@ interface CartStateProps {
 
 function CartState({ userId, ownershipReady, ownedCourseIds, children }: CartStateProps) {
   const [items, setItems] = useState<CartItem[]>(() => readItems(userId));
+  const ownership = useCourseOwnership(items.map((item) => item.id));
+  const confirmedOwned = useMemo(() => new Set([...ownedCourseIds, ...(ownership.data ?? [])]), [ownedCourseIds, ownership.data]);
+  const confirmedReady = ownershipReady && (items.length === 0 || ownership.isSuccess);
 
   useEffect(() => {
     localStorage.removeItem(LEGACY_KEY);
   }, []);
 
   const availableItems = useMemo(
-    () => ownershipReady ? items.filter((item) => !ownedCourseIds.has(item.id)) : items,
-    [items, ownedCourseIds, ownershipReady],
+    () => confirmedReady ? items.filter((item) => !confirmedOwned.has(item.id)) : items,
+    [items, confirmedOwned, confirmedReady],
   );
 
   useEffect(() => {
@@ -48,10 +51,10 @@ function CartState({ userId, ownershipReady, ownedCourseIds, children }: CartSta
     items: availableItems,
     count: availableItems.length,
     total: availableItems.reduce((sum, item) => sum + item.price, 0),
-    ownershipReady,
-    ownsCourse: (courseId: string) => ownedCourseIds.has(courseId),
+    ownershipReady: confirmedReady,
+    ownsCourse: (courseId: string) => confirmedOwned.has(courseId),
     addCourse: (course: CourseSummary) => {
-      if (!userId || !ownershipReady || ownedCourseIds.has(course.id)) return;
+      if (!userId || !ownershipReady || confirmedOwned.has(course.id) || items.length >= 50) return;
       setItems((current) => current.some((item) => item.id === course.id)
         ? current
         : [...current, {
@@ -68,7 +71,7 @@ function CartState({ userId, ownershipReady, ownedCourseIds, children }: CartSta
     },
     clear: () => setItems([]),
     hasCourse: (courseId: string) => items.some((item) => item.id === courseId),
-  }), [availableItems, items, ownedCourseIds, ownershipReady, userId]);
+  }), [availableItems, items, confirmedOwned, confirmedReady, ownershipReady, userId]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
@@ -78,7 +81,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const userId = isAuthenticated ? user?.id : undefined;
   const enrollmentsQuery = useMyCourses(Boolean(userId));
   const ownedCourseIds = useMemo(
-    () => new Set(enrollmentsQuery.data?.map((enrollment) => enrollment.course.id) ?? []),
+    () => new Set(enrollmentsQuery.data?.filter((enrollment) => enrollment.accessActive !== false).map((enrollment) => enrollment.course.id) ?? []),
     [enrollmentsQuery.data],
   );
 

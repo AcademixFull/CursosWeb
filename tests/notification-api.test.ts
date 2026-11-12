@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+// This test must also work in a fresh checkout without a private .env file.
+vi.hoisted(() => { vi.stubEnv("VITE_API_URL", "https://api.academix.test/api/v1"); });
 import { notificationService } from "../src/services/notification.service";
 
 afterEach(() => vi.unstubAllGlobals());

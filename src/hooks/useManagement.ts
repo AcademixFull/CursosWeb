@@ -1,6 +1,9 @@
+import { useAuth } from "./useAuth";
+import { privateScope } from "../utils/queryClient";
+import { invalidateCatalog } from "../utils/queryClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { managementService } from "../services/management.service";
-import type { CourseInput, CourseWorkflowStatus } from "../types/management.types";
+import type { CourseInput, ManagedCourseFilters, AdminFilters } from "../types/management.types";
 import type { UserRole } from "../types/auth.types";
 
 export const managementQueryKeys = {
@@ -16,21 +19,23 @@ export const managementQueryKeys = {
   resources: ["management", "resource-options"] as const,
 };
 
-export function useAdminData() {
+export function useAdminData(filters: AdminFilters = {}, active: "users" | "courses" | "reviews" | "categories" | "applications" = "users") {
+  const { user } = useAuth();
+  const scope = privateScope(user ?? undefined);
   return {
-    users: useQuery({ queryKey: managementQueryKeys.users, queryFn: () => managementService.listUsers({ limit: 50 }) }),
-    instructors: useQuery({ queryKey: managementQueryKeys.instructors, queryFn: managementService.listInstructors }),
-    courses: useQuery({ queryKey: managementQueryKeys.courses, queryFn: () => managementService.listAdminCourses({ limit: 50 }) }),
-    reviews: useQuery({ queryKey: managementQueryKeys.reviews, queryFn: () => managementService.listReviews({ limit: 50 }) }),
-    options: useQuery({ queryKey: managementQueryKeys.options, queryFn: managementService.courseOptions }),
-    categories: useQuery({ queryKey: managementQueryKeys.categories, queryFn: managementService.listCategories }),
-    applications: useQuery({ queryKey: managementQueryKeys.applications, queryFn: () => managementService.listInstructorApplications() }),
+    users: useQuery({ queryKey: [...managementQueryKeys.users, filters.users, ...scope], queryFn: () => managementService.listUsers(filters.users), enabled: active === "users" }),
+    instructors: useQuery({ queryKey: [...managementQueryKeys.instructors, filters.instructors, ...scope], queryFn: () => managementService.listInstructors(filters.instructors), enabled: active === "courses" }),
+    courses: useQuery({ queryKey: [...managementQueryKeys.courses, filters.courses, ...scope], queryFn: () => managementService.listAdminCourses(filters.courses), enabled: active === "courses" }),
+    reviews: useQuery({ queryKey: [...managementQueryKeys.reviews, filters.reviews, ...scope], queryFn: () => managementService.listReviews(filters.reviews), enabled: active === "reviews" }),
+    options: useQuery({ queryKey: [...managementQueryKeys.options, ...scope], queryFn: managementService.courseOptions, enabled: active === "courses" }),
+    categories: useQuery({ queryKey: [...managementQueryKeys.categories, filters.categories, ...scope], queryFn: () => managementService.listCategories(filters.categories), enabled: active === "categories" }),
+    applications: useQuery({ queryKey: [...managementQueryKeys.applications, filters.applications, ...scope], queryFn: () => managementService.listInstructorApplications(filters.applications), enabled: active === "applications" }),
   };
 }
 
 export function useAdminActions() {
   const client = useQueryClient();
-  const invalidate = (...keys: ReadonlyArray<readonly unknown[]>) => Promise.all(keys.map((queryKey) => client.invalidateQueries({ queryKey })));
+  const invalidate = (...keys: ReadonlyArray<readonly unknown[]>) => Promise.all([...keys.map((queryKey) => client.invalidateQueries({ queryKey })), invalidateCatalog(client)]);
   return {
     setRoles: useMutation({
       mutationFn: ({ userId, roles }: { userId: string; roles: UserRole[] }) => managementService.setUserRoles(userId, roles),
@@ -80,27 +85,35 @@ export function useAdminActions() {
   };
 }
 
-export function useInstructorCourses(status?: CourseWorkflowStatus) {
+export function useInstructorCourses(filters: ManagedCourseFilters = {}) {
+  const { user } = useAuth();
+  const scope = privateScope(user ?? undefined);
   return useQuery({
-    queryKey: [...managementQueryKeys.instructorCourses, status ?? "all"],
-    queryFn: () => managementService.listInstructorCourses({ status, limit: 50 }),
+    queryKey: [...managementQueryKeys.instructorCourses, filters, ...scope],
+    queryFn: () => managementService.listInstructorCourses(filters),
   });
 }
 
 export function useCourseOptions() {
-  return useQuery({ queryKey: managementQueryKeys.options, queryFn: managementService.courseOptions });
+  const { user } = useAuth();
+  const scope = privateScope(user ?? undefined);
+  return useQuery({ queryKey: [...managementQueryKeys.options, ...scope], queryFn: managementService.courseOptions });
 }
 
 export function useCourseContent(courseId: string) {
+  const { user } = useAuth();
+  const scope = privateScope(user ?? undefined);
   return useQuery({
-    queryKey: managementQueryKeys.content(courseId),
+    queryKey: [...managementQueryKeys.content(courseId), ...scope],
     queryFn: () => managementService.getCourseContent(courseId),
     enabled: Boolean(courseId),
   });
 }
 
 export function useResourceOptions() {
-  return useQuery({ queryKey: managementQueryKeys.resources, queryFn: managementService.resourceOptions });
+  const { user } = useAuth();
+  const scope = privateScope(user ?? undefined);
+  return useQuery({ queryKey: [...managementQueryKeys.resources, ...scope], queryFn: managementService.resourceOptions });
 }
 
 export function useInvalidateCourseContent(courseId: string) {

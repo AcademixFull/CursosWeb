@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Pagination } from "../components/ui/Pagination";
 import { StudentPageHeader } from "../components/student/StudentPageHeader";
 import { Badge } from "../components/ui/Badge";
 import { ButtonLink } from "../components/ui/Button";
@@ -5,7 +7,8 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { certificateRoute, certificateVerificationRoute, ROUTES } from "../config/routes";
-import { useMyCertificates } from "../hooks/useStudent";
+import { useMyCertificatesPage } from "../hooks/useStudent";
+import { userErrorMessage } from "../services/api";
 
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
   day: "numeric",
@@ -14,21 +17,22 @@ const dateFormatter = new Intl.DateTimeFormat("es-MX", {
 });
 
 export default function CertificatesPage() {
-  const query = useMyCertificates();
+  const [page, setPage] = useState(1);
+  const query = useMyCertificatesPage(page);
 
   if (query.isLoading) return <PageLoader label="Cargando certificados" />;
   if (query.isError) {
     return (
       <ErrorState
         description={
-          query.error instanceof Error ? query.error.message : "No pudimos cargar tus certificados."
+          userErrorMessage(query.error, "No pudimos cargar tus certificados.")
         }
         onRetry={() => void query.refetch()}
       />
     );
   }
 
-  const certificates = query.data ?? [];
+  const certificates = query.data?.items ?? [];
 
   return (
     <div>
@@ -38,6 +42,7 @@ export default function CertificatesPage() {
         description="Aquí encontrarás las credenciales obtenidas al completar tus cursos."
       />
 
+      {query.data ? <Pagination label="Certificados" pagination={query.data.pagination} onPageChange={setPage} isPending={query.isFetching} /> : null}
       {certificates.length ? (
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {certificates.map((certificate) => (

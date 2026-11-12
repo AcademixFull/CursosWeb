@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import { Button } from "../components/ui/Button";
 import { useCourseContent, useInvalidateCourseContent, useResourceOptions } from "../hooks/useManagement";
 import { managementService } from "../services/management.service";
+import { userErrorMessage } from "../services/api";
 import type { AuthoringLesson } from "../types/management.types";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
@@ -41,7 +42,7 @@ function LessonResourceForm({ courseId, lesson, refresh, resourceTypes }: { cour
       <div className="flex gap-2 sm:col-span-2"><Button type="button" size="sm" variant={source === "file" ? "primary" : "secondary"} onClick={() => { setSource("file"); setUrl(""); }}>Subir archivo</Button><Button type="button" size="sm" variant={source === "url" ? "primary" : "secondary"} onClick={() => { setSource("url"); setFile(null); }}>Usar enlace</Button></div>
       {source === "url" ? <input required value={url} onChange={(e) => setUrl(e.target.value)} type="url" placeholder="Pega aquí el enlace del material" className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 sm:col-span-2" /> : <div className="rounded-xl border border-dashed border-brand-400/50 bg-brand-500/5 p-4 sm:col-span-2"><input id={`resource-file-${lesson.id}`} type="file" accept={acceptedFiles(selectedType?.name ?? "")} onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="sr-only" /><label htmlFor={`resource-file-${lesson.id}`} className="inline-flex cursor-pointer rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">{selectedType?.name.toLowerCase().includes("video") ? "Elegir video" : "Elegir archivo"}</label><span className="ml-3 text-sm text-slate-300">{file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB` : "Ningún archivo seleccionado"}</span><p className="mt-2 text-xs text-slate-400">Tamaño máximo: 25 MB.</p></div>}
       <Button type="submit" size="sm" className="sm:col-span-2" disabled={save.isPending || !typeId || (source === "url" ? !url : !file)}>{save.isPending ? "Subiendo..." : source === "file" ? `Subir ${selectedType?.name.toLowerCase() || "archivo"} y agregar` : "Agregar enlace"}</Button>
-      {save.error ? <p role="alert" className="text-sm text-red-300 sm:col-span-2">{save.error instanceof Error ? save.error.message : "No se pudo agregar el recurso."}</p> : null}
+      {save.error ? <p role="alert" className="text-sm text-red-300 sm:col-span-2">{userErrorMessage(save.error, "No pudimos agregar el recurso. Intenta nuevamente.")}</p> : null}
     </form>
   );
 }
@@ -78,7 +79,7 @@ export default function AuthoringPage() {
       <p className="text-sm font-semibold text-brand-300">Editor del curso</p><h1 id="authoring-title" className="mt-2 text-3xl font-bold">Contenido del curso</h1>
       <p className="mt-2 text-slate-400">Organiza los módulos, lecciones y materiales que verán tus estudiantes.</p>
       {content.isPending ? <p className="mt-8 text-slate-400">Cargando contenido...</p> : null}
-      {content.error ? <p role="alert" className="mt-8 text-red-300">{content.error instanceof Error ? content.error.message : "No se pudo cargar el contenido."}</p> : null}
+      {content.error ? <p role="alert" className="mt-8 text-red-300">{userErrorMessage(content.error, "No pudimos cargar el contenido. Intenta nuevamente.")}</p> : null}
       {content.data ? <p className="mt-5 text-sm text-slate-400">Estado: <strong className="text-slate-200">{statusLabels[content.data.status]}</strong></p> : null}
       <form onSubmit={(e) => { e.preventDefault(); createModule.mutate(); }} className="mt-8 flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-5 sm:flex-row">
         <label className="sr-only" htmlFor="module-title">Título del módulo</label><input id="module-title" required value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="Nuevo módulo" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-4 py-2.5" />
@@ -103,7 +104,7 @@ export default function AuthoringPage() {
         ))}
       </div>
       {content.data ? <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-white/10 pt-6"><Button variant="secondary" onClick={() => navigate(user?.role === "admin" ? ROUTES.admin : ROUTES.instructorPanel)}>Guardar y salir</Button>{user?.role === "instructor" && content.data.status === "draft" ? <Button onClick={() => finish.mutate()} disabled={finish.isPending}>{finish.isPending ? "Enviando..." : "Finalizar y enviar a revisión"}</Button> : null}</div> : null}
-      {finish.error ? <p role="alert" className="mt-3 text-right text-sm text-red-300">{finish.error instanceof Error ? finish.error.message : "No se pudo finalizar el curso."}</p> : null}
+      {finish.error ? <p role="alert" className="mt-3 text-right text-sm text-red-300">{userErrorMessage(finish.error, "No pudimos finalizar el curso. Intenta nuevamente.")}</p> : null}
     </section>
   );
 }

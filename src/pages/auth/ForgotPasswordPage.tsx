@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { ROUTES } from "../../config/routes";
 import { useAuth } from "../../hooks/useAuth";
 import AuthLayout from "../../layouts/AuthLayout";
-import { ApiError } from "../../services/api";
+import { userErrorMessage } from "../../services/api";
 import { validateEmail } from "../../validations/auth.validation";
 
 export default function ForgotPasswordPage() {
@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
       setIsSent(true);
     } catch (error) {
       setSubmitError(
-        error instanceof ApiError ? error.message : "No pudimos procesar tu solicitud. Intenta nuevamente.",
+        userErrorMessage(error, "No pudimos procesar tu solicitud. Intenta nuevamente."),
       );
     } finally {
       setIsSubmitting(false);

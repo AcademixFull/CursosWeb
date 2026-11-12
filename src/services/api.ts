@@ -1,14 +1,44 @@
 import { env } from "../config/env";
-import { clearAuthSession, getAuthToken } from "../utils/authSessionStore";
+import { expireAuthCredentials, getAuthToken } from "../utils/authSessionStore";
 
 export const AUTH_SESSION_EXPIRED_EVENT = "academix:auth-session-expired";
+const sessionRequests = new Set<AbortController>();
+const responseControllers = new WeakMap<Response, AbortController>();
+let sessionRevision = 0;
+export function abortSessionRequests(): void {
+  sessionRevision++;
+  for (const controller of sessionRequests) controller.abort();
+  sessionRequests.clear();
+}
+
+async function sessionFetch(url: string, options: RequestInit, sessionBound: boolean): Promise<Response> {
+  if (!sessionBound) return fetch(url, options);
+  const controller = new AbortController();
+  sessionRequests.add(controller);
+  const signal = options.signal ? AbortSignal.any([options.signal, controller.signal]) : controller.signal;
+  try {
+    const response = await fetch(url, { ...options, signal });
+    if (signal.aborted) throw new DOMException("Session changed", "AbortError");
+    responseControllers.set(response, controller);
+    return response;
+  } catch (error) { sessionRequests.delete(controller); throw error; }
+}
+
+function releaseResponse(response: Response): void {
+  const controller = responseControllers.get(response);
+  if (controller) sessionRequests.delete(controller);
+  responseControllers.delete(response);
+}
+async function readResponse<T>(response: Response, read: () => Promise<T>): Promise<T> {
+  try { return await read(); } finally { releaseResponse(response); }
+}
 
 const GENERIC_CONNECTIVITY_MESSAGE =
   "No pudimos comunicarnos con Academix. Intenta nuevamente en unos momentos.";
 const GENERIC_OPERATION_MESSAGE =
   "No pudimos completar la operación. Intenta nuevamente.";
 const TECHNICAL_MESSAGE_PATTERN =
-  /(?:academix-backend|\bbackend\b|\bapi\b|supabase|vite_api_url|fetch|network|cors|json|http\s*\d*|endpoint|authorization|x-file-name|sql|postgres|database|request[_ -]?id|p0001)/i;
+  /(?:academix-backend|\bbackend\b|\bapi\b|supabase|vite_api_url|fetch|network|cors|json|http\s*\d*|endpoint|authorization|x-file-name|sql|postgres|database|request[_ -]?id|p0001|\bslug\b|metadatos?|node_modules|localhost|127\.0\.0\.1|econn\w*|enotfound|etimedout|typeerror|referenceerror|syntaxerror|cannot read|undefined|stack trace|failed to)/i;
 
 function publicErrorMessage(
   message: string | undefined,
@@ -116,9 +146,29 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Convierte cualquier error que vaya a renderizarse en un mensaje apto para la persona usuaria.
+ * Los detalles técnicos pueden conservarse en consola, pero no deben aparecer en la interfaz.
+ */
+export function userErrorMessage(error: unknown, fallback = GENERIC_OPERATION_MESSAGE): string {
+  const safeFallback = fallback.trim() || GENERIC_OPERATION_MESSAGE;
+  if (error instanceof ApiError) {
+    const message = publicErrorMessage(error.message, { status: error.status, code: error.code });
+    return message === GENERIC_OPERATION_MESSAGE ? safeFallback : message;
+  }
+  if (!(error instanceof Error)) return safeFallback;
+
+  const value = error.message.trim();
+  if (!value || TECHNICAL_MESSAGE_PATTERN.test(value) || /^[A-Z0-9_]{4,}$/.test(value)) {
+    return safeFallback;
+  }
+  return value;
+}
+
 type JsonBody = object;
 
 interface RequestOptions {
+  params?: Record<string, string | number | boolean | undefined>;
   /** Cuerpo de la petición; se serializa a JSON automáticamente. */
   body?: JsonBody;
   /** Headers adicionales/override. */
@@ -149,13 +199,13 @@ function responseMetadata(response: Response) {
 }
 
 function notifyExpiredSession(): void {
-  clearAuthSession();
+  expireAuthCredentials();
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
   }
 }
 
-function buildUrl(path: string): string {
+function buildUrl(path: string, params?: RequestOptions["params"]): string {
   const base = env.apiUrl.replace(/\/+$/, ""); // sin slash final
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
@@ -169,7 +219,11 @@ function buildUrl(path: string): string {
     });
   }
 
-  return `${base}${cleanPath}`;
+  const url = new URL(`${base}${cleanPath}`);
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value !== undefined) url.searchParams.set(key, String(value));
+  }
+  return url.toString();
 }
 
 async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<T>> {
@@ -181,7 +235,8 @@ async function parseEnvelope<T>(response: Response): Promise<ApiSuccessEnvelope<
   let payload: unknown;
   try {
     payload = await response.json();
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiError(GENERIC_OPERATION_MESSAGE, {
       status: response.status,
       code: "INVALID_RESPONSE",
@@ -229,7 +284,8 @@ async function requestEnvelope<T>(
   path: string,
   options: RequestOptions = {}
 ): Promise<ApiSuccessEnvelope<T>> {
-  const url = buildUrl(path);
+  const revision = sessionRevision;
+  const url = buildUrl(path, options.params);
 
   const headers = new Headers(options.headers);
   if (options.body !== undefined) {
@@ -246,12 +302,12 @@ async function requestEnvelope<T>(
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await sessionFetch(url, {
       method,
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: options.signal,
-    });
+    }, usesSessionToken && Boolean(sessionToken));
   } catch (error) {
     // El fetch nunca llegó a completarse: sin conexión, CORS bloqueado,
     // backend caído, DNS, etc. `fetch` lanza TypeError en estos casos.
@@ -265,10 +321,13 @@ async function requestEnvelope<T>(
   }
 
   if (response.status === 401 && usesSessionToken && sessionToken) {
+    releaseResponse(response);
     notifyExpiredSession();
   }
 
-  return parseEnvelope<T>(response);
+  const result = await readResponse(response, () => parseEnvelope<T>(response));
+  if (usesSessionToken && sessionToken && revision !== sessionRevision) throw new DOMException("Session changed", "AbortError");
+  return result;
 }
 
 async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
@@ -306,6 +365,7 @@ async function requestBinary(
   path: string,
   options: Omit<RequestOptions, "body"> = {},
 ): Promise<ApiBinary> {
+  const revision = sessionRevision;
   const headers = new Headers(options.headers);
   headers.set("Accept", "*/*");
   const sessionToken = getAuthToken();
@@ -314,7 +374,7 @@ async function requestBinary(
 
   let response: Response;
   try {
-    response = await fetch(buildUrl(path), { method: "GET", headers, signal: options.signal });
+    response = await sessionFetch(buildUrl(path, options.params), { method: "GET", headers, signal: options.signal }, options.authToken === undefined && Boolean(sessionToken));
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiError(GENERIC_CONNECTIVITY_MESSAGE, {
@@ -324,14 +384,17 @@ async function requestBinary(
   }
 
   if (response.status === 401 && options.authToken === undefined && sessionToken) {
+    releaseResponse(response);
     notifyExpiredSession();
   }
   if (!response.ok) {
-    await parseEnvelope<never>(response);
+    await readResponse(response, () => parseEnvelope<never>(response));
   }
 
+  const blob = await readResponse(response, () => response.blob());
+  if (options.authToken === undefined && sessionToken && revision !== sessionRevision) throw new DOMException("Session changed", "AbortError");
   return {
-    blob: await response.blob(),
+    blob,
     contentType: response.headers.get("Content-Type") ?? "application/octet-stream",
     fileName: contentDispositionFileName(response.headers.get("Content-Disposition")),
   };
@@ -343,6 +406,7 @@ async function requestRaw<T>(
   body: BodyInit,
   options: Omit<RequestOptions, "body"> = {},
 ): Promise<T> {
+  const revision = sessionRevision;
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   const sessionToken = getAuthToken();
@@ -351,13 +415,15 @@ async function requestRaw<T>(
 
   let response: Response;
   try {
-    response = await fetch(buildUrl(path), { method, headers, body, signal: options.signal });
+    response = await sessionFetch(buildUrl(path, options.params), { method, headers, body, signal: options.signal }, options.authToken === undefined && Boolean(sessionToken));
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiError(GENERIC_CONNECTIVITY_MESSAGE, { status: 0, code: "NETWORK_ERROR" });
   }
-  if (response.status === 401 && options.authToken === undefined && sessionToken) notifyExpiredSession();
-  return (await parseEnvelope<T>(response)).data;
+  if (response.status === 401 && options.authToken === undefined && sessionToken) { releaseResponse(response); notifyExpiredSession(); }
+  const result = (await readResponse(response, () => parseEnvelope<T>(response))).data;
+  if (options.authToken === undefined && sessionToken && revision !== sessionRevision) throw new DOMException("Session changed", "AbortError");
+  return result;
 }
 
 /** Cliente HTTP central. Todos los `*.service.ts` deben usar esto, nunca `fetch` directo. */

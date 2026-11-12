@@ -10,6 +10,7 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { learningRoute, ROUTES } from "../config/routes";
 import { useLearningCourse, useSetLessonProgress } from "../hooks/useLearning";
+import { userErrorMessage } from "../services/api";
 
 export default function LearningPage() {
   const { courseId = "", lessonId } = useParams<{ courseId: string; lessonId?: string }>();
@@ -23,7 +24,7 @@ export default function LearningPage() {
     return (
       <main className="min-h-screen bg-slate-950 px-4 py-16 text-slate-100">
         <div className="mx-auto max-w-2xl">
-          <ErrorState description={query.error instanceof Error ? query.error.message : "No pudimos abrir este curso."} onRetry={() => void query.refetch()} />
+          <ErrorState description={userErrorMessage(query.error, "No pudimos abrir este curso.")} onRetry={() => void query.refetch()} />
           <div className="mt-6 text-center"><ButtonLink to={ROUTES.myCourses} variant="secondary">Volver a mis cursos</ButtonLink></div>
         </div>
       </main>
@@ -86,7 +87,7 @@ export default function LearningPage() {
 
             {progressMutation.isError ? (
               <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                {progressMutation.error instanceof Error ? progressMutation.error.message : "No pudimos guardar tu progreso."}
+                {userErrorMessage(progressMutation.error, "No pudimos guardar tu progreso. Intenta nuevamente.")}
               </div>
             ) : null}
 

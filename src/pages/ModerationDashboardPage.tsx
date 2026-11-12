@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { useModerationActions, useModerationCourse, useModerationCourses } from "../hooks/useModeration";
+import { userErrorMessage } from "../services/api";
 import type { LearningResource } from "../types/learning.types";
 import type { AuthoringLesson, CourseWorkflowStatus, ManagedCourse } from "../types/management.types";
 import type { ModerationCourseStatus } from "../types/moderation.types";
@@ -112,7 +113,7 @@ function ModerationDetail({ courseId }: { courseId: string }) {
     return <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-8 text-sm text-slate-400">Cargando contenido completo del curso...</div>;
   }
   if (detail.error) {
-    return <ErrorState description={detail.error instanceof Error ? detail.error.message : "No se pudo cargar el curso."} onRetry={() => void detail.refetch()} />;
+    return <ErrorState description={userErrorMessage(detail.error, "No pudimos cargar el curso. Intenta nuevamente.")} onRetry={() => void detail.refetch()} />;
   }
   if (!detail.data) return null;
 
@@ -255,7 +256,7 @@ function ModerationDetail({ courseId }: { courseId: string }) {
 
         {!canTakeDown && !canRestore ? <p className="mt-4 text-sm text-slate-400">Este estado es solo de consulta. La baja por moderación se aplica a cursos publicados o en revisión.</p> : null}
         {successMessage ? <p role="status" className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{successMessage}</p> : null}
-        {actionError ? <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{actionError instanceof Error ? actionError.message : "No se pudo completar la acción."}</p> : null}
+        {actionError ? <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{userErrorMessage(actionError, "No pudimos completar la acción. Intenta nuevamente.")}</p> : null}
       </section>
     </section>
   );
@@ -313,7 +314,7 @@ export default function ModerationDashboardPage() {
         </form>
       </div>
 
-      {courses.error ? <div className="mt-6"><ErrorState description={courses.error instanceof Error ? courses.error.message : "No se pudieron cargar los cursos."} onRetry={() => void courses.refetch()} /></div> : null}
+      {courses.error ? <div className="mt-6"><ErrorState description={userErrorMessage(courses.error, "No pudimos cargar los cursos. Intenta nuevamente.")} onRetry={() => void courses.refetch()} /></div> : null}
 
       <div className="mt-7 grid min-w-0 gap-6 xl:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
         <aside className="min-w-0" aria-label="Cursos para moderar">

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getLearningResourceContent } from "../../services/learning.service";
+import { userErrorMessage } from "../../services/api";
 import type { LearningResource } from "../../types/learning.types";
 import { Button } from "../ui/Button";
 
@@ -74,7 +75,7 @@ function ProtectedResource({ resource }: ProtectedResourceProps) {
       if (controller.signal.aborted) return;
       setState({
         status: "error",
-        message: error instanceof Error ? error.message : "No pudimos abrir este recurso.",
+        message: userErrorMessage(error, "No pudimos abrir este recurso. Intenta nuevamente."),
       });
     } finally {
       if (requestRef.current === controller) requestRef.current = null;
@@ -121,6 +122,7 @@ export function LessonResources({ resources }: { resources: LearningResource[] }
                 <ProtectedResource resource={resource} />
               ) : <p className="text-sm text-amber-300">Este recurso no está disponible.</p>}
             </div>
+            {externalUrl ? <p className="mt-2 text-xs text-amber-300">Este recurso externo necesita conexión a internet.</p> : null}
           </li>;
         })}
       </ul>

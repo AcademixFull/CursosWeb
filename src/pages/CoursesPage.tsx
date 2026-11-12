@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useSearchParams } from "react-router";
 import CourseFilters from "../components/courses/CourseFilters";
 import CourseGrid from "../components/courses/CourseGrid";
@@ -8,9 +8,11 @@ import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { SectionHeader } from "../components/ui/SectionHeader";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useCategories } from "../hooks/useCategories";
 import { useCourses } from "../hooks/useCourses";
 import PublicLayout from "../layouts/PublicLayout";
+import { userErrorMessage } from "../services/api";
 import type { CourseFilters as Filters, CourseLevel } from "../types/course.types";
 
 const initialFilters: Filters = {
@@ -18,7 +20,7 @@ const initialFilters: Filters = {
   category: "all",
   level: "all",
   page: 1,
-  limit: 12,
+  limit: 10,
 };
 
 const courseLevels = new Set<CourseLevel>(["beginner", "intermediate", "advanced"]);
@@ -36,7 +38,7 @@ function readFilters(params: URLSearchParams): Filters {
     category: params.get("category") ?? "all",
     level: level && courseLevels.has(level as CourseLevel) ? level as CourseLevel : "all",
     page: positiveInteger(params.get("page"), 1),
-    limit: positiveInteger(params.get("limit"), 12, 50),
+    limit: positiveInteger(params.get("limit"), 10, 50),
   };
 }
 
@@ -46,14 +48,14 @@ function filterParams(filters: Filters): URLSearchParams {
   if (filters.category && filters.category !== "all") params.set("category", filters.category);
   if (filters.level && filters.level !== "all") params.set("level", filters.level);
   params.set("page", String(filters.page ?? 1));
-  params.set("limit", String(filters.limit ?? 12));
+  params.set("limit", String(filters.limit ?? 10));
   return params;
 }
 
 export default function CoursesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => readFilters(searchParams), [searchParams]);
-  const deferredSearch = useDeferredValue(filters.search);
+  const deferredSearch = useDebouncedValue(filters.search, 250);
   const query = useCourses({ ...filters, search: deferredSearch });
   const categoriesQuery = useCategories();
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -143,7 +145,7 @@ export default function CoursesPage() {
               ) : query.isError ? (
                 <ErrorState
                   title="No pudimos cargar el catálogo"
-                  description={query.error instanceof Error ? query.error.message : "Intenta de nuevo."}
+                  description={userErrorMessage(query.error, "No pudimos cargar los cursos. Intenta nuevamente.")}
                   onRetry={() => void query.refetch()}
                 />
               ) : query.data.items.length === 0 ? (

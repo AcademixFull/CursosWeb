@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { courseDetailRoute, instructorRoute, ROUTES } from "../../config/routes";
+import { courseDetailRoute, instructorRoute, learningRoute, ROUTES } from "../../config/routes";
 import type { CourseLevel, CourseSummary } from "../../types/course.types";
 import { Badge } from "../ui/Badge";
 import { Button, ButtonLink } from "../ui/Button";
@@ -16,15 +16,16 @@ const levelLabels: Record<CourseLevel, string> = {
 
 interface CourseCardProps {
   course: CourseSummary;
+  ownership?: { owned: boolean; ready: boolean };
 }
 
-export default function CourseCard({ course }: CourseCardProps) {
+export default function CourseCard({ course, ownership }: CourseCardProps) {
   const cart = useCart();
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const ownsCourse = isAuthenticated && cart.ownsCourse(course.id);
-  const ownershipPending = isAuthenticated && !cart.ownershipReady;
+  const ownsCourse = isAuthenticated && (ownership?.owned ?? cart.ownsCourse(course.id));
+  const ownershipPending = isAuthenticated && !(ownership?.ready ?? cart.ownershipReady);
 
   function addToCart() {
     if (!isAuthenticated) {
@@ -73,7 +74,7 @@ export default function CourseCard({ course }: CourseCardProps) {
         <div className="mt-auto flex flex-col items-stretch gap-3 border-t border-white/10 pt-5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
           <span className="text-xl font-extrabold text-violet-400">{formatMxn(course.price)}</span>
           <div className="flex flex-wrap gap-2 min-[420px]:justify-end">
-            {course.price > 0 ? (
+            {course.price > 0 || ownsCourse ? (
               <Button
                 type="button"
                 variant={ownershipPending || ownsCourse || (isAuthenticated && cart.hasCourse(course.id)) ? "ghost" : "secondary"}
@@ -92,7 +93,7 @@ export default function CourseCard({ course }: CourseCardProps) {
                         : "Agregar"}
               </Button>
             ) : null}
-            <ButtonLink to={courseDetailRoute(course.id)} variant="secondary" size="sm">Ver curso</ButtonLink>
+            <ButtonLink to={ownsCourse ? learningRoute(course.id) : courseDetailRoute(course.id)} variant="secondary" size="sm">{ownsCourse ? "Ver material" : "Ver curso"}</ButtonLink>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { courseMocks } from "../data/courseMocks";
 import { instructorMocks } from "../data/instructorMocks";
 import { mergeCourseReviewMocks } from "../data/reviewMocks";
 import type { CourseSummary, InstructorDetail } from "../types/course.types";
-import { api } from "./api";
+import { api, type ApiPage } from "./api";
 
 const MOCK_DELAY_MS = 160;
 
@@ -37,4 +37,11 @@ export async function listInstructorCourses(instructorId: string): Promise<Cours
   return courseMocks
     .filter((course) => course.instructor.id === instructorId)
     .map(mergeCourseReviewMocks);
+}
+
+
+export async function listInstructorCoursesPage(instructorId: string, page = 1, signal?: AbortSignal): Promise<ApiPage<CourseSummary>> {
+  if (env.dataSource === "api") return api.getPage<CourseSummary>(`/instructors/${encodeURIComponent(instructorId)}/courses`, { params: { page, limit: 10 }, signal });
+  const courses = await listInstructorCourses(instructorId);
+  return { items: courses.slice((page - 1) * 10, page * 10), pagination: { page, limit: 10, total: courses.length } };
 }

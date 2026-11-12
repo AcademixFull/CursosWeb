@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { ROUTES } from "../../config/routes";
 import { useAuth } from "../../hooks/useAuth";
 import AuthLayout from "../../layouts/AuthLayout";
-import { ApiError } from "../../services/api";
+import { ApiError, userErrorMessage } from "../../services/api";
 import type { LoginInput } from "../../types/auth.types";
 import { safeReturnTo } from "../../utils/navigation";
 import { hasValidationErrors, validateLogin } from "../../validations/auth.validation";
@@ -28,7 +28,7 @@ export default function LoginPage() {
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [retrySeconds, setRetrySeconds] = useState(0);
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, session, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LoginLocationState | null;
@@ -42,7 +42,7 @@ export default function LoginPage() {
     return () => window.clearInterval(timer);
   }, [retrySeconds]);
 
-  if (isAuthenticated) {
+  if (isAuthenticated && session?.accessToken) {
     return <Navigate to={returnTo} replace />;
   }
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
         return;
       }
       setSubmitError(
-        error instanceof ApiError ? error.message : "No pudimos iniciar tu sesión. Intenta nuevamente.",
+        userErrorMessage(error, "No pudimos iniciar tu sesión. Intenta nuevamente."),
       );
     } finally {
       setIsSubmitting(false);

@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { roleHomeRoute, ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 import { managementService } from "../services/management.service";
+import { userErrorMessage } from "../services/api";
 
 const labels = { pending: "Pendiente de revisión", approved: "Aprobada", rejected: "No aprobada" } as const;
 
@@ -84,7 +85,7 @@ export default function InstructorApplicationPage() {
         <label className="block"><span className="mb-2 block text-sm font-semibold">Enlace o referencia de tu comprobante</span><input required minLength={5} maxLength={500} value={credentialReference} onChange={(event) => setCredentialReference(event.target.value)} className="w-full rounded-lg border border-white/10 bg-slate-950 px-4 py-3" /></label>
         <p className="text-xs leading-5 text-slate-500">Academix asignará automáticamente un folio único cuando envíes la solicitud.</p>
         <Button type="submit" disabled={submit.isPending}>{submit.isPending ? "Enviando..." : "Enviar solicitud"}</Button>
-        {submit.error ? <p role="alert" className="text-sm text-red-300">{submit.error instanceof Error ? submit.error.message : "No se pudo enviar la solicitud."}</p> : null}
+        {submit.error ? <p role="alert" className="text-sm text-red-300">{userErrorMessage(submit.error, "No pudimos enviar la solicitud. Intenta nuevamente.")}</p> : null}
       </form>}
     </section>
   );

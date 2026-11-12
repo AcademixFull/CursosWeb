@@ -31,7 +31,7 @@ export default function Footer() {
             <Link to={ROUTES.dashboard} className="w-fit transition hover:text-white">Mi aprendizaje</Link>
             <Link to={ROUTES.certificates} className="w-fit transition hover:text-white">Mis certificados</Link>
             <Link to={ROUTES.verifyCertificate} className="w-fit transition hover:text-white">Verificar certificado</Link>
-            <span className="text-slate-500">Membresías · Próximamente</span>
+            <Link to={ROUTES.pricing} className="w-fit transition hover:text-white">Planes y precios</Link>
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { certificateVerificationRoute, ROUTES } from "../config/routes";
 import { useMyCertificate } from "../hooks/useStudent";
+import { userErrorMessage } from "../services/api";
 
 export default function CertificateDetailPage() {
   const { certificateId = "" } = useParams<{ certificateId: string }>();
@@ -22,7 +23,7 @@ export default function CertificateDetailPage() {
         <div className="mx-auto max-w-2xl">
           <ErrorState
             title="Certificado no disponible"
-            description={query.error instanceof Error ? query.error.message : "No pudimos cargar este certificado."}
+            description={userErrorMessage(query.error, "No pudimos cargar este certificado.")}
             onRetry={() => void query.refetch()}
           />
           <div className="mt-6 text-center"><ButtonLink to={ROUTES.certificates} variant="secondary">Volver a certificados</ButtonLink></div>

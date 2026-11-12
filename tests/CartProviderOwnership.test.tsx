@@ -11,12 +11,18 @@ const authState = vi.hoisted(() => ({
 
 const ownedCourseId = courseMocks[0]?.id;
 if (!ownedCourseId) throw new Error("El catálogo mock no contiene cursos.");
+const completedCourseId = courseMocks[1]?.id;
 
 vi.mock("../src/hooks/useAuth", () => ({ useAuth: () => authState }));
 vi.mock("../src/hooks/useStudent", () => ({
+  useCourseOwnership: () => ({ data: [ownedCourseId, completedCourseId], isSuccess: true }),
   useMyCourses: () => ({
     isSuccess: true,
-    data: [{ course: { id: ownedCourseId } }],
+    data: [
+      { course: { id: ownedCourseId }, status: "in_progress" },
+      { course: { id: completedCourseId }, status: "completed" },
+      { course: { id: "expired-plus-course" }, status: "completed", accessActive: false },
+    ],
   }),
 }));
 
@@ -30,6 +36,7 @@ function Probe() {
       <span data-testid="count">{cart.count}</span>
       <span data-testid="titles">{cart.items.map((item) => item.title).join(",")}</span>
       <button type="button" onClick={() => cart.addCourse(ownedCourse)}>Agregar poseído</button>
+      <button type="button" onClick={() => courseMocks[1] && cart.addCourse(courseMocks[1])}>Agregar completado</button>
     </div>
   );
 }
@@ -39,6 +46,7 @@ describe("CartProvider ownership", () => {
     localStorage.clear();
     localStorage.setItem("academix:cart:user-1", JSON.stringify([
       { id: ownedCourseId, title: "Curso ya adquirido", price: 50, instructorName: "Antony" },
+      { id: completedCourseId, title: "Curso completado", price: 100, instructorName: "Ana" },
       { id: "course-available", title: "Curso disponible", price: 80, instructorName: "Marco" },
     ]));
   });
@@ -51,12 +59,20 @@ describe("CartProvider ownership", () => {
     expect(screen.getByTestId("titles")).not.toHaveTextContent("Curso ya adquirido");
 
     fireEvent.click(screen.getByRole("button", { name: "Agregar poseído" }));
+    fireEvent.click(screen.getByRole("button", { name: "Agregar completado" }));
     expect(screen.getByTestId("count")).toHaveTextContent("1");
 
     await waitFor(() => {
       const stored = localStorage.getItem("academix:cart:user-1") ?? "";
       expect(stored).not.toContain(ownedCourseId);
+      expect(stored).not.toContain(completedCourseId);
       expect(stored).toContain("course-available");
     });
   });
+  it("keeps an expired Plus course available for individual purchase", () => {
+    localStorage.setItem("academix:cart:user-1", JSON.stringify([{ id: "expired-plus-course", title: "Plus vencido", price: 80, instructorName: "Ana" }]));
+    render(<CartProvider><Probe /></CartProvider>);
+    expect(screen.getByTestId("count")).toHaveTextContent("1");
+  });
+
 });

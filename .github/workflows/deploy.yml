@@ -34,7 +34,14 @@ jobs:
 
       - run: npm audit --omit=dev
 
-      - run: npm run build
+      - name: Build using the configured public API
+        env:
+          VITE_DATA_SOURCE: ${{ vars.VITE_DATA_SOURCE || 'api' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_MAPBOX_TOKEN: ${{ vars.VITE_MAPBOX_TOKEN }}
+        run: |
+          node -e "if(process.env.VITE_DATA_SOURCE==='api'){const u=new URL(process.env.VITE_API_URL);if(u.protocol!=='https:'||['localhost','127.0.0.1','::1'].includes(u.hostname))throw new Error('Configure a public HTTPS VITE_API_URL repository variable before deployment')}"
+          npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:

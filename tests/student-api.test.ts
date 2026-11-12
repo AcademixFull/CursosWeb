@@ -45,6 +45,28 @@ describe("student services in authenticated API mode", () => {
     vi.unstubAllGlobals();
   });
 
+  it("confirma con el servidor y avisa a la PWA solo después de obtener acceso", async () => {
+    const receipt = { id: "receipt", mode: "simulated", total: 140, currency: "MXN", enrollments: [] };
+    const fetchMock = vi.fn().mockResolvedValueOnce(successResponse(receipt))
+      .mockResolvedValueOnce(errorResponse(403, "COURSE_REQUIRES_APPROVAL", "Este curso requiere aprobación."));
+    vi.stubGlobal("fetch", fetchMock);
+    await useAuthenticatedApi();
+    const listener = vi.fn();
+    window.addEventListener("academix:enrolled", listener);
+    try {
+      const { simulatedCheckout } = await import("../src/services/checkout.service");
+      const input = { courseIds: ["22222222-2222-4222-8222-222222222222"], idempotencyKey: "66666666-6666-4666-8666-666666666666" };
+      await expect(simulatedCheckout(input)).resolves.toEqual(receipt);
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string)).toEqual(input);
+      expect(requestHeaders(fetchMock).get("Authorization")).toBe("Bearer student-jwt");
+      await expect(simulatedCheckout(input)).rejects.toMatchObject({ code: "COURSE_REQUIRES_APPROVAL" });
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      window.removeEventListener("academix:enrolled", listener);
+    }
+  });
+
   it("loads and updates only the authenticated user's profile", async () => {
     const profile = {
       ...user,
@@ -98,7 +120,7 @@ describe("student services in authenticated API mode", () => {
       lastAccessedAt: "2026-08-12T12:00:00.000Z",
     };
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(successResponse([enrollment]))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, data: [enrollment], pagination: { page: 1, limit: 50, total: 1 } }), { headers: { "Content-Type": "application/json" } }))
       .mockResolvedValueOnce(successResponse(enrollment, 201));
     vi.stubGlobal("fetch", fetchMock);
     await useAuthenticatedApi();
@@ -152,7 +174,7 @@ describe("student services in authenticated API mode", () => {
       verificationPath: `/api/v1/certificates/verify/${summary.credentialCode}`,
     };
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(successResponse([summary]))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, data: [summary], pagination: { page: 1, limit: 10, total: 1 } }), { headers: { "Content-Type": "application/json" } }))
       .mockResolvedValueOnce(successResponse(detail));
     vi.stubGlobal("fetch", fetchMock);
     await useAuthenticatedApi();

@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { DeferredContactMap } from './components/contact/DeferredContactMap';
 import { ROUTES } from './config/routes';
 import PublicLayout from './layouts/PublicLayout';
-import { ApiError } from './services/api';
+import { userErrorMessage } from './services/api';
 import { submitContactMessage } from './services/contact.service';
 
 interface ContactForm {
@@ -281,9 +281,7 @@ export default function Contacto() {
       setStatus('success');
     } catch (error) {
       setSubmitError(
-        error instanceof ApiError
-          ? error.message
-          : 'No pudimos enviar tu mensaje. Intenta nuevamente.',
+        userErrorMessage(error, 'No pudimos enviar tu mensaje. Intenta nuevamente.'),
       );
       setStatus('error');
     }

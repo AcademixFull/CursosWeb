@@ -49,7 +49,7 @@ describe("management services", () => {
   });
 
   it("loads inactive categories and submits instructor applications through Express", async () => {
-    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(response([])));
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(response([], { page: 1, limit: 20, total: 0, totalPages: 1 })));
     vi.stubGlobal("fetch", fetchMock);
     const service = await loadService();
     await service.listCategories();

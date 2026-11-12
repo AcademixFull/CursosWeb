@@ -10,6 +10,7 @@ export interface LearningLesson {
 }
 
 export interface LearningResource {
+  accessExpiresAt?: string | null;
   id: string;
   type: string;
   title: string;
@@ -28,6 +29,7 @@ export interface LearningModule {
 }
 
 export interface LearningCourse {
+  accessExpiresAt?: string | null;
   id: string;
   title: string;
   instructorName: string;

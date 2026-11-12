@@ -1,3 +1,6 @@
+import { useAuth } from "./useAuth";
+import { privateScope } from "../utils/queryClient";
+import type { BasicListFilters, ManagedCourseFilters } from "../types/management.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { organizationService } from "../services/organization.service";
 import type { CreateOrganizationInput, OrganizationRole } from "../types/organization.types";
@@ -9,20 +12,23 @@ export const organizationQueryKeys = {
 };
 
 export function useOrganizations() {
-  return useQuery({ queryKey: organizationQueryKeys.all, queryFn: organizationService.list });
+  const { user } = useAuth();
+  return useQuery({ queryKey: [...organizationQueryKeys.all, ...privateScope(user ?? undefined)], queryFn: organizationService.list, enabled: Boolean(user) });
 }
 
-export function useOrganizationWorkspace(organizationId?: string, canAdmin = false) {
+export function useOrganizationWorkspace(organizationId?: string, canAdmin = false, memberFilters: BasicListFilters & { role?: OrganizationRole } = {}, courseFilters: ManagedCourseFilters = {}) {
   const client = useQueryClient();
-  const enabled = Boolean(organizationId);
+  const { user } = useAuth();
+  const identity = privateScope(user ?? undefined);
+  const enabled = Boolean(organizationId && user);
   const members = useQuery({
-    queryKey: organizationQueryKeys.members(organizationId ?? ""),
-    queryFn: () => organizationService.members(organizationId!),
+    queryKey: [...organizationQueryKeys.members(organizationId ?? ""), memberFilters, ...identity],
+    queryFn: () => organizationService.members(organizationId!, memberFilters),
     enabled: enabled && canAdmin,
   });
   const courses = useQuery({
-    queryKey: organizationQueryKeys.courses(organizationId ?? ""),
-    queryFn: () => organizationService.courses(organizationId!),
+    queryKey: [...organizationQueryKeys.courses(organizationId ?? ""), courseFilters, ...identity],
+    queryFn: () => organizationService.courses(organizationId!, courseFilters),
     enabled,
   });
   const create = useMutation({
@@ -37,7 +43,11 @@ export function useOrganizationWorkspace(organizationId?: string, canAdmin = fal
   const setRole = useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: OrganizationRole }) =>
       organizationService.updateMemberRole(organizationId!, userId, role),
-    onSuccess: () => client.invalidateQueries({ queryKey: organizationQueryKeys.members(organizationId ?? "") }),
+    onSuccess: () => client.invalidateQueries({ queryKey: organizationQueryKeys.all }),
   });
-  return { members, courses, create, join, setRole };
+  const assignInstructor = useMutation({
+    mutationFn: ({ courseId, instructorId }: { courseId: string; instructorId: string }) => organizationService.assignInstructor(organizationId!, courseId, instructorId),
+    onSuccess: () => client.invalidateQueries({ queryKey: organizationQueryKeys.courses(organizationId ?? "") }),
+  });
+  return { members, courses, create, join, setRole, assignInstructor };
 }

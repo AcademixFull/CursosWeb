@@ -1,8 +1,9 @@
-import { learningRoute } from "../../config/routes";
+import { learningRoute, courseDetailRoute } from "../../config/routes";
 import type { EnrollmentSummary } from "../../types/student.types";
 import { Badge } from "../ui/Badge";
 import { ButtonLink } from "../ui/Button";
 import { ProgressBar } from "./ProgressBar";
+import { CourseDownloadStatus } from "../pwa/CourseDownloadStatus";
 
 interface EnrollmentCardProps {
   enrollment: EnrollmentSummary;
@@ -34,8 +35,9 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
           )}
         </p>
         <div className="mt-auto pt-6">
-          <ButtonLink to={learningRoute(course.id)} variant={isCompleted ? "secondary" : "primary"} fullWidth>
-            {isCompleted ? "Repasar curso" : "Continuar aprendiendo"}
+          <CourseDownloadStatus courseId={course.id} />
+          <ButtonLink to={enrollment.accessActive === false ? courseDetailRoute(course.id) : learningRoute(course.id)} variant={isCompleted ? "secondary" : "primary"} fullWidth>
+            {enrollment.accessActive === false ? "Revisar acceso" : isCompleted ? "Repasar curso" : "Continuar aprendiendo"}
           </ButtonLink>
         </div>
       </div>

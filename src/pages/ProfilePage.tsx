@@ -6,8 +6,10 @@ import { Button } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { useMyProfile, useUpdateMyProfile } from "../hooks/useStudent";
-import { ApiError } from "../services/api";
+import { userErrorMessage } from "../services/api";
 import type { UpdateProfileInput, UserProfile } from "../types/student.types";
+import { AccountDeletionPanel } from "../components/account/AccountDeletionPanel";
+import { SubscriptionPanel } from "../components/subscription/SubscriptionPanel";
 
 interface ProfileFormProps {
   profile: UserProfile;
@@ -108,10 +110,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
 
         {formError || mutation.isError ? (
           <div role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {formError
-              || (mutation.error instanceof ApiError
-                ? mutation.error.message
-                : "No pudimos guardar tu perfil. Intenta nuevamente.")}
+            {formError || userErrorMessage(mutation.error, "No pudimos guardar tu perfil. Intenta nuevamente.")}
           </div>
         ) : null}
         {mutation.isSuccess ? (
@@ -133,7 +132,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
         <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
         <Badge className="mt-4">{roleLabels[profile.role]}</Badge>
         <p className="mt-5 border-t border-white/10 pt-5 text-xs leading-5 text-slate-500">
-          Próximamente podrás personalizar también tu imagen de perfil.
+          Tu información personal está vinculada a tu cuenta de Academix.
         </p>
       </aside>
     </form>
@@ -147,7 +146,7 @@ export default function ProfilePage() {
   if (query.isError || !query.data) {
     return (
       <ErrorState
-        description={query.error instanceof Error ? query.error.message : "No pudimos cargar tu perfil."}
+        description={userErrorMessage(query.error, "No pudimos cargar tu perfil.")}
         onRetry={() => void query.refetch()}
       />
     );
@@ -160,7 +159,9 @@ export default function ProfilePage() {
         title="Mi perfil"
         description="Mantén actualizada tu información personal y tus objetivos de aprendizaje."
       />
-      <ProfileForm profile={query.data} />
+      <ProfileForm key={query.data.id} profile={query.data} />
+      <SubscriptionPanel />
+      <AccountDeletionPanel key={query.data.id} />
     </div>
   );
 }

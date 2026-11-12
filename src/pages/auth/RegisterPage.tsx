@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { ROUTES } from "../../config/routes";
 import { useAuth } from "../../hooks/useAuth";
 import AuthLayout from "../../layouts/AuthLayout";
-import { ApiError } from "../../services/api";
+import { ApiError, userErrorMessage } from "../../services/api";
 import { hasValidationErrors, validateRegister } from "../../validations/auth.validation";
 
 const initialForm = {
@@ -50,12 +50,12 @@ export default function RegisterPage() {
       navigate(ROUTES.dashboard, { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.code === "EMAIL_CONFIRMATION_REQUIRED") {
-        setSubmitNotice(error.message);
+        setSubmitNotice(userErrorMessage(error, "Revisa tu correo para continuar con el registro."));
         setForm((current) => ({ ...current, password: "", confirmPassword: "" }));
         return;
       }
       setSubmitError(
-        error instanceof ApiError ? error.message : "No pudimos crear tu cuenta. Intenta nuevamente.",
+        userErrorMessage(error, "No pudimos crear tu cuenta. Intenta nuevamente."),
       );
     } finally {
       setIsSubmitting(false);

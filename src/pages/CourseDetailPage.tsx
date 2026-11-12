@@ -14,9 +14,9 @@ import { useCourse, useRelatedCourses } from "../hooks/useCourse";
 import { useEnrollCourse } from "../hooks/useEnrollment";
 import { useCart } from "../hooks/useCart";
 import { useCourseReviews, useCreateReview } from "../hooks/useReviews";
-import { useMyCourses } from "../hooks/useStudent";
+import { useMyCoursesPage } from "../hooks/useStudent";
 import PublicLayout from "../layouts/PublicLayout";
-import { ApiError } from "../services/api";
+import { ApiError, userErrorMessage } from "../services/api";
 import { formatMxn } from "../utils/currency";
 import { locationPath } from "../utils/navigation";
 
@@ -27,7 +27,7 @@ export default function CourseDetailPage() {
   const [reviewPage, setReviewPage] = useState(1);
   const reviewsQuery = useCourseReviews(courseQuery.data?.id, reviewPage);
   const { isAuthenticated, user } = useAuth();
-  const enrollmentsQuery = useMyCourses(isAuthenticated);
+  const enrollmentsQuery = useMyCoursesPage({ courseIds: courseQuery.data ? [courseQuery.data.id] : undefined }, isAuthenticated && Boolean(courseQuery.data));
   const enrollmentMutation = useEnrollCourse();
   const cart = useCart();
   const reviewMutation = useCreateReview(courseId ?? "");
@@ -51,11 +51,7 @@ export default function CourseDetailPage() {
         <div className="mx-auto max-w-3xl px-6 py-24 text-center">
           <ErrorState
             title="Curso no disponible"
-            description={
-              courseQuery.error instanceof Error
-                ? courseQuery.error.message
-                : "No fue posible consultarlo."
-            }
+            description={userErrorMessage(courseQuery.error, "No pudimos consultar este curso. Intenta nuevamente.")}
             onRetry={() => void courseQuery.refetch()}
           />
           <ButtonLink to={ROUTES.courses} variant="secondary" className="mt-6">
@@ -67,8 +63,8 @@ export default function CourseDetailPage() {
   }
 
   const course = courseQuery.data;
-  const isEnrolled = enrollmentsQuery.data?.some((enrollment) => enrollment.course.id === course.id) ?? false;
-  const enrollment = enrollmentsQuery.data?.find((item) => item.course.id === course.id);
+  const isEnrolled = enrollmentsQuery.data?.items.some((enrollment) => enrollment.course.id === course.id && enrollment.accessActive !== false) ?? false;
+  const enrollment = enrollmentsQuery.data?.items.find((item) => item.course.id === course.id);
   const hasReviewed = reviewConfirmed || course.reviews.some((review) => review.authorId === user?.id)
     || reviewsQuery.data?.items.some((review) => review.authorId === user?.id) === true;
 
@@ -189,7 +185,7 @@ export default function CourseDetailPage() {
                     ))
                   ) : (
                     <p className="rounded-xl border border-dashed border-slate-700 p-6 text-slate-400">
-                      El temario detallado se publicará próximamente.
+                      Este curso no tiene lecciones publicadas.
                     </p>
                   )}
                 </div>
@@ -235,11 +231,7 @@ export default function CourseDetailPage() {
                   {reviewsQuery.isError ? (
                     <ErrorState
                       title="No pudimos cargar las reseñas"
-                      description={
-                        reviewsQuery.error instanceof Error
-                          ? reviewsQuery.error.message
-                          : "Intenta nuevamente."
-                      }
+                      description={userErrorMessage(reviewsQuery.error, "No pudimos cargar las reseñas. Intenta nuevamente.")}
                       onRetry={() => void reviewsQuery.refetch()}
                     />
                   ) : null}
@@ -291,9 +283,12 @@ export default function CourseDetailPage() {
                   {enrollmentsQuery.isError ? "No pudimos verificar tus cursos" : "Consultando tus cursos..."}
                 </Button>
               ) : isEnrolled ? (
-                <ButtonLink to={learningRoute(course.id)} size="lg" fullWidth className="mt-5">
-                  Ir a mi curso
-                </ButtonLink>
+                <>
+                  <p className="mt-4 text-sm font-semibold text-emerald-300">Ya lo tienes{enrollment?.status === "completed" ? " · Curso completado" : ""}</p>
+                  <ButtonLink to={learningRoute(course.id)} size="lg" fullWidth className="mt-5">
+                    Ver material
+                  </ButtonLink>
+                </>
               ) : course.price > 0 ? (
                 <>
                   <Button
@@ -351,9 +346,7 @@ export default function CourseDetailPage() {
             isPending={enrollmentMutation.isPending}
             error={
               enrollmentMutation.isError
-                ? enrollmentMutation.error instanceof ApiError
-                  ? enrollmentMutation.error.message
-                  : "No pudimos completar la inscripción. Intenta nuevamente."
+                ? userErrorMessage(enrollmentMutation.error, "No pudimos completar la inscripción. Intenta nuevamente.")
                 : undefined
             }
             onClose={() => setShowEnrollment(false)}
@@ -364,7 +357,7 @@ export default function CourseDetailPage() {
           <ReviewDialog
             courseTitle={course.title}
             isPending={reviewMutation.isPending}
-            serverError={reviewMutation.isError ? (reviewMutation.error instanceof Error ? reviewMutation.error.message : "No pudimos publicar la reseña.") : undefined}
+            serverError={reviewMutation.isError ? userErrorMessage(reviewMutation.error, "No pudimos publicar la reseña. Intenta nuevamente.") : undefined}
             onClose={() => setShowReview(false)}
             onSubmit={(input) => void publishReview(input)}
           />

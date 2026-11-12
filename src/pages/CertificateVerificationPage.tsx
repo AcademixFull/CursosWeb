@@ -7,6 +7,7 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { certificateVerificationRoute } from "../config/routes";
 import { useCertificateVerification } from "../hooks/useCertificateVerification";
+import { userErrorMessage } from "../services/api";
 import PublicLayout from "../layouts/PublicLayout";
 import { CREDENTIAL_CODE_PATTERN, normalizeCredentialCode } from "../services/certificates.service";
 
@@ -63,7 +64,7 @@ function CertificateVerificationContent({ credentialCode }: { credentialCode?: s
           {query.isError ? (
             <ErrorState
               title="Certificado no verificado"
-              description={query.error instanceof Error ? query.error.message : "No pudimos verificar esta credencial."}
+              description={userErrorMessage(query.error, "No pudimos verificar esta credencial.")}
               onRetry={() => void query.refetch()}
             />
           ) : null}

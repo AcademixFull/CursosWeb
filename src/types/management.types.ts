@@ -10,6 +10,7 @@ export interface ManagedUser {
   email: string;
   active: boolean;
   roles: UserRole[];
+  institutionalOrganizations?: Array<{ id: string; name: string }>;
 }
 
 export interface ManagedInstructor {
@@ -62,6 +63,7 @@ export interface ManagedCourse {
   price: number;
   certificateEnabled: boolean;
   requiresApproval: boolean;
+  featuredVisible?: boolean;
   organization: { id: string; name: string } | null;
   status: CourseWorkflowStatus;
   active: boolean;
@@ -161,5 +163,13 @@ export interface CourseInput {
   price: number;
   certificateEnabled: boolean;
   requiresApproval: boolean;
+  featuredVisible?: boolean;
   organizationId?: string | null;
 }
+
+export interface BasicListFilters { page?: number; limit?: number; search?: string; active?: "true" | "false" }
+export interface UserListFilters extends BasicListFilters { role?: UserRole | "institutional_administrator"; sort?: "name" | "email" | "createdAt"; direction?: "asc" | "desc" }
+export interface ManagedCourseFilters { page?: number; limit?: number; search?: string; status?: CourseWorkflowStatus; scope?: "external" | "institutional"; organizationId?: string }
+export interface ApplicationListFilters { page?: number; limit?: number; status?: InstructorApplicationStatus }
+export interface ReviewListFilters { page?: number; limit?: number; visibility?: "all" | "visible" | "hidden"; courseId?: string }
+export interface AdminFilters { users?: UserListFilters; courses?: ManagedCourseFilters; instructors?: BasicListFilters; categories?: BasicListFilters; applications?: ApplicationListFilters; reviews?: ReviewListFilters }

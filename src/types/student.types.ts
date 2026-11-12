@@ -3,6 +3,7 @@ import type { CourseSummary } from "./course.types";
 export type EnrollmentStatus = "in_progress" | "completed";
 
 export interface EnrollmentSummary {
+  accessActive?: boolean;
   id: string;
   course: CourseSummary;
   status: EnrollmentStatus;
