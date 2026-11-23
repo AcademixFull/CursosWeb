@@ -23,7 +23,7 @@ export function sourceVersion(root: string, configuration: { base: string; env: 
 
 export function buildIdentity(): Plugin {
   let config: ResolvedConfig;
-  const info = () => ({ sourceVersion: sourceVersion(config.root, config), base: config.base, dataSource: config.env.VITE_DATA_SOURCE === "api" ? "api" : "mock" });
+  const info = () => ({ version: JSON.parse(readFileSync(join(config.root, "package.json"), "utf8")).version as string, sourceVersion: sourceVersion(config.root, config), base: config.base, dataSource: config.env.VITE_DATA_SOURCE === "api" ? "api" : "mock" });
   return {
     name: "academix-build-identity",
     configResolved(value) { config = value; },
