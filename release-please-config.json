@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "a64de701ce89ea263f884cbb0536f61be57f9bbe",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "academix-frontend",
+      "include-component-in-tag": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
+    }
+  }
+}
