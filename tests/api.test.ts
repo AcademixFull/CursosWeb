@@ -168,7 +168,8 @@ describe("central API client", () => {
 
   it("downloads protected binary content with the current Bearer token", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(new Blob(["PDF"], { type: "application/pdf" }), {
+      // Response usa el Blob de Node; el Blob de jsdom no implementa stream en Node 22.
+      new Response("PDF", {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": "inline; filename*=UTF-8''gu%C3%ADa.pdf",
@@ -187,6 +188,7 @@ describe("central API client", () => {
     const file = await api.getBinary("/lessons/lesson-1/resources/resource-1/content");
 
     expect(file.contentType).toBe("application/pdf");
+    expect(file.blob.size).toBe(3);
     expect(file.fileName).toBe("guía.pdf");
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.academix.test/api/v1/lessons/lesson-1/resources/resource-1/content",
