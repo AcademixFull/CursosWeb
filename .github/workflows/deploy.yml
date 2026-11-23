@@ -1,0 +1,33 @@
+name: Verify Vercel deployment
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: github.event.deployment_status.state == 'success' && (github.event.deployment.environment == 'Production' || github.event.deployment.environment == 'production')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - name: Verify published version and real data source
+        env:
+          DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+        run: |
+          node --input-type=module <<'NODE'
+          const origin = new URL(process.env.DEPLOYMENT_URL);
+          if (origin.protocol !== 'https:' || !origin.hostname.endsWith('.vercel.app')) {
+            throw new Error('Expected an HTTPS Vercel deployment');
+          }
+          const response = await fetch(new URL('/build-info.json', origin), { signal: AbortSignal.timeout(30000) });
+          if (!response.ok) throw new Error(`build-info.json returned ${response.status}`);
+          const info = await response.json();
+          if (info.dataSource !== 'api' || info.base !== '/' || !/^\d+\.\d+\.\d+/.test(info.version)) {
+            throw new Error('Deployment must expose its version and use the real API from the root path');
+          }
+          console.log(`Academix Web ${info.version}: production configuration verified`);
+          NODE
