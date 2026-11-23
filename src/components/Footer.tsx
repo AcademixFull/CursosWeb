@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { MAIN_NAVIGATION } from "../config/navigation";
 import { ROUTES } from "../config/routes";
 import BrandLogo from "./BrandLogo";
+import { APP_VERSION } from "../config/version";
 
 export default function Footer() {
   return (
@@ -51,6 +52,7 @@ export default function Footer() {
 
       <div className="mx-auto mt-10 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-6 text-center text-xs sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <p>© 2026 Academix. Todos los derechos reservados.</p>
+        <p>Academix Web · v{APP_VERSION}</p>
       </div>
     </footer>
   );
