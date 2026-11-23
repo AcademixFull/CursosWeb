@@ -4,8 +4,12 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { academixPwa } from './pwa'
 import { buildIdentity } from './build-info'
+import { readFileSync } from 'node:fs'
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
 
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(version) },
   base: '/CursosWeb/',
   server: { port: 5173, strictPort: true },
   preview: { port: 4173, strictPort: true, headers: { 'Cache-Control': 'no-cache' } },
