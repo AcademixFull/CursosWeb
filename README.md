@@ -6,7 +6,7 @@ Este repositorio contiene únicamente la interfaz. La lógica de negocio y el ac
 
 ## Requisitos
 
-- Node.js 20 o superior
+- Node.js 22 (la misma versión de Actions, Vercel y Render)
 - npm
 
 ## Ejecución local
@@ -95,7 +95,7 @@ Los componentes no llaman `fetch` ni Supabase directamente. Al conectar el backe
 - `/#/administracion` (solo Admin)
 - `/#/autor/:courseId` (Admin o Instructor autorizado)
 
-Se usa `HashRouter` porque el despliegue actual está configurado para GitHub Pages.
+Se conserva `HashRouter` para las rutas de la aplicación. Vercel publica el proyecto desde `/`.
 
 ## Contrato con academix-backend
 
@@ -134,3 +134,39 @@ valida antes de conectar la siguiente para aislar errores entre UI, API y datos.
 - Mantener validación de UX en frontend y validación definitiva en backend.
 - Mostrar estados de carga, error y resultados vacíos.
 - Tratar los controles por rol del frontend como UX; Express vuelve a autorizar cada petición.
+
+## Despliegue y versiones
+
+- Web de producción: https://academix-web-three.vercel.app
+- Vista previa de `dev`: https://academix-web-git-dev-marco-antonio-damian-ortizs-projects.vercel.app
+- API en Render: https://academix-api-eioa.onrender.com/api/v1
+- Disponibilidad de API y Supabase: `/api/v1/health/ready`
+
+En Vercel, tanto Production como Preview usan estas variables públicas:
+
+```env
+VITE_API_URL=https://academix-api-eioa.onrender.com/api/v1
+VITE_DATA_SOURCE=api
+```
+
+`vercel.json` instala con `npm ci`, ejecuta `npm run check` y publica `dist`.
+GitHub Pages está despublicado. Los secretos de Supabase permanecen en Render.
+
+Los cambios se revisan en `dev` y se integran a `main` mediante PR después de aprobar
+`Frontend checks`. Vercel genera previews de desarrollo y producción desde `main`.
+Render exige CI aprobado antes de desplegar la API. Slack recibe los pushes, PR,
+pruebas y releases en `#dev-github`.
+
+Release Please propone versiones y changelog al aprobar CI de `main`; al integrar
+su PR se publica la release. La versión del frontend aparece en el pie de página y
+en `/build-info.json`; la de la API aparece en `/api/v1/health`.
+
+El secreto de Actions `RELEASE_PLEASE_TOKEN` debe estar disponible en los dos repositorios,
+con permisos de escritura en Contents, Issues y Pull requests. Así los PR de versión
+disparan CI nativo. Si falta el secreto se usa `GITHUB_TOKEN`: en ese caso un integrante
+debe cerrar y reabrir el PR de versión para ejecutar el evento `pull_request`, porque
+las comprobaciones de `workflow_dispatch` no satisfacen la protección de la rama.
+Nunca se guarda el valor del token en archivos del repositorio.
+
+Si una sesión abierta conserva una versión anterior, usar el aviso **Actualizar ahora**
+y cerrar otras pestañas de la aplicación antes de aplicar la actualización.
