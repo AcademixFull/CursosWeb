@@ -13,6 +13,13 @@ export interface InstructorSummary {
   avatarUrl?: string;
 }
 
+export interface InstructorDetail extends InstructorSummary {
+  biography: string;
+  experienceYears: number;
+  studentCount: number;
+  courseCount: number;
+}
+
 export interface CourseSummary {
   id: string;
   slug: string;
@@ -45,10 +52,16 @@ export interface CourseModule {
 
 export interface CourseReview {
   id: string;
+  authorId?: string;
   authorName: string;
   rating: number;
   comment: string;
   createdAt: string;
+}
+
+export interface CreateReviewInput {
+  rating: number;
+  comment: string;
 }
 
 export interface CourseDetail extends CourseSummary {
@@ -78,5 +91,10 @@ export interface Pagination {
 
 export interface CourseListResult {
   items: CourseSummary[];
+  pagination: Pagination;
+}
+
+export interface ReviewListResult {
+  items: CourseReview[];
   pagination: Pagination;
 }

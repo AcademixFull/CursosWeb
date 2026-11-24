@@ -1,9 +1,10 @@
 import { type FormEvent, useState } from 'react';
-import Map, { Marker } from 'react-map-gl/mapbox';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { Link } from 'react-router';
-import Header from './components/Header';
-import { env } from './config/env';
+import { DeferredContactMap } from './components/contact/DeferredContactMap';
+import { ROUTES } from './config/routes';
+import PublicLayout from './layouts/PublicLayout';
+import { userErrorMessage } from './services/api';
+import { submitContactMessage } from './services/contact.service';
 
 interface ContactForm {
   nombre: string;
@@ -23,11 +24,6 @@ interface Benefit {
   icon: IconName;
   title: string;
   description: string;
-}
-
-interface FaqItem {
-  question: string;
-  answer: string;
 }
 
 type IconName =
@@ -102,33 +98,7 @@ const benefits: Benefit[] = [
   },
 ];
 
-const faqs: FaqItem[] = [
-  {
-    question: 'Cuanto tardan en responder mi mensaje?',
-    answer:
-      'Normalmente respondemos en menos de 24 horas habiles. Las solicitudes de inscripcion activa tienen prioridad.',
-  },
-  {
-    question: 'Puedo solicitar informacion para mi empresa?',
-    answer:
-      'Si. Podemos orientar equipos, proponer rutas de aprendizaje y adaptar horarios de acuerdo con las necesidades de tu organizacion.',
-  },
-  {
-    question: 'Que datos debo enviar para recibir una recomendacion?',
-    answer:
-      'Comparte tu nivel actual, objetivo profesional, tiempo disponible y el curso que te interesa. Con eso podemos darte una recomendacion precisa.',
-  },
-  {
-    question: 'Atienden estudiantes fuera de Mexico?',
-    answer:
-      'Si. La atencion es internacional y podemos coordinar horarios para estudiantes en Latinoamerica, Estados Unidos y Espana.',
-  },
-  {
-    question: 'Puedo pedir soporte despues de comprar un curso?',
-    answer:
-      'Si. El soporte posterior a la compra esta incluido para ayudarte con accesos, materiales y dudas generales del programa.',
-  },
-];
+
 
 function Icon({ name, className = 'h-6 w-6' }: { name: IconName; className?: string }) {
   const common = {
@@ -268,37 +238,56 @@ export default function Contacto() {
   const [form, setForm] = useState<ContactForm>(initialForm);
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errors, setErrors] = useState<Partial<Record<keyof ContactForm, string>>>({});
-  const [openFaq, setOpenFaq] = useState<number>(0);
+  const [submitError, setSubmitError] = useState('');
 
   const isLoading = status === 'loading';
 
   function updateField(field: keyof ContactForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+    setSubmitError('');
 
     if (status !== 'idle') {
       setStatus('idle');
     }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-  const nextErrors = validateForm(form);
+    const nextErrors = validateForm(form);
 
-  if (Object.keys(nextErrors).length > 0) {
-    setErrors(nextErrors);
-    setStatus('error');
-    return;
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      setStatus('error');
+      const firstInvalidField = (['nombre', 'email', 'asunto', 'mensaje'] as const)
+        .find((field) => Boolean(nextErrors[field]));
+      if (firstInvalidField) document.getElementById(firstInvalidField)?.focus();
+      return;
+    }
+
+    setErrors({});
+    setSubmitError('');
+    setStatus('loading');
+
+    try {
+      await submitContactMessage({
+        fullName: form.nombre.trim(),
+        email: form.email.trim(),
+        subject: form.asunto.trim(),
+        message: form.mensaje.trim(),
+      });
+      setForm(initialForm);
+      setStatus('success');
+    } catch (error) {
+      setSubmitError(
+        userErrorMessage(error, 'No pudimos enviar tu mensaje. Intenta nuevamente.'),
+      );
+      setStatus('error');
+    }
   }
-  }
-  // El envío se implementará mediante contact.service.ts
-  // y POST /api/v1/contact cuando academix-backend esté disponible.
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="contacto" />
-
-      <main>
+    <PublicLayout active="contacto">
         <section className="relative overflow-hidden px-6 py-20 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.38),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.22),transparent_28%)]" />
           <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
@@ -311,19 +300,19 @@ export default function Contacto() {
                 inscripciones, soporte o rutas de aprendizaje para tu perfil.
               </p>
               <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
-                <a
-                  href="#formulario-contacto"
+                <Link
+                  to={{ pathname: ROUTES.contact, hash: '#formulario-contacto' }}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-violet-600/25 transition hover:bg-violet-500"
                 >
                   Enviar mensaje
                   <Icon name="send" className="h-4 w-4" />
-                </a>
-                <a
-                  href="#faq"
+                </Link>
+                <Link
+                  to={ROUTES.faq}
                   className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-violet-400/70 hover:bg-white/10"
                 >
                   Ver preguntas frecuentes
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -376,7 +365,7 @@ export default function Contacto() {
                     placeholder="Tu nombre"
                   />
                   {errors.nombre ? (
-                    <p id="nombre-error" className="mt-2 text-sm text-rose-300">
+                  <p id="nombre-error" role="alert" className="mt-2 text-sm text-rose-300">
                       {errors.nombre}
                     </p>
                   ) : null}
@@ -399,7 +388,7 @@ export default function Contacto() {
                     placeholder="correo@ejemplo.com"
                   />
                   {errors.email ? (
-                    <p id="email-error" className="mt-2 text-sm text-rose-300">
+                  <p id="email-error" role="alert" className="mt-2 text-sm text-rose-300">
                       {errors.email}
                     </p>
                   ) : null}
@@ -421,7 +410,7 @@ export default function Contacto() {
                     placeholder="Informacion sobre cursos"
                   />
                   {errors.asunto ? (
-                    <p id="asunto-error" className="mt-2 text-sm text-rose-300">
+                  <p id="asunto-error" role="alert" className="mt-2 text-sm text-rose-300">
                       {errors.asunto}
                     </p>
                   ) : null}
@@ -443,7 +432,7 @@ export default function Contacto() {
                     placeholder="Cuentanos que curso te interesa o que necesitas resolver."
                   />
                   {errors.mensaje ? (
-                    <p id="mensaje-error" className="mt-2 text-sm text-rose-300">
+                  <p id="mensaje-error" role="alert" className="mt-2 text-sm text-rose-300">
                       {errors.mensaje}
                     </p>
                   ) : null}
@@ -459,14 +448,14 @@ export default function Contacto() {
                 </button>
 
                 {status === 'success' ? (
-                  <p className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
+                  <p role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
                     Mensaje enviado correctamente. Te responderemos muy pronto.
                   </p>
                 ) : null}
 
                 {status === 'error' ? (
-                  <p className="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
-                    Revisa los campos o intenta de nuevo en unos minutos.
+                  <p role="alert" className="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+                    {submitError || 'Revisa los campos e intenta nuevamente.'}
                   </p>
                 ) : null}
               </form>
@@ -515,51 +504,31 @@ export default function Contacto() {
           </div>
         </section>
 
-        <section id="faq" className="px-6 py-16">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-extrabold tracking-tight text-white">
-                Preguntas frecuentes
-              </h2>
-              <p className="mt-3 text-slate-400">
-                Respuestas rapidas antes de enviar tu consulta.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq, index) => {
-                const isOpen = openFaq === index;
-
-                return (
-                  <article
-                    key={faq.question}
-                    className="rounded-2xl border border-slate-700/70 bg-slate-900 text-left shadow-xl shadow-black/20"
-                  >
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                      aria-expanded={isOpen}
-                      aria-controls={`faq-${index}`}
-                      onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                    >
-                      <span className="text-base font-bold text-white">{faq.question}</span>
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-300 transition ${isOpen ? 'rotate-180' : ''}`}
-                      >
-                        <Icon name="chevron" className="h-5 w-5" />
-                      </span>
-                    </button>
-                    <div
-                      id={`faq-${index}`}
-                      className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="px-6 pb-5 text-sm leading-7 text-slate-400">{faq.answer}</p>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+        <section className="px-6 py-16">
+          <div className="mx-auto max-w-4xl rounded-3xl border border-slate-700/70 bg-slate-900/70 p-6 text-center shadow-xl shadow-black/20 sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-300">
+              Centro de ayuda
+            </p>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white">
+              Todas las preguntas frecuentes ahora están en un solo lugar
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-400">
+              Consulta primero la sección de preguntas frecuentes para resolver dudas sobre cuentas,
+              organizaciones, pagos, soporte y acceso a cursos antes de enviarnos un mensaje.
+            </p>
+            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+              <Link
+                to={ROUTES.faq}
+                className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-violet-600/25 transition hover:bg-violet-500"
+              >
+                Ir a preguntas frecuentes
+              </Link>
+              <Link
+                to={{ pathname: ROUTES.contact, hash: '#formulario-contacto' }}
+                className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-violet-400/70 hover:bg-white/10"
+              >
+                Prefiero enviar un mensaje
+              </Link>
             </div>
           </div>
         </section>
@@ -590,36 +559,29 @@ export default function Contacto() {
               </div>
             </div>
             <div className="min-h-72 overflow-hidden rounded-2xl">
-              <Map
-                mapboxAccessToken={env.mapboxToken}
-                initialViewState={{ longitude: -98.1333, latitude: 19.4167, zoom: 13 }}
-                style={{ width: '100%', height: '100%', minHeight: '288px' }}
-                mapStyle="mapbox://styles/mapbox/dark-v11"
-              >
-                <Marker longitude={-98.1333} latitude={19.4167} color="#7c3aed" />
-              </Map>
+              <DeferredContactMap />
             </div>
           </div>
         </section>
 
         <section className="px-6 py-16">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <div className="academix-cta-panel mx-auto max-w-6xl overflow-hidden rounded-2xl p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
+            <h2 className="academix-on-brand academix-cta-heading text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Listo para elegir el curso correcto?
             </h2>
-            <p className="mx-auto mt-4 max-2xl text-violet-100">
+            <p className="academix-on-brand academix-cta-body mx-auto mt-4 max-w-2xl text-violet-100">
               Nuestro equipo puede ayudarte a encontrar una ruta clara y realista para avanzar en
               desarrollo web, backend, mobile o arquitectura.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-              <a
-                href="#formulario-contacto"
+              <Link
+                to={{ pathname: ROUTES.contact, hash: '#formulario-contacto' }}
                 className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
               >
                 Quiero asesoria
-              </a>
+              </Link>
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="inline-flex items-center justify-center rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
               >
                 Explorar cursos
@@ -627,24 +589,6 @@ export default function Contacto() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-white/10 px-6 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-400 sm:flex-row">
-          <p>Academix. Formacion moderna para equipos y profesionales.</p>
-          <div className="flex gap-4">
-            <Link to="/" className="transition hover:text-white">
-              Inicio
-            </Link>
-            <Link to="/cursos" className="transition hover:text-white">
-              Cursos
-            </Link>
-            <Link to="/contacto" className="transition hover:text-white">
-              Contacto
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }

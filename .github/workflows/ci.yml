@@ -1,0 +1,39 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main, feat/frontend-courses-architecture]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: Frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_API_URL: https://academix-api-eioa.onrender.com/api/v1
+      VITE_DATA_SOURCE: api
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Revisar código, ejecutar pruebas y compilar
+        run: npm run check
+      - name: Revisar dependencias de producción
+        run: npm audit --omit=dev

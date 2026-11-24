@@ -17,18 +17,14 @@ cp .env.example .env
 npm run dev
 ```
 
-Mientras el backend de cursos no esté disponible, conserva:
-
-```env
-VITE_DATA_SOURCE=mock
-```
-
-Para consumir la API:
+La integración real local usa:
 
 ```env
 VITE_API_URL=http://localhost:3000/api/v1
 VITE_DATA_SOURCE=api
 ```
+
+`VITE_DATA_SOURCE=mock` queda disponible únicamente para demostraciones aisladas.
 
 ## Scripts
 
@@ -36,8 +32,14 @@ VITE_DATA_SOURCE=api
 npm run dev
 npm run build
 npm run lint
+npm test
+npm run test:watch
+npm run check
 npm run preview
 ```
+
+`npm run check` ejecuta lint, pruebas y build. La auditoría de dependencias que llegan a producción
+se ejecuta por separado con `npm audit --omit=dev`.
 
 ## Arquitectura
 
@@ -45,13 +47,21 @@ npm run preview
 src/
 ├── app/                  # Providers y enrutamiento principal
 ├── components/           # Componentes visuales reutilizables
-│   └── courses/          # Componentes del catálogo
+│   ├── a11y/             # Navegación y accesibilidad
+│   ├── courses/          # Componentes del catálogo
+│   └── ui/               # Sistema de diseño
 ├── config/               # Variables, rutas y navegación
 ├── data/                 # Datos mock temporales
 ├── hooks/                # Integración entre React Query y servicios
+├── layouts/              # Estructuras públicas, privadas y de autenticación
 ├── pages/                # Pantallas asociadas a rutas
 ├── services/             # Cliente HTTP y acceso a recursos de la API
-└── types/                # Contratos TypeScript del dominio
+├── types/                # Contratos TypeScript del dominio
+├── utils/                # Persistencia temporal y utilidades puras
+└── validations/          # Reglas inmediatas de formularios
+
+tests/                    # Pruebas unitarias y de componentes con Vitest
+docs/                     # Contrato de integración con el backend
 ```
 
 El flujo de datos del catálogo es:
@@ -67,34 +77,54 @@ Los componentes no llaman `fetch` ni Supabase directamente. Al conectar el backe
 - `/#/`
 - `/#/cursos`
 - `/#/cursos/:courseId`
+- `/#/instructores/:instructorId`
 - `/#/nosotros`
 - `/#/contacto`
 - `/#/dashboard`
+- `/#/mis-cursos`
+- `/#/certificados`
+- `/#/certificados/:certificateId`
+- `/#/verificar-certificado/:credentialCode?`
+- `/#/perfil`
+- `/#/aprender/:courseId/:lessonId?`
+- `/#/iniciar-sesion`
+- `/#/registro`
+- `/#/recuperar-contrasena`
+- `/#/actualizar-contrasena` (destino de los enlaces de recuperación)
+- `/#/panel-instructor` (solo Instructor)
+- `/#/administracion` (solo Admin)
+- `/#/autor/:courseId` (Admin o Instructor autorizado)
 
 Se usa `HashRouter` porque el despliegue actual está configurado para GitHub Pages.
 
-## Contrato esperado del catálogo
+## Contrato con academix-backend
 
-```http
-GET /api/v1/courses?search=&category=&level=&page=1&limit=12
-GET /api/v1/courses/:id
-GET /api/v1/courses/:id/related
+El contrato completo de autenticación, catálogo, perfiles, aula, progreso, reseñas y certificados
+está documentado en [`docs/frontend-api-contract.md`](docs/frontend-api-contract.md). El backend
+debe respetar el sobre `{ success, data | error, pagination? }` que valida `src/services/api.ts`.
+
+## Calidad
+
+GitHub Actions ejecuta automáticamente en cada pull request:
+
+```bash
+npm ci
+npm run lint
+npm test
+npm run build
+npm audit --omit=dev
 ```
 
-Las respuestas deben respetar el sobre común del backend:
+La suite cubre autenticación, navegación segura, paginación, persistencia mock, catálogo, área del
+alumno, aula, progreso, recursos binarios protegidos, expiración de sesión, rate limiting,
+recuperación de contraseña y el sobre común del cliente HTTP.
 
-```json
-{
-  "success": true,
-  "data": [],
-  "pagination": {
-    "page": 1,
-    "limit": 12,
-    "total": 0,
-    "totalPages": 1
-  }
-}
-```
+## Integración por etapas
+
+Las Etapas A–F conectan autenticación, catálogo, área privada, aula, reseñas, certificados,
+instructores y administración. El estado final está en
+[`docs/frontend-integration-progress.md`](docs/frontend-integration-progress.md). Cada etapa se
+valida antes de conectar la siguiente para aislar errores entre UI, API y datos.
 
 ## Reglas de integración
 
@@ -103,3 +133,4 @@ Las respuestas deben respetar el sobre común del backend:
 - Usar `src/services/api.ts` para toda comunicación HTTP.
 - Mantener validación de UX en frontend y validación definitiva en backend.
 - Mostrar estados de carga, error y resultados vacíos.
+- Tratar los controles por rol del frontend como UX; Express vuelve a autorizar cada petición.

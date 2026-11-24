@@ -30,6 +30,7 @@ export default function CourseFilters({ categories, filters, onChange }: CourseF
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
+          aria-pressed={!filters.category || filters.category === "all"}
           onClick={() => onChange({ ...filters, category: "all", page: 1 })}
           className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
             !filters.category || filters.category === "all"
@@ -43,6 +44,7 @@ export default function CourseFilters({ categories, filters, onChange }: CourseF
           <button
             key={category.id}
             type="button"
+            aria-pressed={filters.category === category.slug}
             onClick={() => onChange({ ...filters, category: category.slug, page: 1 })}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
               filters.category === category.slug

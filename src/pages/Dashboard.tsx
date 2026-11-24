@@ -1,72 +1,89 @@
-import { Link } from 'react-router';
-
-const dashboardStats = [
-  { label: 'Cursos en progreso', value: '0' },
-  { label: 'Cursos completados', value: '0' },
-  { label: 'Certificados obtenidos', value: '0' },
-  { label: 'Horas de aprendizaje', value: '0h' },
-];
+import { EnrollmentCard } from "../components/student/EnrollmentCard";
+import { StudentPageHeader } from "../components/student/StudentPageHeader";
+import { ButtonLink } from "../components/ui/Button";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ErrorState } from "../components/ui/ErrorState";
+import { PageLoader } from "../components/ui/PageLoader";
+import { ROUTES } from "../config/routes";
+import { useAuth } from "../hooks/useAuth";
+import { useLearningSummary, useMyCoursesPage } from "../hooks/useStudent";
+import { userErrorMessage } from "../services/api";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const coursesQuery = useMyCoursesPage({ page: 1, limit: 2, status: "in_progress" });
+  const summaryQuery = useLearningSummary();
+
+  if (coursesQuery.isLoading || summaryQuery.isLoading) {
+    return <PageLoader label="Preparando tu panel" />;
+  }
+
+  if (coursesQuery.isError || summaryQuery.isError) {
+    const error = coursesQuery.error ?? summaryQuery.error;
+    return (
+      <ErrorState
+        description={userErrorMessage(error, "No pudimos consultar tu información de aprendizaje.")}
+        onRetry={() => {
+          void coursesQuery.refetch();
+          void summaryQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  const inProgress = coursesQuery.data?.items ?? [];
+  const summary = summaryQuery.data;
+  const metrics = [
+    { label: "Cursos en progreso", value: String(summary?.inProgress ?? 0) },
+    { label: "Cursos completados", value: String(summary?.completed ?? 0) },
+    { label: "Certificados obtenidos", value: String(summary?.certificates ?? 0) },
+    { label: "Horas de aprendizaje", value: `${summary?.learningHours ?? 0}h` },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <header className="border-b border-white/10 bg-slate-950/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link to="/" className="text-lg font-extrabold tracking-tight text-white">
-            <span className="bg-clip-text text-transparent bg-linear-to-r from-violet-400 to-fuchsia-400">
-              Academix
-            </span>
-          </Link>
-          <Link
-            to="/"
-            className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
-          >
-            Cerrar sesión
-          </Link>
-        </nav>
-      </header>
+    <div className="min-w-0 space-y-7 sm:space-y-10">
+      <section className="academix-dashboard-hero min-w-0 overflow-hidden rounded-3xl border border-brand-400/20 bg-linear-to-r from-brand-800 via-violet-700 to-fuchsia-700 p-5 shadow-2xl shadow-brand-950/40 sm:p-7 lg:p-10">
+        <p className="academix-on-brand text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-brand-100 sm:text-xs sm:tracking-[0.18em]">Tu aprendizaje</p>
+        <h1 className="academix-on-brand mt-2 break-words text-2xl font-extrabold tracking-tight text-white sm:text-3xl lg:text-4xl">
+          Hola, {user?.fullName || "estudiante"}
+        </h1>
+        <p className="academix-on-brand mt-3 max-w-2xl text-sm leading-6 text-brand-100 sm:text-base sm:leading-7">
+          Continúa donde te quedaste y mantén el ritmo para alcanzar tu siguiente meta profesional.
+        </p>
+      </section>
 
-      <main className="px-6 py-16">
-        <div className="mx-auto max-w-6xl">
-          <div className="rounded-2xl border border-violet-400/20 bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 shadow-2xl shadow-violet-950/40 sm:p-10">
-            <span className="text-xs font-semibold uppercase tracking-wider text-violet-100">
-              Bienvenido de vuelta
-            </span>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Tu panel de aprendizaje
-            </h1>
-            <p className="mt-3 max-w-2xl text-violet-100">
-              Aquí podrás dar seguimiento a tus cursos, certificados y progreso. Esta sección
-              está en construcción.
-            </p>
-          </div>
+      <section aria-label="Resumen de aprendizaje" className="grid min-w-0 grid-cols-1 gap-4 min-[420px]:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <article key={metric.label} className="min-w-0 rounded-2xl border border-slate-700/70 bg-slate-900 p-5 shadow-xl shadow-black/20 sm:p-6">
+            <p className="text-3xl font-extrabold text-white">{metric.value}</p>
+            <p className="mt-2 text-sm text-slate-400">{metric.label}</p>
+          </article>
+        ))}
+      </section>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {dashboardStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-2xl border border-slate-700/70 bg-slate-900 p-6 shadow-xl shadow-black/20"
-              >
-                <p className="text-3xl font-extrabold text-white">{stat.value}</p>
-                <p className="mt-2 text-sm text-slate-400">{stat.label}</p>
-              </div>
+      <section>
+        <StudentPageHeader
+          eyebrow="Continúa aprendiendo"
+          title="Tus cursos activos"
+          description="Retoma una lección y avanza a tu propio ritmo."
+          action={<ButtonLink to={ROUTES.myCourses} variant="secondary">Ver todos</ButtonLink>}
+        />
+        {inProgress.length ? (
+          <div className="mt-7 grid gap-6 md:grid-cols-2">
+            {inProgress.slice(0, 2).map((enrollment) => (
+              <EnrollmentCard key={enrollment.id} enrollment={enrollment} />
             ))}
           </div>
-
-          <div className="mt-10 rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 p-10 text-center">
-            <p className="text-lg font-bold text-white">Aún no tienes cursos inscritos</p>
-            <p className="mt-2 text-sm text-slate-400">
-              Explora nuestro catálogo y empieza tu primer curso hoy mismo.
-            </p>
-            <Link
-              to="/cursos"
-              className="mt-6 inline-flex items-center justify-center rounded-lg bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-500"
-            >
-              Explorar Cursos
-            </Link>
+        ) : (
+          <div className="mt-7">
+            <EmptyState
+              title="Aún no tienes cursos activos"
+              description="Explora el catálogo y elige el curso con el que quieres comenzar."
+              action={<ButtonLink to={ROUTES.courses}>Explorar cursos</ButtonLink>}
+            />
           </div>
-        </div>
-      </main>
+        )}
+      </section>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { courseMocks } from "../data/courseMocks";
+import { mergeCourseReviewMocks } from "../data/reviewMocks";
 import type {
   CourseDetail,
   CourseFilters,
@@ -21,7 +22,7 @@ function buildCourseQuery(filters: CourseFilters): string {
   if (filters.category && filters.category !== "all") params.set("category", filters.category);
   if (filters.level && filters.level !== "all") params.set("level", filters.level);
   params.set("page", String(filters.page ?? 1));
-  params.set("limit", String(filters.limit ?? 12));
+  params.set("limit", String(filters.limit ?? 10));
 
   return params.toString();
 }
@@ -31,9 +32,9 @@ async function listMockCourses(filters: CourseFilters): Promise<CourseListResult
 
   const normalizedSearch = filters.search?.trim().toLocaleLowerCase("es") ?? "";
   const page = filters.page ?? 1;
-  const limit = filters.limit ?? 12;
+  const limit = filters.limit ?? 10;
 
-  const filtered = courseMocks.filter((course) => {
+  const filtered = courseMocks.map(mergeCourseReviewMocks).filter((course) => {
     const matchesSearch =
       !normalizedSearch ||
       [course.title, course.shortDescription, course.instructor.name, course.category.name]
@@ -60,8 +61,8 @@ async function listMockCourses(filters: CourseFilters): Promise<CourseListResult
   };
 }
 
-async function listApiCourses(filters: CourseFilters): Promise<CourseListResult> {
-  const page = await api.getPage<CourseSummary>(`/courses?${buildCourseQuery(filters)}`);
+async function listApiCourses(filters: CourseFilters, signal?: AbortSignal): Promise<CourseListResult> {
+  const page = await api.getPage<CourseSummary>(`/courses?${buildCourseQuery(filters)}`, { signal });
 
   return {
     items: page.items,
@@ -72,13 +73,22 @@ async function listApiCourses(filters: CourseFilters): Promise<CourseListResult>
   };
 }
 
-export async function listCourses(filters: CourseFilters = {}): Promise<CourseListResult> {
-  return env.dataSource === "api" ? listApiCourses(filters) : listMockCourses(filters);
+export async function listCourses(filters: CourseFilters = {}, signal?: AbortSignal): Promise<CourseListResult> {
+  return env.dataSource === "api" ? listApiCourses(filters, signal) : listMockCourses(filters);
 }
 
-export async function getCourse(courseId: string): Promise<CourseDetail> {
+export async function listFeaturedCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
   if (env.dataSource === "api") {
-    return api.get<CourseDetail>(`/courses/${encodeURIComponent(courseId)}`);
+    return api.get<CourseSummary[]>("/courses/featured", { signal });
+  }
+
+  await waitForMocks();
+  return courseMocks.slice(0, 5).map(mergeCourseReviewMocks);
+}
+
+export async function getCourse(courseId: string, signal?: AbortSignal): Promise<CourseDetail> {
+  if (env.dataSource === "api") {
+    return api.get<CourseDetail>(`/courses/${encodeURIComponent(courseId)}`, { signal });
   }
 
   await waitForMocks();
@@ -88,16 +98,17 @@ export async function getCourse(courseId: string): Promise<CourseDetail> {
     throw new Error("No encontramos el curso solicitado.");
   }
 
-  return course;
+  return mergeCourseReviewMocks(course);
 }
 
-export async function getRelatedCourses(course: CourseDetail): Promise<CourseSummary[]> {
+export async function getRelatedCourses(course: CourseDetail, signal?: AbortSignal): Promise<CourseSummary[]> {
   if (env.dataSource === "api") {
-    return api.get<CourseSummary[]>(`/courses/${encodeURIComponent(course.id)}/related`);
+    return api.get<CourseSummary[]>(`/courses/${encodeURIComponent(course.id)}/related`, { signal });
   }
 
   await waitForMocks();
   return course.relatedCourseIds
     .map((courseId) => courseMocks.find((item) => item.id === courseId))
-    .filter((item): item is CourseDetail => Boolean(item));
+    .filter((item): item is CourseDetail => Boolean(item))
+    .map(mergeCourseReviewMocks);
 }

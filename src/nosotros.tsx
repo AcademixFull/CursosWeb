@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
-import Header from './components/Header';
+import { ROUTES } from './config/routes';
+import PublicLayout from './layouts/PublicLayout';
 
 interface ValueItem {
   icon: IconName;
@@ -148,10 +149,7 @@ function initials(name: string) {
 
 export default function Nosotros() {
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="nosotros" />
-
-      <main>
+    <PublicLayout active="nosotros">
         <section className="relative overflow-hidden px-6 py-20 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.38),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.22),transparent_28%)]" />
           <div className="relative mx-auto max-w-4xl text-center">
@@ -164,7 +162,7 @@ export default function Nosotros() {
                 educación digital
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-2xl text-lg leading-8 text-slate-300">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300">
               En Academix, creemos que el conocimiento es la herramienta más poderosa para dar
               forma al futuro. Estamos construyendo el ecosistema de aprendizaje más avanzado
               para la próxima generación de profesionales.
@@ -270,23 +268,23 @@ export default function Nosotros() {
         </section>
 
         <section className="px-6 py-16">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <div className="academix-cta-panel mx-auto max-w-6xl overflow-hidden rounded-2xl p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-10">
+            <h2 className="academix-on-brand academix-cta-heading text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               ¿Listo para unirte a nuestra comunidad?
             </h2>
-            <p className="mx-auto mt-4 max-2xl text-violet-100">
+            <p className="academix-on-brand academix-cta-body mx-auto mt-4 max-w-2xl text-violet-100">
               Únete a miles de estudiantes que ya están transformando sus carreras profesionales
               con Academix.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
               >
                 Explorar Catálogo
               </Link>
               <Link
-                to="/contacto"
+                to={ROUTES.contact}
                 className="inline-flex items-center justify-center rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
               >
                 Contáctanos
@@ -294,24 +292,6 @@ export default function Nosotros() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-white/10 px-6 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-400 sm:flex-row">
-          <p>Academix. Formación moderna para equipos y profesionales.</p>
-          <div className="flex gap-4">
-            <Link to="/" className="transition hover:text-white">
-              Inicio
-            </Link>
-            <Link to="/cursos" className="transition hover:text-white">
-              Cursos
-            </Link>
-            <Link to="/contacto" className="transition hover:text-white">
-              Contacto
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }

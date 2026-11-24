@@ -1,5 +1,9 @@
 import { Link } from 'react-router';
-import Header from '../components/Header';
+import academixLearning from '../assets/home/academix-learning.png';
+import { courseDetailRoute, ROUTES } from '../config/routes';
+import { useFeaturedCourses } from '../hooks/useCourses';
+import PublicLayout from '../layouts/PublicLayout';
+import { formatMxn } from '../utils/currency';
 
 const stats = [
   { value: '1000+', label: 'Estudiantes activos' },
@@ -47,11 +51,10 @@ const testimonials = [
 ];
 
 export default function HomePage() {
-  return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
-      <Header active="inicio" />
+  const featuredCourses = useFeaturedCourses();
 
-      <main>
+  return (
+    <PublicLayout active="inicio">
         {/* Hero */}
         <section className="relative overflow-hidden px-6 py-20 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.35),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(37,99,235,0.2),transparent_28%)]" />
@@ -73,31 +76,30 @@ export default function HomePage() {
               </p>
               <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
                 <Link
-                  to="/cursos"
+                  to={ROUTES.courses}
                   className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-violet-600/25 transition hover:bg-violet-500"
                 >
                   Explorar Cursos
                 </Link>
-                <span
-                  aria-disabled="true"
-                  title="Próximamente"
-                  className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-slate-400"
+                <Link
+                  to={ROUTES.instructorApplication}
+                  className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
                 >
                   Conviértete en Instructor
-                </span>
+                </Link>
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/6 p-3 shadow-2xl shadow-violet-950/40 backdrop-blur">
               <div className="overflow-hidden rounded-xl">
-                <div className="flex aspect-video w-full items-center justify-center bg-linear-to-br from-violet-900 via-slate-900 to-blue-900 text-center">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">
-                      Cursos tecnología
-                    </p>
-                    <p className="mt-2 text-lg font-bold text-white">Proximamente</p>
-                  </div>
-                </div>
+                <img
+                  src={academixLearning}
+                  alt="Academix: tecnología, conocimiento y aprendizaje conectado"
+                  width={1536}
+                  height={1024}
+                  fetchPriority="high"
+                  className="aspect-[3/2] w-full bg-slate-950 object-cover"
+                />
               </div>
             </div>
           </div>
@@ -105,7 +107,7 @@ export default function HomePage() {
 
         {/* Stats */}
         <section className="border-y border-white/10 bg-slate-900/40 px-6 py-12">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 text-center sm:grid-cols-4">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 text-center min-[420px]:grid-cols-2 sm:grid-cols-4 sm:gap-8">
             {stats.map((stat) => (
               <div key={stat.label}>
                 <p className="text-3xl font-extrabold text-white">{stat.value}</p>
@@ -127,48 +129,63 @@ export default function HomePage() {
                   Cursos Destacados
                 </h2>
                 <p className="mt-2 text-slate-400">
-                  Las habilidades más buscadas por las empresas líderes.
+                  Los cursos independientes más tomados por la comunidad de Academix.
                 </p>
               </div>
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="text-sm font-semibold text-violet-300 transition hover:text-violet-200"
               >
                 Ver todos los cursos →
               </Link>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { tag: 'Desarrollo Web', title: 'Master en Desarrollo Web Full Stack', price: '$49.99' },
-                { tag: 'Diseño UI/UX', title: 'Diseño de Interfaces (UI) y Experiencia de Usuario', price: '$34.99' },
-                { tag: 'Inteligencia Artificial', title: 'Introducción a la Inteligencia Artificial', price: '$59.99' },
-                { tag: 'Marketing Digital', title: 'Estrategias Avanzadas de Marketing', price: '$29.99' },
-              ].map((course) => (
-                <article
-                  key={course.title}
-                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/60"
-                >
-                  <div className="flex h-32 items-center justify-center bg-linear-to-br from-violet-800/40 to-slate-800 text-xs font-semibold uppercase tracking-wider text-violet-300">
-                    {course.tag}
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-base font-bold text-white">{course.title}</h3>
-                    <div className="mt-auto flex items-center justify-between pt-5">
-                      <span className="text-lg font-extrabold text-violet-300">
-                        {course.price}
-                      </span>
-                      <Link
-                        to="/cursos"
-                        className="text-sm font-semibold text-white transition hover:text-violet-300"
-                      >
-                        Ver Curso →
-                      </Link>
+            <p className="-mt-6 mb-8 text-sm text-slate-500">
+              Se muestran hasta 5 cursos independientes, ordenados por el número de inscripciones. Los cursos de organizaciones no participan en este ranking.
+            </p>
+
+            {featuredCourses.isPending ? (
+              <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center text-slate-400">
+                Cargando cursos destacados...
+              </div>
+            ) : featuredCourses.isError ? (
+              <div className="rounded-2xl border border-dashed border-red-400/30 p-8 text-center">
+                <p className="text-sm text-red-200">No pudimos consultar los cursos destacados.</p>
+                <button type="button" onClick={() => void featuredCourses.refetch()} className="mt-3 text-sm font-semibold text-violet-300">
+                  Intentar de nuevo
+                </button>
+              </div>
+            ) : featuredCourses.data.length ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                {featuredCourses.data.map((course) => (
+                  <article
+                    key={course.id}
+                    className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900 shadow-xl shadow-black/20 transition hover:-translate-y-1 hover:border-violet-400/60"
+                  >
+                    <div className="academix-soft-banner academix-soft-banner-text flex h-32 items-center justify-center overflow-hidden text-xs font-semibold uppercase tracking-wider text-violet-300">
+                      {course.imageUrl ? <img src={course.imageUrl} alt="" className="h-full w-full object-cover" /> : course.category.name}
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <p className="text-xs text-slate-500">Por {course.instructor.name}</p>
+                      <h3 className="mt-2 break-words text-base font-bold text-white">{course.title}</h3>
+                      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+                        <span className="text-base font-extrabold text-violet-300">{formatMxn(course.price)}</span>
+                        <Link
+                          to={courseDetailRoute(course.id)}
+                          className="text-sm font-semibold text-white transition hover:text-violet-300"
+                        >
+                          Ver Curso →
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center text-slate-400">
+                Aún no hay cursos independientes publicados para destacar.
+              </div>
+            )}
           </div>
         </section>
 
@@ -229,23 +246,23 @@ export default function HomePage() {
 
         {/* CTA final */}
         <section className="px-6 py-20">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-linear-to-r from-violet-700 via-fuchsia-700 to-blue-700 p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-12">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          <div className="academix-cta-panel mx-auto max-w-6xl overflow-hidden rounded-2xl p-8 text-center shadow-2xl shadow-violet-950/50 sm:p-12">
+            <h2 className="academix-on-brand academix-cta-heading text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
               Empieza hoy mismo tu transformación
             </h2>
-            <p className="mx-auto mt-4 max-x-2xl text-violet-100">
+            <p className="academix-on-brand academix-cta-body mx-auto mt-4 max-w-2xl text-violet-100">
               Únete a la comunidad de aprendizaje más vibrante de Latinoamérica. Sin cuotas
               mensuales obligatorias, paga solo por lo que aprendes.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
-                to="/cursos"
+                to={ROUTES.courses}
                 className="inline-flex items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
               >
                 Explorar Catálogo
               </Link>
               <Link
-                to="/cursos"
+                to={ROUTES.register}
                 className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
               >
                 Crear Cuenta Gratis
@@ -253,31 +270,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-white/10 px-6 py-10">
-        <div className="mx-auto max-w-6xl text-center text-sm text-slate-400">
-          <p className="text-base font-bold text-white">Academix</p>
-          <p className="mt-2">
-            Democratizando el acceso a la educación digital con cursos de alta calidad
-            impartidos por expertos.
-          </p>
-          <div className="mt-6 flex justify-center gap-6 text-sm">
-            <Link to="/" className="transition hover:text-white">
-              Inicio
-            </Link>
-            <Link to="/cursos" className="transition hover:text-white">
-              Cursos
-            </Link>
-            <Link to="/contacto" className="transition hover:text-white">
-              Contacto
-            </Link>
-          </div>
-          <p className="mt-8 text-xs text-slate-500">
-            © 2026 Academix. Todos los derechos reservados.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PublicLayout>
   );
 }
