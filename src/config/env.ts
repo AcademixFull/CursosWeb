@@ -1,3 +1,4 @@
+import { APP_VERSION } from './version'
 /**
  * Punto central de lectura de variables de entorno del frontend.
  *
@@ -13,6 +14,7 @@
  */
 
 interface AppEnv {
+  sentry: { dsn: string; environment: string; release: string };
   cache: { catalogTtlMs: number; featuredTtlMs: number; libraryTtlMs: number; gcTimeMs: number; maxInactive: number };
   /** Base URL de academix-backend, ej. http://localhost:3000/api/v1. */
   apiUrl: string;
@@ -44,7 +46,11 @@ function readEnv(): AppEnv {
     }
   }
 
-  return { apiUrl, mapboxToken, dataSource, cache: {
+  return { sentry: {
+    dsn: import.meta.env.VITE_SENTRY_DSN ?? '',
+    environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? (import.meta.env.PROD ? 'production' : 'development'),
+    release: `academix-frontend@${APP_VERSION}`,
+  }, apiUrl, mapboxToken, dataSource, cache: {
     catalogTtlMs: bounded(import.meta.env.VITE_CATALOG_TTL_MS, 60_000, 3_600_000),
     featuredTtlMs: bounded(import.meta.env.VITE_FEATURED_TTL_MS, 30_000, 3_600_000),
     libraryTtlMs: bounded(import.meta.env.VITE_LIBRARY_TTL_MS, 30_000, 3_600_000),
