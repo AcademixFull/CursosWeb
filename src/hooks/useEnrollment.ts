@@ -11,6 +11,7 @@ export function useEnrollCourse() {
   const coursesKey = studentQueryKeys.courses(user?.id ?? "anonymous");
 
   return useMutation({
+    networkMode: "always",
     mutationFn: (courseId: string) => {
       if (!user) throw new Error("Debes iniciar sesión para inscribirte.");
       return enrollInCourse(courseId);

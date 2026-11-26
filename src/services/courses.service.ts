@@ -1,3 +1,6 @@
+import { offlineStore } from "../offline/store";
+import { ApiError } from "./api";
+import { withCatalogSnapshot } from "../offline/catalog";
 import { env } from "../config/env";
 import { courseMocks } from "../data/courseMocks";
 import { mergeCourseReviewMocks } from "../data/reviewMocks";
@@ -74,12 +77,16 @@ async function listApiCourses(filters: CourseFilters, signal?: AbortSignal): Pro
 }
 
 export async function listCourses(filters: CourseFilters = {}, signal?: AbortSignal): Promise<CourseListResult> {
-  return env.dataSource === "api" ? listApiCourses(filters, signal) : listMockCourses(filters);
+  if (env.dataSource !== "api") return listMockCourses(filters);
+  if (buildCourseQuery(filters) === "page=1&limit=10") {
+    return withCatalogSnapshot("first", () => listApiCourses(filters, signal), signal);
+  }
+  return listApiCourses(filters, signal);
 }
 
 export async function listFeaturedCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
   if (env.dataSource === "api") {
-    return api.get<CourseSummary[]>("/courses/featured", { signal });
+    return withCatalogSnapshot("featured", () => api.get<CourseSummary[]>("/courses/featured", { signal }), signal);
   }
 
   await waitForMocks();
@@ -88,7 +95,19 @@ export async function listFeaturedCourses(signal?: AbortSignal): Promise<CourseS
 
 export async function getCourse(courseId: string, signal?: AbortSignal): Promise<CourseDetail> {
   if (env.dataSource === "api") {
-    return api.get<CourseDetail>(`/courses/${encodeURIComponent(courseId)}`, { signal });
+    try {
+      if (!navigator.onLine) throw new ApiError("Curso sin conexión", { status: 0, code: "NETWORK_ERROR" });
+      return await api.get<CourseDetail>(`/courses/${encodeURIComponent(courseId)}`, { signal });
+    } catch (error) {
+      signal?.throwIfAborted();
+      if (!(error instanceof ApiError) || (error.code !== "NETWORK_ERROR" && ![502, 503, 504].includes(error.status))) throw error;
+      const first = await offlineStore.get<CourseListResult>("public", "catalog", "first").catch(() => undefined);
+      const featured = await offlineStore.get<CourseSummary[]>("public", "catalog", "featured").catch(() => undefined);
+      const saved = [...(first?.items ?? []), ...(featured ?? [])].find((item) => item.id === courseId || item.slug === courseId);
+      if (!saved) throw error;
+      return { ...saved, savedPreview: true, description: saved.shortDescription,
+        learningOutcomes: [], requirements: [], language: "", modules: [], reviews: [], relatedCourseIds: [] };
+    }
   }
 
   await waitForMocks();
