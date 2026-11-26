@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/AcademixFull/CursosWeb/compare/v1.0.1...v1.1.0) (2026-11-26)
+
+
+### Features
+
+* **monitor:** integrar Sentry en React con filtros de privacidad ([8a8f7b7](https://github.com/AcademixFull/CursosWeb/commit/8a8f7b747a05f4ba8a0a8d00fc75f7bcf52ffd54))
+* **monitor:** integrar Sentry en React con filtros de privacidad ([ebd3176](https://github.com/AcademixFull/CursosWeb/commit/ebd31761047e6620855f9d159ba043b15766a6c7))
+
 ## [1.0.1](https://github.com/AcademixFull/CursosWeb/compare/v1.0.0...v1.0.1) (2026-11-25)
 
 
