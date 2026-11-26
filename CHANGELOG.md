@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/AcademixFull/CursosWeb/compare/v1.0.0...v1.0.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **ci:** verify public Vercel production alias ([7951b57](https://github.com/AcademixFull/CursosWeb/commit/7951b5732ff1f26330adafbbb2106b97dda1857f))
+* **ci:** verify public Vercel production alias ([73cc292](https://github.com/AcademixFull/CursosWeb/commit/73cc2924cf4c6981214b85fc3d6cba433443f35c))
+
 ## 1.0.0 (2026-11-24)
 
 
