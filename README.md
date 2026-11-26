@@ -170,3 +170,7 @@ Nunca se guarda el valor del token en archivos del repositorio.
 
 Si una sesión abierta conserva una versión anterior, usar el aviso **Actualizar ahora**
 y cerrar otras pestañas de la aplicación antes de aplicar la actualización.
+
+## Operación y monitoreo
+
+Consultar [la guía de Operate y Monitor](docs/operate-monitor.md) para la configuración de Sentry, controles de salud y respuesta a incidentes.

@@ -1,3 +1,4 @@
+import { reactErrorHandler } from './monitoring/instrument'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
@@ -8,7 +9,11 @@ import { registerPwa } from './offline/register.ts'
 initializeAuthRedirect()
 registerPwa()
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root')!, {
+  onUncaughtError: reactErrorHandler(),
+  onCaughtError: reactErrorHandler(),
+  onRecoverableError: reactErrorHandler(),
+}).render(
   <StrictMode>
     <App />
   </StrictMode>,
