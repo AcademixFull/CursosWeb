@@ -4,7 +4,7 @@ import { assertOfflineAccess } from "./access";
 
 export const OFFLINE_CHANGED = "academix:offline-changed";
 const scope = `${env.apiUrl}|${env.dataSource}|${import.meta.env.BASE_URL}`;
-type Kind = "library" | "course" | "resource" | "pending" | "download";
+type Kind = "library" | "course" | "resource" | "pending" | "download" | "catalog" | "request";
 type Key = [string, string, Kind, string];
 interface Row<T> { key: Key; value: T }
 export interface PendingProgress {

@@ -5,6 +5,9 @@ import { env } from "../../config/env";
 import { downloadLibrary, type DownloadState } from "../../offline/downloads";
 import { canSync, syncOfflineProgress } from "../../offline/learning";
 import { OFFLINE_CHANGED, offlineStore } from "../../offline/store";
+import { listOfflineRequests, syncOfflineRequests } from "../../offline/requests";
+import { listCourses, listFeaturedCourses } from "../../services/courses.service";
+import { listCategories } from "../../services/categories.service";
 import { listMyCourses } from "../../services/student.service";
 import { userErrorMessage } from "../../services/api";
 
@@ -26,6 +29,28 @@ export function PwaStatus() {
   const [downloads, setDownloads] = useState<DownloadState[]>([]);
   const [shellReady, setShellReady] = useState(!import.meta.env.PROD);
   const userId = user?.id;
+  const [confirmedUser, setConfirmedUser] = useState<string>();
+  const [requestState, setRequestState] = useState<{ user: string; items: Awaited<ReturnType<typeof listOfflineRequests>> }>();
+  const requests = requestState?.user === userId ? requestState?.items ?? [] : [];
+  useEffect(() => {
+    if (!online || !import.meta.env.PROD || env.dataSource !== "api") return;
+    void Promise.allSettled([
+      queryClient.prefetchQuery({ queryKey: ["courses", "featured"], queryFn: () => listFeaturedCourses() }),
+      queryClient.prefetchQuery({ queryKey: ["categories"], queryFn: () => listCategories() }),
+      listCourses(),
+    ]);
+  }, [online, queryClient]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    const refresh = () => {
+      void listOfflineRequests(userId).then((value) => { if (!cancelled) setRequestState({ user: userId, items: value }); }).catch(() => undefined);
+    };
+    refresh();
+    window.addEventListener(OFFLINE_CHANGED, refresh);
+    return () => { cancelled = true; window.removeEventListener(OFFLINE_CHANGED, refresh); };
+  }, [userId]);
   const preparing = useRef(false);
   const requested = useRef(false);
 
@@ -83,7 +108,17 @@ export function PwaStatus() {
       if (refresh) await navigator.storage?.persist?.();
       let syncError = "";
       let synced = 0;
-      try { synced = await syncOfflineProgress(userId, refresh); }
+      try {
+        const confirmed = await syncOfflineRequests(userId);
+        if (confirmed) {
+          setConfirmedUser(userId);
+          includeDownloads = true;
+          for (const key of ["subscriptions", "organizations", "student"]) {
+            void queryClient.invalidateQueries({ queryKey: [key] });
+          }
+        }
+        synced = await syncOfflineProgress(userId, refresh);
+      }
       catch (error) { syncError = userErrorMessage(error, "No se pudo sincronizar el avance. Se conserva en este dispositivo."); }
       if (synced) {
         await queryClient.invalidateQueries({ queryKey: ["student", userId] });
@@ -140,6 +175,12 @@ export function PwaStatus() {
   const needsLogin = user && online && !session?.accessToken;
   const ready = downloads.filter((d) => d.status === "ready").length;
   return (
+    <>
+    {userId && (requests.length || confirmedUser === userId) ? <div role="status" className="mx-auto max-w-7xl px-4 py-2 text-sm">
+      {confirmedUser === userId ? <p>Academix confirmó las solicitudes sincronizadas.</p> : null}
+      {requests.some((entry) => !entry.error) ? <p>Solicitudes pendientes. Se enviarán al recuperar la conexión con tu cuenta abierta.</p> : null}
+      {requests.filter((entry) => entry.error).map((entry) => <p key={entry.id}>No se confirmó una solicitud: {entry.error}</p>)}
+    </div> : null}
     <aside hidden aria-label="Aplicación y conexión" className="print-hidden border-b border-white/10 bg-slate-900 px-4 py-3 text-sm text-slate-200">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3">
         {!installed ? <button type="button" onClick={() => void installApp()} className="rounded-lg bg-brand-600 px-3 py-2 font-semibold text-white">Instalar Academix</button> : null}
@@ -157,5 +198,6 @@ export function PwaStatus() {
         {message ? <p role="status" className="w-full text-slate-300">{message}</p> : null}
       </div>
     </aside>
+    </>
   );
 }

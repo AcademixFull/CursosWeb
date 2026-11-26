@@ -14,12 +14,12 @@ export default function Dashboard() {
   const coursesQuery = useMyCoursesPage({ page: 1, limit: 2, status: "in_progress" });
   const summaryQuery = useLearningSummary();
 
-  if (coursesQuery.isLoading || summaryQuery.isLoading) {
+  if (coursesQuery.isLoading) {
     return <PageLoader label="Preparando tu panel" />;
   }
 
-  if (coursesQuery.isError || summaryQuery.isError) {
-    const error = coursesQuery.error ?? summaryQuery.error;
+  if (coursesQuery.isError) {
+    const error = coursesQuery.error;
     return (
       <ErrorState
         description={userErrorMessage(error, "No pudimos consultar tu información de aprendizaje.")}
@@ -34,10 +34,10 @@ export default function Dashboard() {
   const inProgress = coursesQuery.data?.items ?? [];
   const summary = summaryQuery.data;
   const metrics = [
-    { label: "Cursos en progreso", value: String(summary?.inProgress ?? 0) },
-    { label: "Cursos completados", value: String(summary?.completed ?? 0) },
-    { label: "Certificados obtenidos", value: String(summary?.certificates ?? 0) },
-    { label: "Horas de aprendizaje", value: `${summary?.learningHours ?? 0}h` },
+    { label: "Cursos en progreso", value: String(summary?.inProgress ?? "—") },
+    { label: "Cursos completados", value: String(summary?.completed ?? "—") },
+    { label: "Certificados obtenidos", value: String(summary?.certificates ?? "—") },
+    { label: "Horas de aprendizaje", value: summary ? `${summary.learningHours}h` : "—" },
   ];
 
   return (

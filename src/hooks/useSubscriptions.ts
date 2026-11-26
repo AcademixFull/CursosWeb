@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 import { subscriptionService } from "../services/subscription.service";
 export function usePlans() {
-  return useQuery({ queryKey: ["plans"], queryFn: subscriptionService.plans, staleTime: 60_000 });
+  return useQuery({ queryKey: ["plans"], queryFn: subscriptionService.plans, networkMode: "always", staleTime: 60_000 });
 }
 export function useSubscriptions(page = 1) {
   const { user } = useAuth();
@@ -10,7 +10,7 @@ export function useSubscriptions(page = 1) {
 }
 export function usePurchasePlan() {
   const client = useQueryClient();
-  return useMutation({ mutationFn: subscriptionService.purchase, onSuccess: async () => {
+  return useMutation({ networkMode: "always", mutationFn: subscriptionService.purchase, onSuccess: async () => {
     await Promise.all(["subscriptions", "organizations", "student", "learning"].map((key) => client.invalidateQueries({ queryKey: [key] })));
   } });
 }

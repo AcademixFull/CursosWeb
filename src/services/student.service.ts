@@ -75,26 +75,44 @@ export interface LibraryFilters {
   courseIds?: string[];
 }
 
-export async function listMyCoursesPage(filters: LibraryFilters = {}, signal?: AbortSignal): Promise<ApiPage<EnrollmentSummary>> {
+export async function listMyCoursesPage(filters: LibraryFilters = {}, signal?: AbortSignal, allowOffline = true): Promise<ApiPage<EnrollmentSummary>> {
   const page = filters.page ?? 1;
   const limit = filters.limit ?? 10;
   const user = currentOfflineUser();
+  const revision = user ? offlineStore.generation(user) : undefined;
+  const snapshot = `first:${filters.status ?? "all"}`;
+  const saveFirst = page === 1 && limit === 10 && !filters.courseIds;
   const offlinePage = async () => {
     const library = user ? await cachedLibrary(user) : null;
+    if (!library && user) {
+      const saved = await offlineStore.get<ApiPage<EnrollmentSummary>>(user, "library", "first:all").catch(() => undefined);
+      const matching = saveFirst && filters.status
+        ? await offlineStore.get<ApiPage<EnrollmentSummary>>(user, "library", snapshot).catch(() => undefined)
+        : undefined;
+      if (matching) return matching;
+      if (saved && page === 1) {
+        const items = saved.items.filter((item) => (!filters.status || item.status === filters.status) &&
+          (!filters.courseIds || filters.courseIds.includes(item.course.id))).slice(0, limit);
+        return { items, pagination: { page, limit, total: items.length } };
+      }
+    }
     if (!library) throw new Error("Tu biblioteca aún no está descargada. Conéctate para prepararla.");
     const records = library.filter((item) => (!filters.status || item.status === filters.status)
       && (!filters.courseIds || filters.courseIds.includes(item.course.id)));
     return { items: records.slice((page - 1) * limit, page * limit), pagination: { page, limit, total: records.length } };
   };
   if (env.dataSource === "api") {
-    if (!navigator.onLine) return offlinePage();
+    if (!navigator.onLine && allowOffline) return offlinePage();
     try {
       const result = await api.getPage<EnrollmentSummary>("/users/me/courses", {
         params: { page, limit, ...(filters.status ? { status: filters.status } : {}), ...(filters.courseIds ? { courseIds: filters.courseIds.join(",") } : {}) }, signal,
       });
+      if (saveFirst && user && user === currentOfflineUser()) {
+        await offlineStore.put(user, "library", snapshot, result, revision).catch(() => undefined);
+      }
       return result;
     } catch (error) {
-      if (isConnectivityError(error)) return offlinePage();
+      if (allowOffline && isConnectivityError(error)) return offlinePage();
       throw error;
     }
   }
@@ -111,7 +129,7 @@ export async function listMyCourses(signal?: AbortSignal): Promise<EnrollmentSum
   const records: EnrollmentSummary[] = [];
   for (let page = 1; ; page++) {
     if (signal?.aborted) throw new DOMException("Cancelled", "AbortError");
-    const result = await listMyCoursesPage({ page, limit: 50 }, signal);
+    const result = await listMyCoursesPage({ page, limit: 50 }, signal, false);
     records.push(...result.items);
     if (records.length >= result.pagination.total || result.items.length === 0) break;
     if (currentOfflineUser() !== user) throw new DOMException("Account changed", "AbortError");

@@ -1,3 +1,4 @@
+import { submitOfflineRequest } from "../../offline/requests";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
@@ -23,11 +24,20 @@ export function PlanPurchaseButton({ plan, organizationId }: { plan: Subscriptio
     const storageKey = `academix:plan-purchase:${user!.id}:${plan.id}:${organizationId ?? "personal"}`;
     sessionStorage.setItem(storageKey, key);
     try {
-      const receipt = await mutation.mutateAsync({ planId: plan.id, organizationId, idempotencyKey: key });
-      setSuccess(`Compra simulada registrada. Vigencia hasta ${new Date(receipt.subscription.endsAt).toLocaleString("es-MX")}.`);
+      const input = { planId: plan.id, organizationId, idempotencyKey: key };
+      const outcome = await submitOfflineRequest(user!.id, { kind: "plan", input }, () => mutation.mutateAsync(input));
+      setSuccess(outcome.queued
+        ? "Solicitud guardada. La suscripción se enviará cuando vuelva la conexión."
+        : `Compra simulada registrada. Vigencia hasta ${new Date(outcome.result.subscription.endsAt).toLocaleString("es-MX")}.`);
       setKey(null);
       sessionStorage.removeItem(storageKey);
-    } catch { /* Retain the same key on retries after a timeout. */ }
+    } catch {
+      if (!navigator.onLine) {
+        setSuccess("No pudimos guardar la solicitud en este dispositivo.");
+        setKey(null);
+      }
+      // Retain the key for an explicit retry after a server error.
+    }
   }
   return <div><Button onClick={() => { setKey(sessionStorage.getItem(`academix:plan-purchase:${user.id}:${plan.id}:${organizationId ?? "personal"}`) ?? crypto.randomUUID()); mutation.reset(); setSuccess(""); }}>Comprar plan (simulado)</Button>
     {success ? <p role="status" className="mt-3 text-sm text-emerald-300">{success}</p> : null}

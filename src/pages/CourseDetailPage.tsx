@@ -1,3 +1,5 @@
+import { submitOfflineRequest } from "../offline/requests";
+import { env } from "../config/env";
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
@@ -31,6 +33,7 @@ export default function CourseDetailPage() {
   const enrollmentMutation = useEnrollCourse();
   const cart = useCart();
   const reviewMutation = useCreateReview(courseId ?? "");
+  const [offlineNotice, setOfflineNotice] = useState("");
   const [showEnrollment, setShowEnrollment] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
@@ -87,13 +90,26 @@ export default function CourseDetailPage() {
 
   async function confirmEnrollment() {
     try {
-      await enrollmentMutation.mutateAsync(course.id);
+      if (user && env.dataSource === "api") {
+        const outcome = await submitOfflineRequest(user.id, { kind: "enrollment", courseId: course.id },
+          () => enrollmentMutation.mutateAsync(course.id));
+        if (outcome.queued) {
+          setOfflineNotice("Inscripción guardada. Se enviará cuando vuelva la conexión.");
+          setShowEnrollment(false);
+          return;
+        }
+      } else {
+        await enrollmentMutation.mutateAsync(course.id);
+      }
       setShowEnrollment(false);
       navigate(learningRoute(course.id));
     } catch (error) {
       if (error instanceof ApiError && error.code === "ENROLLMENT_ALREADY_EXISTS") {
         setShowEnrollment(false);
         navigate(learningRoute(course.id));
+      } else if (!navigator.onLine) {
+        setOfflineNotice("No pudimos guardar la inscripción en este dispositivo.");
+        setShowEnrollment(false);
       }
     }
   }
@@ -278,7 +294,9 @@ export default function CourseDetailPage() {
 
             <aside className="h-fit rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl shadow-black/30 lg:sticky lg:top-28">
               <p className="text-3xl font-extrabold text-white">{formatMxn(course.price)}</p>
-              {isAuthenticated && !cart.ownershipReady ? (
+              {course.savedPreview ? <p className="mt-2 text-sm text-slate-400">Vista guardada del catálogo. El detalle completo se actualizará con conexión.</p> : null}
+              {offlineNotice ? <p role="status" className="mt-3">{offlineNotice}</p> : null}
+              {isAuthenticated && !cart.ownershipReady && (course.price > 0 || (navigator.onLine && !course.savedPreview)) ? (
                 <Button size="lg" fullWidth className="mt-5" disabled>
                   {enrollmentsQuery.isError ? "No pudimos verificar tus cursos" : "Consultando tus cursos..."}
                 </Button>
@@ -311,8 +329,8 @@ export default function CourseDetailPage() {
                   ) : null}
                 </>
               ) : (
-                <Button size="lg" fullWidth className="mt-5" onClick={startEnrollment} disabled={enrollmentsQuery.isLoading}>
-                  {enrollmentsQuery.isLoading ? "Consultando..." : "Inscribirme ahora"}
+                <Button size="lg" fullWidth className="mt-5" onClick={startEnrollment} disabled={enrollmentsQuery.isLoading && navigator.onLine && !course.savedPreview}>
+                  {enrollmentsQuery.isLoading && navigator.onLine && !course.savedPreview ? "Consultando..." : "Inscribirme ahora"}
                 </Button>
               )}
               <div className="mt-6 border-t border-white/10 pt-5 text-sm text-slate-400">
