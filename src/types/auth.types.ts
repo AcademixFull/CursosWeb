@@ -3,6 +3,7 @@ export type UserRole = "student" | "instructor" | "moderator" | "admin";
 export interface AuthUser {
   id: string;
   fullName: string;
+  avatarId?: string | null;
   email: string;
   role: UserRole;
 }

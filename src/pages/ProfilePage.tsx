@@ -7,9 +7,12 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { PageLoader } from "../components/ui/PageLoader";
 import { useMyProfile, useUpdateMyProfile } from "../hooks/useStudent";
 import { userErrorMessage } from "../services/api";
-import type { UpdateProfileInput, UserProfile } from "../types/student.types";
+import { AvatarPicker } from "../components/account/AvatarPicker";
+import type { UserProfile } from "../types/student.types";
 import { AccountDeletionPanel } from "../components/account/AccountDeletionPanel";
 import { SubscriptionPanel } from "../components/subscription/SubscriptionPanel";
+
+type ProfileFormFields = Pick<UserProfile, "fullName" | "phone" | "country" | "bio">;
 
 interface ProfileFormProps {
   profile: UserProfile;
@@ -23,7 +26,7 @@ const roleLabels: Record<UserProfile["role"], string> = {
 };
 
 function ProfileForm({ profile }: ProfileFormProps) {
-  const [form, setForm] = useState<UpdateProfileInput>(() => ({
+  const [form, setForm] = useState<ProfileFormFields>(() => ({
     fullName: profile.fullName,
     phone: profile.phone,
     country: profile.country,
@@ -32,7 +35,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
   const [formError, setFormError] = useState("");
   const mutation = useUpdateMyProfile();
 
-  function updateField<Key extends keyof UpdateProfileInput>(key: Key, value: UpdateProfileInput[Key]) {
+  function updateField<Key extends keyof ProfileFormFields>(key: Key, value: ProfileFormFields[Key]) {
     setForm((current) => ({ ...current, [key]: value }));
     setFormError("");
     mutation.reset();
@@ -125,9 +128,7 @@ function ProfileForm({ profile }: ProfileFormProps) {
       </section>
 
       <aside className="h-fit rounded-2xl border border-slate-700/70 bg-slate-900 p-6 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-500/15 text-2xl font-extrabold text-brand-200">
-          {profile.fullName.charAt(0).toUpperCase()}
-        </div>
+        <AvatarPicker avatarId={profile.avatarId} name={profile.fullName} />
         <p className="mt-4 font-bold text-white">{profile.fullName}</p>
         <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
         <Badge className="mt-4">{roleLabels[profile.role]}</Badge>

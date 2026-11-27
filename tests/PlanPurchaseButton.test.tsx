@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlanPurchaseButton } from "../src/components/subscription/SubscriptionPanel";
 const state=vi.hoisted(()=>({ purchase: vi.fn(), reset: vi.fn() }));
 vi.mock("../src/hooks/useAuth",()=>({ useAuth:()=>({ user:{ id:"actor" } }) }));
@@ -12,6 +12,7 @@ beforeEach(()=>{
  HTMLDialogElement.prototype.showModal=function(){ this.setAttribute("open",""); };
  HTMLDialogElement.prototype.close=function(){ this.removeAttribute("open"); };
 });
+afterEach(() => vi.restoreAllMocks());
 describe("simulated plan purchase",()=>{
  it("shows server price and benefits, then confirms only after backend receipt",async()=>{
   state.purchase.mockResolvedValue({ id:"receipt",subscription:{ endsAt:"2026-12-01T00:00:00Z" } });
@@ -22,7 +23,7 @@ describe("simulated plan purchase",()=>{
   expect(screen.getByRole("dialog")).toHaveTextContent("Cursos incluidos");
   await user.click(screen.getByRole("button",{ name:"Confirmar compra simulada" }));
   await waitFor(()=>expect(screen.getByRole("status")).toHaveTextContent("Compra simulada registrada"));
-  expect(state.purchase).toHaveBeenCalledWith({ planId:"plus-monthly",organizationId:undefined,idempotencyKey:expect.any(String) });
+  expect(state.purchase).toHaveBeenCalledWith({ plan,organizationId:undefined,idempotencyKey:expect.any(String) });
   expect(sessionStorage.getItem("academix:plan-purchase:actor:plus-monthly:personal")).toBeNull();
  });
  it("retains the idempotency key across an ambiguous failure and reopening",async()=>{
@@ -37,5 +38,20 @@ describe("simulated plan purchase",()=>{
   await user.click(screen.getByRole("button",{ name:"Confirmar compra simulada" }));
   await waitFor(()=>expect(state.purchase).toHaveBeenCalledTimes(2));
   expect(state.purchase.mock.calls[0][0].idempotencyKey).toBe(state.purchase.mock.calls[1][0].idempotencyKey);
+ });
+ it("requires a new confirmation after the connection comes back", async () => {
+  const connected = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+  render(<MemoryRouter><PlanPurchaseButton plan={plan} /></MemoryRouter>);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Comprar plan (simulado)" }));
+  connected.mockReturnValue(false);
+  act(() => { window.dispatchEvent(new Event("offline")); });
+  const confirm = screen.getByRole("button", { name: "Confirmar compra simulada" });
+  expect(confirm).toBeDisabled();
+  expect(screen.getByRole("dialog")).toHaveTextContent("Conéctate a internet");
+  connected.mockReturnValue(true);
+  act(() => { window.dispatchEvent(new Event("online")); });
+  expect(confirm).toBeEnabled();
+  expect(state.purchase).not.toHaveBeenCalled();
  });
 });

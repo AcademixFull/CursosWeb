@@ -37,32 +37,38 @@ it("reopens the last successful catalog and highlights after a fresh app load of
   expect(transport).toHaveBeenCalledTimes(3);
 });
 
-it("sends a queued subscription once with its original key and never from another account", async () => {
-  vi.stubEnv("VITE_API_URL", "https://queue-qa.test/api/v1");
+it("preserves cached plan prices and has a reference on the first offline visit", async () => {
+  vi.stubEnv("VITE_API_URL", "https://plans-qa.test/api/v1");
   vi.stubEnv("VITE_DATA_SOURCE", "api");
   vi.resetModules();
   const connected = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
-  const { submitOfflineRequest, syncOfflineRequests, listOfflineRequests } = await import("../src/offline/requests");
-  const { saveAuthSession } = await import("../src/utils/authSessionStore");
-  function signIn(id: string) {
-    saveAuthSession({ user: { id, fullName: id, email: `${id}@test.com`, role: "student" },
-      accessToken: "test-token", expiresAt: new Date(Date.now() + 60_000).toISOString() });
-  }
-  signIn("owner");
-  const send = vi.fn();
-  const input = { planId: "plus-monthly", idempotencyKey: "stable-key" };
-  expect(await submitOfflineRequest("owner", { kind: "plan", input }, send)).toEqual({ queued: true });
-  expect(send).not.toHaveBeenCalled();
-  const transport = vi.fn().mockResolvedValue(response({ id: "receipt" }));
+  const { subscriptionService } = await import("../src/services/subscription.service");
+  const transport = vi.fn().mockResolvedValue(response([{ id: "plus-monthly", priceMxn: 21 }]));
   vi.stubGlobal("fetch", transport);
+  expect(await subscriptionService.plans()).toContainEqual(expect.objectContaining({ id: "organizations-monthly", priceMxn: 1000 }));
   connected.mockReturnValue(true);
-  signIn("somebody-else");
+  await subscriptionService.plans();
+  connected.mockReturnValue(false);
+  expect(await subscriptionService.plans()).toMatchObject([{ id: "plus-monthly", priceMxn: 21 }]);
+  expect(transport).toHaveBeenCalledTimes(1);
+});
+
+it("discards subscriptions queued by older builds without sending a purchase", async () => {
+  vi.stubEnv("VITE_API_URL", "https://queue-qa.test/api/v1");
+  vi.stubEnv("VITE_DATA_SOURCE", "api");
+  vi.resetModules();
+  vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+  const { syncOfflineRequests, listOfflineRequests } = await import("../src/offline/requests");
+  const { offlineStore } = await import("../src/offline/store");
+  const { saveAuthSession } = await import("../src/utils/authSessionStore");
+  saveAuthSession({ user: { id: "owner", fullName: "Owner", email: "owner@test.com", role: "student" },
+    accessToken: "test-token", expiresAt: new Date(Date.now() + 60_000).toISOString() });
+  const key = "plan:plus-monthly:";
+  await offlineStore.put("owner", "request", key, { id: key, request: { kind: "plan", input: { planId: "plus-monthly" } } });
+  const transport = vi.fn();
+  vi.stubGlobal("fetch", transport);
+  expect(await listOfflineRequests("owner")).toEqual([]);
   expect(await syncOfflineRequests("owner")).toBe(0);
   expect(transport).not.toHaveBeenCalled();
-  signIn("owner");
-  expect(await syncOfflineRequests("owner")).toBe(1);
-  expect(await syncOfflineRequests("owner")).toBe(0);
-  expect(transport).toHaveBeenCalledTimes(1);
-  expect(JSON.parse(transport.mock.calls[0][1].body)).toEqual(input);
-  expect(await listOfflineRequests("owner")).toEqual([]);
+  expect(await offlineStore.get("owner", "request", key)).toBeUndefined();
 });

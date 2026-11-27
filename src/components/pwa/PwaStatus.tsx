@@ -7,6 +7,7 @@ import { canSync, syncOfflineProgress } from "../../offline/learning";
 import { OFFLINE_CHANGED, offlineStore } from "../../offline/store";
 import { listOfflineRequests, syncOfflineRequests } from "../../offline/requests";
 import { listCourses, listFeaturedCourses } from "../../services/courses.service";
+import { subscriptionService } from "../../services/subscription.service";
 import { listCategories } from "../../services/categories.service";
 import { listMyCourses } from "../../services/student.service";
 import { userErrorMessage } from "../../services/api";
@@ -38,6 +39,7 @@ export function PwaStatus() {
       queryClient.prefetchQuery({ queryKey: ["courses", "featured"], queryFn: () => listFeaturedCourses() }),
       queryClient.prefetchQuery({ queryKey: ["categories"], queryFn: () => listCategories() }),
       listCourses(),
+      queryClient.prefetchQuery({ queryKey: ["plans"], queryFn: subscriptionService.plans }),
     ]);
   }, [online, queryClient]);
 

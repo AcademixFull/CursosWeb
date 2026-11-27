@@ -30,6 +30,7 @@ function createMockProfile(user: AuthUser, changes?: Partial<UpdateProfileInput>
   return {
     id: user.id,
     fullName: changes?.fullName ?? user.fullName,
+    avatarId: changes?.avatarId === undefined ? user.avatarId : changes.avatarId,
     email: user.email,
     role: user.role,
     phone: changes?.phone ?? "",
@@ -203,6 +204,7 @@ export async function updateMyProfile(
   }
 
   await waitForMocks();
-  saveMockProfile(user.id, input);
-  return createMockProfile(user, input);
+  const merged = { ...readMockProfile(user.id), ...input };
+  saveMockProfile(user.id, merged);
+  return createMockProfile(user, merged);
 }

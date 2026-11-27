@@ -132,6 +132,7 @@ export default function OrganizationPage() {
             <article className="rounded-2xl border border-brand-400/25 bg-brand-500/10 p-5 lg:col-span-2">
               <p className="text-xs font-bold uppercase tracking-widest text-brand-300">{selected.type === "university" ? "Universidad" : selected.type === "company" ? "Empresa" : "Organización"}</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-100">{selected.name}</h2>
+              <p className="mt-2 text-sm text-slate-400">Creada por <span className="font-medium text-slate-200">{selected.creatorName ?? "Persona no disponible"}</span></p>
               <p className="mt-2 text-sm text-slate-400">{selected.description || "Sin descripción todavía."}</p>
               <div className="mt-4 flex flex-wrap gap-2"><span className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">Tu rol: {roleLabels[selected.role]}</span><span className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">{selected.memberCount} miembros</span></div>
               <p className="mt-3 text-sm text-slate-300">{selected.isOwner ? "Eres propietario de esta organización. " : ""}{selected.active === false ? "Organización inactiva." : selected.subscription?.active ? "Suscripción vigente." : "Sin suscripción vigente: puedes consultar el espacio y conservar tu rol. Activa el plan para habilitar los cursos institucionales."}</p>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import PublicLayout from "../layouts/PublicLayout";
 import { ROUTES } from "../config/routes";
+import { useOnline } from "../hooks/useOnline";
 import { usePlans } from "../hooks/useSubscriptions";
 import { PlanPurchaseButton } from "../components/subscription/SubscriptionPanel";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -16,6 +17,7 @@ const personPlans = [
 export default function PricingPage() {
   const [audience, setAudience] = useState<"people" | "organizations">("people");
   const plans = usePlans();
+  const online = useOnline();
   const selectedPlans = plans.data?.filter((plan) => plan.audience === (audience === "people" ? "person" : "organization")) ?? [];
 
   return (
@@ -34,6 +36,7 @@ export default function PricingPage() {
       </section>
 
       <section className="px-6 pb-24">
+        {!online ? <p role="status" className="mx-auto mb-6 max-w-6xl text-sm text-slate-400">Precios guardados. Conéctate a internet para confirmar la vigencia y suscribirte.</p> : null}
         {plans.isPending ? <PageLoader label="Consultando planes y precios" /> : null}
         {plans.error ? <ErrorState description={userErrorMessage(plans.error)} onRetry={() => void plans.refetch()} /> : null}
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2">
@@ -42,7 +45,7 @@ export default function PricingPage() {
               {index === 0 ? <span className="absolute right-6 top-0 -translate-y-1/2 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-white">Recomendado</span> : null}
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-300">{plan.audience === "organization" ? "Universidades y empresas" : "Acceso durante la vigencia"}</p>
               <h2 className="mt-3 text-2xl font-bold text-white">{plan.name}</h2>
-              <p className="mt-5 text-2xl font-extrabold text-brand-200">{plan.priceMxn == null ? "Hablemos de tu proyecto" : `${formatMxn(plan.priceMxn)} MXN / ${plan.months === 1 ? "mes" : `${plan.months} meses`}`}</p>
+              <p className="mt-5 text-2xl font-extrabold text-brand-200">{plan.priceMxn == null ? "Hablemos de tu proyecto" : `${formatMxn(plan.priceMxn)} / ${plan.months === 1 ? "mes" : `${plan.months} meses`}`}</p>
               <p className="mt-4 text-sm leading-6 text-slate-400">{plan.audience === "organization" ? "Un espacio institucional para reunir estudiantes, instructores y cursos propios." : "Estudia los cursos incluidos sin comprarlos individualmente mientras tu suscripción esté vigente."}</p>
               <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-300">
                 {plan.features.map((feature) => <li key={feature} className="flex gap-3"><span className="mt-0.5 text-brand-300" aria-hidden="true">✓</span><span>{feature}</span></li>)}
