@@ -45,7 +45,7 @@ export default function PricingPage() {
               {index === 0 ? <span className="absolute right-6 top-0 -translate-y-1/2 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-white">Recomendado</span> : null}
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-300">{plan.audience === "organization" ? "Universidades y empresas" : "Acceso durante la vigencia"}</p>
               <h2 className="mt-3 text-2xl font-bold text-white">{plan.name}</h2>
-              <p className="mt-5 text-2xl font-extrabold text-brand-200">{plan.priceMxn == null ? "Hablemos de tu proyecto" : `${formatMxn(plan.priceMxn)} MXN / ${plan.months === 1 ? "mes" : `${plan.months} meses`}`}</p>
+              <p className="mt-5 text-2xl font-extrabold text-brand-200">{plan.priceMxn == null ? "Hablemos de tu proyecto" : `${formatMxn(plan.priceMxn)} / ${plan.months === 1 ? "mes" : `${plan.months} meses`}`}</p>
               <p className="mt-4 text-sm leading-6 text-slate-400">{plan.audience === "organization" ? "Un espacio institucional para reunir estudiantes, instructores y cursos propios." : "Estudia los cursos incluidos sin comprarlos individualmente mientras tu suscripción esté vigente."}</p>
               <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-300">
                 {plan.features.map((feature) => <li key={feature} className="flex gap-3"><span className="mt-0.5 text-brand-300" aria-hidden="true">✓</span><span>{feature}</span></li>)}

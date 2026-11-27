@@ -47,7 +47,7 @@ export function PlanPurchaseButton({ plan, organizationId }: { plan: Subscriptio
     {!key && mutation.error ? <p role="alert" className="mt-3 text-sm text-red-300">{userErrorMessage(mutation.error)}</p> : null}
     <ConfirmationDialog open={Boolean(key)} title={`Confirmar ${displayPlan.name}`} pending={mutation.isPending} confirmDisabled={!online} onCancel={() => setKey(null)} onConfirm={() => void confirm()} confirmLabel="Confirmar compra simulada">
       {!online ? <p role="status">Conéctate a internet para confirmar la suscripción.</p> : null}
-      <p>{formatMxn(displayPlan.priceMxn ?? 0)} MXN por {displayPlan.months} {displayPlan.months === 1 ? "mes" : "meses"}. No se realizará ningún cobro real.</p>
+      <p>{formatMxn(displayPlan.priceMxn ?? 0)} por {displayPlan.months} {displayPlan.months === 1 ? "mes" : "meses"}. No se realizará ningún cobro real.</p>
       <p>El plan habilita sus beneficios durante la vigencia. Una renovación amplía el periodo vigente.</p>
       <ul className="list-disc pl-5">{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
       {mutation.error ? <p role="alert" className="text-red-300">{userErrorMessage(mutation.error)}</p> : null}
@@ -71,12 +71,12 @@ export function SubscriptionPanel({ organizationId, canPurchase = true }: { orga
       <p>Activación: {new Date(subscription.startsAt).toLocaleString("es-MX")}</p><p>Vencimiento: {new Date(subscription.endsAt).toLocaleString("es-MX")}</p>
     </article>)}{subscriptions.data?.items.length === 0 ? <p className="text-sm text-slate-400">Todavía no tienes una suscripción.</p> : null}</div> : null}
     {!organizationId && subscriptions.data ? <Pagination label="Suscripciones" pagination={subscriptions.data.pagination} isPending={subscriptions.isFetching} onPageChange={setPage} /> : null}
-    {canPurchase ? <div className="mt-5 grid gap-4 sm:grid-cols-2">{plans.data?.filter((plan) => plan.purchasable && plan.audience === (organizationId ? "organization" : "person")).map((plan) => <article key={plan.id} className="rounded-xl border border-white/10 p-4"><h3 className="font-semibold text-slate-100">{plan.name}</h3><p className="mb-4 mt-2 text-sm text-slate-400">{formatMxn(plan.priceMxn ?? 0)} MXN · {plan.months} {plan.months === 1 ? "mes" : "meses"}</p><PlanPurchaseButton plan={plan} organizationId={organizationId} /></article>)}</div> : null}
+    {canPurchase ? <div className="mt-5 grid gap-4 sm:grid-cols-2">{plans.data?.filter((plan) => plan.purchasable && plan.audience === (organizationId ? "organization" : "person")).map((plan) => <article key={plan.id} className="rounded-xl border border-white/10 p-4"><h3 className="font-semibold text-slate-100">{plan.name}</h3><p className="mb-4 mt-2 text-sm text-slate-400">{formatMxn(plan.priceMxn ?? 0)} · {plan.months} {plan.months === 1 ? "mes" : "meses"}</p><PlanPurchaseButton plan={plan} organizationId={organizationId} /></article>)}</div> : null}
     {plans.error ? <p role="alert" className="mt-4 text-sm text-red-300">{userErrorMessage(plans.error)}</p> : null}
     {!organizationId ? <div className="mt-6"><h3 className="font-semibold text-slate-100">Historial de compras simuladas</h3>
       {transactions.isPending ? <p role="status" className="mt-3 text-sm text-slate-400">Consultando compras…</p> : null}
       {transactions.error ? <p role="alert" className="mt-3 text-sm text-red-300">{userErrorMessage(transactions.error)}</p> : null}
-      <ul className="mt-3 space-y-3">{transactions.data?.items.map((receipt) => <li key={receipt.id} className="rounded-lg bg-white/5 p-3 text-sm text-slate-300"><p>{receipt.subscription.planName} · {formatMxn(receipt.amount)} MXN</p><p>{new Date(receipt.createdAt).toLocaleString("es-MX")} · Simulada</p></li>)}</ul>
+      <ul className="mt-3 space-y-3">{transactions.data?.items.map((receipt) => <li key={receipt.id} className="rounded-lg bg-white/5 p-3 text-sm text-slate-300"><p>{receipt.subscription.planName} · {formatMxn(receipt.amount)}</p><p>{new Date(receipt.createdAt).toLocaleString("es-MX")} · Simulada</p></li>)}</ul>
       {transactions.data?.items.length === 0 ? <p className="mt-3 text-sm text-slate-400">No hay compras registradas.</p> : null}
       {transactions.data ? <Pagination label="Compras de planes" pagination={transactions.data.pagination} isPending={transactions.isFetching} onPageChange={setTransactionPage} /> : null}
     </div> : null}
