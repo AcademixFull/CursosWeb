@@ -42,7 +42,7 @@ export function AvatarPicker({ avatarId, name }: { avatarId?: string | null; nam
     <dialog ref={dialog} aria-labelledby={titleId}
       onCancel={(event) => { event.preventDefault(); if (!mutation.isPending) setOpen(false); }}
       className="m-auto max-h-[100dvh] w-full max-w-none flex-col overflow-hidden border border-white/10 bg-slate-950 p-0 text-left text-slate-100 shadow-2xl backdrop:bg-slate-950/80 open:flex sm:max-h-[min(88dvh,56rem)] sm:w-[min(94vw,68rem)] sm:rounded-3xl">
-      <header className="shrink-0 border-b border-white/10 bg-gradient-to-br from-brand-950 via-slate-900 to-slate-950 px-4 pb-3 pt-5 sm:px-8 sm:pt-7">
+      <header className="avatar-gallery-header shrink-0 border-b border-white/10 px-4 pb-3 pt-5 sm:px-8 sm:pt-7">
         <div className="flex items-center justify-between gap-3">
           <h2 id={titleId} className="text-2xl font-extrabold tracking-tight sm:text-3xl">Elige tu avatar</h2>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3" aria-live="polite">
@@ -55,7 +55,7 @@ export function AvatarPicker({ avatarId, name }: { avatarId?: string | null; nam
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Filtrar colecciones">
           {[{ id: "all", title: "Todos" }, ...profileAvatarCollections].map(({ id, title }) => (
             <button key={id} type="button" aria-pressed={collection === id} onClick={() => setCollection(id)}
-              className="shrink-0 rounded-full border border-white/15 px-3 py-2 text-sm font-semibold text-slate-300 hover:border-brand-400 focus-visible:outline-2 focus-visible:outline-brand-400 aria-pressed:border-brand-400 aria-pressed:bg-brand-600 aria-pressed:text-white">
+              className="shrink-0 rounded-full border border-white/15 px-3 py-2 text-sm font-semibold hover:border-brand-400 focus-visible:outline-2 focus-visible:outline-brand-400 aria-pressed:border-brand-400 aria-pressed:bg-brand-600 aria-pressed:text-white">
               {title}
             </button>
           ))}
@@ -70,11 +70,11 @@ export function AvatarPicker({ avatarId, name }: { avatarId?: string | null; nam
               {items.map((avatar) => (
                 <button key={avatar.id} type="button" aria-pressed={selected === avatar.id}
                   onClick={() => setSelected(avatar.id)} disabled={mutation.isPending}
-                  className="group relative min-w-0 rounded-2xl border border-white/10 bg-slate-900 p-1.5 text-left font-semibold transition hover:border-brand-300 focus-visible:outline-2 focus-visible:outline-brand-300 aria-pressed:border-brand-300 aria-pressed:bg-brand-500/20">
+                  className="group relative min-w-0 rounded-2xl border border-white/10 bg-slate-900 p-1.5 text-left font-semibold transition hover:border-brand-300 focus-visible:outline-2 focus-visible:outline-brand-300 aria-pressed:border-brand-300 aria-pressed:bg-brand-500/20 aria-pressed:ring-2 aria-pressed:ring-brand-400/60">
                   <img alt="" src={avatar.image} width={192} height={192}
                     className="aspect-square w-full rounded-xl object-cover" />
                   <span className="block px-1 pb-1 pt-1.5 text-sm leading-tight">{avatar.name}</span>
-                  {selected === avatar.id ? <span className="absolute right-2 top-2 rounded-full bg-brand-600 px-1.5 text-white" aria-hidden="true">✓</span> : null}
+                  {selected === avatar.id ? <span className="absolute right-2 top-2 rounded-full bg-brand-600 px-1.5 text-[#fff]" aria-hidden="true">✓</span> : null}
                 </button>
               ))}
             </div>
