@@ -108,7 +108,7 @@ export function useUpdateMyProfile() {
     },
     onSuccess: (profile) => {
       queryClient.setQueryData(studentQueryKeys.profile(profile.id), profile);
-      updateUser({ fullName: profile.fullName });
+      updateUser({ fullName: profile.fullName, avatarId: profile.avatarId });
     },
   });
 }

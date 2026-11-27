@@ -36,6 +36,7 @@ export interface VerifiedCertificate extends CertificateDetail {
 
 export interface UserProfile {
   id: string;
+  avatarId?: string | null;
   fullName: string;
   email: string;
   role: "student" | "instructor" | "moderator" | "admin";
@@ -44,4 +45,4 @@ export interface UserProfile {
   bio: string;
 }
 
-export type UpdateProfileInput = Pick<UserProfile, "fullName" | "phone" | "country" | "bio">;
+export type UpdateProfileInput = Partial<Pick<UserProfile, "fullName" | "phone" | "country" | "bio" | "avatarId">>;

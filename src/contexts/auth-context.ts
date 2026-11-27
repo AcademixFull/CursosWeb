@@ -19,7 +19,7 @@ export interface AuthContextValue {
   requestPasswordReset: (input: PasswordResetInput) => Promise<void>;
   updatePassword: (input: UpdatePasswordInput, recoveryToken: string) => Promise<void>;
   clearSession: () => void;
-  updateUser: (changes: Partial<Pick<AuthUser, "fullName">>) => void;
+  updateUser: (changes: Partial<Pick<AuthUser, "fullName" | "avatarId">>) => void;
   refreshUser: () => Promise<AuthUser>;
 }
 

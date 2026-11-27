@@ -1,3 +1,4 @@
+import { ProfileAvatar } from "../account/ProfileAvatar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { SECONDARY_NAVIGATION } from "../../config/navigation";
@@ -135,7 +136,7 @@ export function ProfileMenu({ compact = false }: ProfileMenuProps) {
         )}
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/20 text-xs font-extrabold text-brand-200 ring-1 ring-inset ring-brand-400/25">
-          {isAuthenticated ? initials : <SidebarIcon name="profile" className="h-5 w-5" />}
+          {isAuthenticated ? <ProfileAvatar avatarId={user?.avatarId}>{initials}</ProfileAvatar> : <SidebarIcon name="profile" className="h-5 w-5" />}
         </span>
         {!compact ? <span className="hidden max-w-28 truncate text-sm font-semibold sm:block">{firstName}</span> : null}
         <svg aria-hidden="true" viewBox="0 0 20 20" className={classNames("h-4 w-4 text-slate-500 transition", open && "rotate-180")} fill="currentColor"><path fillRule="evenodd" d="M5.2 7.5a.75.75 0 0 1 1.06 0L10 11.24l3.74-3.74a.75.75 0 1 1 1.06 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0L5.2 8.56a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg>
@@ -150,7 +151,7 @@ export function ProfileMenu({ compact = false }: ProfileMenuProps) {
           {isAuthenticated ? (
             <div className="border-b border-white/10 px-4 py-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500/20 font-extrabold text-brand-200 ring-1 ring-inset ring-brand-400/25">{initials}</span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500/20 font-extrabold text-brand-200 ring-1 ring-inset ring-brand-400/25"><ProfileAvatar avatarId={user?.avatarId}>{initials}</ProfileAvatar></span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-slate-100">{user?.fullName}</p>
                   <p className="truncate text-xs text-slate-400">{user?.email}</p>

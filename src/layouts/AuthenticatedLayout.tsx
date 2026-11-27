@@ -1,3 +1,4 @@
+import { ProfileAvatar } from "../components/account/ProfileAvatar";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import BrandLogo from "../components/BrandLogo";
@@ -84,7 +85,7 @@ export default function AuthenticatedLayout() {
 
       <div className="border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500/15 font-bold text-brand-300 ring-1 ring-brand-400/25">{initials}</div>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500/15 font-bold text-brand-300 ring-1 ring-brand-400/25"><ProfileAvatar avatarId={user?.avatarId}>{initials}</ProfileAvatar></div>
           <div className="min-w-0">
             <p className="truncate font-semibold text-slate-100">{user?.fullName}</p>
             <p className="truncate text-xs text-slate-400">{roleLabel}</p>

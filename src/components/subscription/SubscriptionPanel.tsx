@@ -1,4 +1,5 @@
-import { submitOfflineRequest } from "../../offline/requests";
+import { useOnline } from "../../hooks/useOnline";
+import { ApiError } from "../../services/api";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
@@ -14,35 +15,39 @@ import { Pagination } from "../ui/Pagination";
 export function PlanPurchaseButton({ plan, organizationId }: { plan: SubscriptionPlan; organizationId?: string }) {
   const { user } = useAuth();
   const mutation = usePurchasePlan();
+  const online = useOnline();
+  const [confirmedPlan, setConfirmedPlan] = useState<SubscriptionPlan | null>(null);
   const [key, setKey] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
+  if (plan.purchasable && !online && !key) return <p className="font-semibold text-slate-300">Conéctate a internet para suscribirte.</p>;
   if (!user) return <Link className="font-semibold text-brand-300 underline" to={ROUTES.login}>Inicia sesión para comprar</Link>;
   if (!plan.purchasable) return <Link className="font-semibold text-brand-300 underline" to={ROUTES.contact}>Contactar a Academix</Link>;
   if (plan.audience === "organization" && !organizationId) return <Link className="font-semibold text-brand-300 underline" to={ROUTES.organization}>Elegir o crear organización</Link>;
   async function confirm() {
-    if (!key) return;
+    if (!key || !confirmedPlan || !navigator.onLine) return;
     const storageKey = `academix:plan-purchase:${user!.id}:${plan.id}:${organizationId ?? "personal"}`;
     sessionStorage.setItem(storageKey, key);
     try {
-      const input = { planId: plan.id, organizationId, idempotencyKey: key };
-      const outcome = await submitOfflineRequest(user!.id, { kind: "plan", input }, () => mutation.mutateAsync(input));
-      setSuccess(outcome.queued
-        ? "Solicitud guardada. La suscripción se enviará cuando vuelva la conexión."
-        : `Compra simulada registrada. Vigencia hasta ${new Date(outcome.result.subscription.endsAt).toLocaleString("es-MX")}.`);
+      const result = await mutation.mutateAsync({ plan: confirmedPlan, organizationId, idempotencyKey: key });
+      setSuccess(`Compra simulada registrada. Vigencia hasta ${new Date(result.subscription.endsAt).toLocaleString("es-MX")}.`);
       setKey(null);
       sessionStorage.removeItem(storageKey);
-    } catch {
-      if (!navigator.onLine) {
-        setSuccess("No pudimos guardar la solicitud en este dispositivo.");
-        setKey(null);
-      }
-      // Retain the key for an explicit retry after a server error.
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "PLAN_CHANGED") setKey(null);
     }
   }
-  return <div><Button onClick={() => { setKey(sessionStorage.getItem(`academix:plan-purchase:${user.id}:${plan.id}:${organizationId ?? "personal"}`) ?? crypto.randomUUID()); mutation.reset(); setSuccess(""); }}>Comprar plan (simulado)</Button>
+  const displayPlan = confirmedPlan ?? plan;
+  return <div><Button disabled={!online} onClick={() => {
+    setConfirmedPlan(plan);
+    setKey(sessionStorage.getItem(`academix:plan-purchase:${user.id}:${plan.id}:${organizationId ?? "personal"}`) ?? crypto.randomUUID());
+    mutation.reset();
+    setSuccess("");
+  }}>Comprar plan (simulado)</Button>
     {success ? <p role="status" className="mt-3 text-sm text-emerald-300">{success}</p> : null}
-    <ConfirmationDialog open={Boolean(key)} title={`Confirmar ${plan.name}`} pending={mutation.isPending} onCancel={() => setKey(null)} onConfirm={() => void confirm()} confirmLabel="Confirmar compra simulada">
-      <p>{formatMxn(plan.priceMxn ?? 0)} MXN por {plan.months} {plan.months === 1 ? "mes" : "meses"}. No se realizará ningún cobro real.</p>
+    {!key && mutation.error ? <p role="alert" className="mt-3 text-sm text-red-300">{userErrorMessage(mutation.error)}</p> : null}
+    <ConfirmationDialog open={Boolean(key)} title={`Confirmar ${displayPlan.name}`} pending={mutation.isPending} confirmDisabled={!online} onCancel={() => setKey(null)} onConfirm={() => void confirm()} confirmLabel="Confirmar compra simulada">
+      {!online ? <p role="status">Conéctate a internet para confirmar la suscripción.</p> : null}
+      <p>{formatMxn(displayPlan.priceMxn ?? 0)} MXN por {displayPlan.months} {displayPlan.months === 1 ? "mes" : "meses"}. No se realizará ningún cobro real.</p>
       <p>El plan habilita sus beneficios durante la vigencia. Una renovación amplía el periodo vigente.</p>
       <ul className="list-disc pl-5">{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
       {mutation.error ? <p role="alert" className="text-red-300">{userErrorMessage(mutation.error)}</p> : null}

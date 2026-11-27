@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import PublicLayout from "../layouts/PublicLayout";
 import { ROUTES } from "../config/routes";
+import { useOnline } from "../hooks/useOnline";
 import { usePlans } from "../hooks/useSubscriptions";
 import { PlanPurchaseButton } from "../components/subscription/SubscriptionPanel";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -16,6 +17,7 @@ const personPlans = [
 export default function PricingPage() {
   const [audience, setAudience] = useState<"people" | "organizations">("people");
   const plans = usePlans();
+  const online = useOnline();
   const selectedPlans = plans.data?.filter((plan) => plan.audience === (audience === "people" ? "person" : "organization")) ?? [];
 
   return (
@@ -34,6 +36,7 @@ export default function PricingPage() {
       </section>
 
       <section className="px-6 pb-24">
+        {!online ? <p role="status" className="mx-auto mb-6 max-w-6xl text-sm text-slate-400">Precios guardados. Conéctate a internet para confirmar la vigencia y suscribirte.</p> : null}
         {plans.isPending ? <PageLoader label="Consultando planes y precios" /> : null}
         {plans.error ? <ErrorState description={userErrorMessage(plans.error)} onRetry={() => void plans.refetch()} /> : null}
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2">
