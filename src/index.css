@@ -340,3 +340,11 @@ html[data-theme="light"] .academix-dashboard-hero {
 html[data-theme="light"] .academix-dashboard-hero .academix-on-brand {
   color: #ffffff !important;
 }
+
+.avatar-gallery-header {
+  background: linear-gradient(125deg, #25164b, #111827 60%, #020617);
+}
+
+html[data-theme="light"] .avatar-gallery-header {
+  background: linear-gradient(125deg, #efe8ff, #f8fafc 65%);
+}
