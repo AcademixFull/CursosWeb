@@ -48,6 +48,25 @@ describe("management services", () => {
     expect(() => service.uploadCourseFile("course-1", file)).toThrow("25 MB");
   });
 
+  it("uploads an intro MP4 on its typed route and rejects invalid cover files", async () => {
+    const introVideoUrl = "https://storage.test/intro.mp4";
+    const fetchMock = vi.fn().mockResolvedValue(response({ introVideoUrl }));
+    vi.stubGlobal("fetch", fetchMock);
+    const service = await loadService();
+    const file = new File(["clip"], "intro.mp4", { type: "video/mp4" });
+    expect(() => service.uploadCourseMedia("course-1", "cover", file)).toThrow("JPEG, PNG o WebP");
+    expect(() => service.uploadCourseMedia("course-1", "intro", new File([], "empty.mp4", { type: "video/mp4" }))).toThrow("vacío");
+    await expect(service.uploadCourseMedia("course-1", "intro", file)).resolves.toEqual({ introVideoUrl });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.academix.test/api/v1/authoring/courses/course-1/media/intro",
+      expect.objectContaining({ method: "POST", body: file }),
+    );
+    const headers = new Headers(fetchMock.mock.calls[0][1].headers);
+    expect(headers.get("content-type")).toBe("video/mp4");
+    expect(headers.get("x-file-name")).toBe("intro.mp4");
+  });
+
   it("loads inactive categories and submits instructor applications through Express", async () => {
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(response([], { page: 1, limit: 20, total: 0, totalPages: 1 })));
     vi.stubGlobal("fetch", fetchMock);

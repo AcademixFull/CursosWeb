@@ -2,10 +2,11 @@ import { type FormEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { Button } from "../components/ui/Button";
+import { CourseMediaEditor } from "../components/courses/CourseMediaEditor";
 import { useCourseContent, useInvalidateCourseContent, useResourceOptions } from "../hooks/useManagement";
 import { managementService } from "../services/management.service";
 import { userErrorMessage } from "../services/api";
-import type { AuthoringLesson } from "../types/management.types";
+import type { AuthoringLesson, CourseMediaKind } from "../types/management.types";
 import { ROUTES } from "../config/routes";
 import { useAuth } from "../hooks/useAuth";
 
@@ -69,6 +70,12 @@ export default function AuthoringPage() {
     },
     onSuccess: refresh,
   });
+  const uploadMedia = useMutation({
+    mutationFn: ({ kind, file }: { kind: CourseMediaKind; file: File }) => managementService.uploadCourseMedia(courseId, kind, file),
+    onSuccess: refresh,
+  });
+  const media = content.data?.media;
+  const mediaReady = Boolean(media?.coverUrl && media?.introVideoUrl);
   const finish = useMutation({
     mutationFn: () => managementService.submitInstructorCourse(courseId),
     onSuccess: () => navigate(ROUTES.instructorPanel),
@@ -81,6 +88,18 @@ export default function AuthoringPage() {
       {content.isPending ? <p className="mt-8 text-slate-400">Cargando contenido...</p> : null}
       {content.error ? <p role="alert" className="mt-8 text-red-300">{userErrorMessage(content.error, "No pudimos cargar el contenido. Intenta nuevamente.")}</p> : null}
       {content.data ? <p className="mt-5 text-sm text-slate-400">Estado: <strong className="text-slate-200">{statusLabels[content.data.status]}</strong></p> : null}
+      {content.data ? (
+        <CourseMediaEditor
+          key={courseId}
+          media={media}
+          pendingKind={uploadMedia.isPending ? uploadMedia.variables?.kind : undefined}
+          errorKind={uploadMedia.variables?.kind}
+          error={uploadMedia.error}
+          disabled={finish.isPending}
+          onRefresh={refresh}
+          onUpload={(kind, file) => uploadMedia.mutateAsync({ kind, file })}
+        />
+      ) : null}
       <form onSubmit={(e) => { e.preventDefault(); createModule.mutate(); }} className="mt-8 flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-5 sm:flex-row">
         <label className="sr-only" htmlFor="module-title">Título del módulo</label><input id="module-title" required value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="Nuevo módulo" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-4 py-2.5" />
         <Button type="submit" disabled={createModule.isPending}>Crear módulo</Button>
@@ -103,7 +122,7 @@ export default function AuthoringPage() {
           </article>
         ))}
       </div>
-      {content.data ? <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-white/10 pt-6"><Button variant="secondary" onClick={() => navigate(user?.role === "admin" ? ROUTES.admin : ROUTES.instructorPanel)}>Guardar y salir</Button>{user?.role === "instructor" && content.data.status === "draft" ? <Button onClick={() => finish.mutate()} disabled={finish.isPending}>{finish.isPending ? "Enviando..." : "Finalizar y enviar a revisión"}</Button> : null}</div> : null}
+      {content.data ? <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-white/10 pt-6"><Button variant="secondary" disabled={uploadMedia.isPending || finish.isPending} onClick={() => navigate(user?.role === "admin" ? ROUTES.admin : ROUTES.instructorPanel)}>Guardar y salir</Button>{(user?.role === "instructor" || user?.role === "student") && content.data.status === "draft" ? <Button onClick={() => finish.mutate()} disabled={finish.isPending || uploadMedia.isPending || !mediaReady}>{finish.isPending ? "Enviando..." : "Finalizar y enviar a revisión"}</Button> : null}</div> : null}
       {finish.error ? <p role="alert" className="mt-3 text-right text-sm text-red-300">{userErrorMessage(finish.error, "No pudimos finalizar el curso. Intenta nuevamente.")}</p> : null}
     </section>
   );

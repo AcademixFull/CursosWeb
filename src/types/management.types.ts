@@ -128,10 +128,18 @@ export interface AuthoringModule {
   lessons: AuthoringLesson[];
 }
 
+export type CourseMediaKind = "cover" | "intro";
+
+export interface AuthoringCourseMedia {
+  coverUrl?: string;
+  introVideoUrl?: string;
+}
+
 export interface AuthoringCourseContent {
   courseId: string;
   status: CourseWorkflowStatus;
   modules: AuthoringModule[];
+  media?: AuthoringCourseMedia;
 }
 
 export interface UploadedCourseFile {
