@@ -108,16 +108,49 @@ export default function InstructorDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {courses.data?.items.map((course) => (
           <article key={course.id} className="min-w-0 rounded-2xl border border-white/10 bg-slate-900/70 p-4 sm:p-6">
-            <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between"><h2 className="text-xl font-semibold">{course.title}</h2><span className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">{statusLabels[course.status]}</span></div>
+            <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between"><h2 id={`instructor-course-${course.id}`} className="text-xl font-semibold">{course.title}</h2><span className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">{statusLabels[course.status]}</span></div>
             <p className="mt-3 text-sm text-slate-400">{course.shortDescription}</p>{course.organization ? <p className="mt-2 text-xs font-semibold text-brand-300">Organización: {course.organization.name}</p> : <p className="mt-2 text-xs text-slate-500">Curso independiente</p>}
-            {course.status === "draft" || course.status === "published" || course.status === "moderated" ? <div className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]"><input aria-label={`Descripción corta de ${course.title}`} maxLength={300} value={descriptions[course.id] ?? course.shortDescription} onChange={(event) => setDescriptions((current) => ({ ...current, [course.id]: event.target.value }))} className="min-w-0 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm" />{!course.organization ? <input aria-label={`Precio de ${course.title}`} type="number" min="0.01" step="0.01" value={coursePrices[course.id] ?? String(course.price)} onChange={(event) => setCoursePrices((current) => ({ ...current, [course.id]: event.target.value }))} className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm sm:w-28" /> : <span className="self-center text-xs font-semibold text-brand-300">Incluido en plan institucional</span>}<Button size="sm" variant="secondary" disabled={update.isPending} onClick={() => {
-              const input: Partial<CourseInput> = { shortDescription: descriptions[course.id] ?? course.shortDescription };
-              if (!course.organization) {
-                const nextPrice = Math.max(0.01, Number(coursePrices[course.id] ?? course.price) || 0.01);
-                if (nextPrice !== course.price) input.price = nextPrice;
-              }
-              update.mutate({ courseId: course.id, input });
-            }}>{course.status === "moderated" ? "Guardar corrección" : "Guardar datos"}</Button></div> : null}
+            {course.status === "draft" || course.status === "published" || course.status === "moderated" ? (
+              <form className="mt-4 grid items-end gap-2 sm:grid-cols-[minmax(0,1fr)_auto] 2xl:grid-cols-[minmax(0,1fr)_auto_auto]" onSubmit={(event) => {
+                event.preventDefault();
+                const input: Partial<CourseInput> = { shortDescription: descriptions[course.id] ?? course.shortDescription };
+                const price = coursePrices[course.id];
+                if (!course.organization && price && Number(price) !== course.price) {
+                  input.price = Number(price);
+                }
+                update.mutate({ courseId: course.id, input });
+              }}>
+                <input
+                  aria-label={`Descripción corta de ${course.title}`}
+                  maxLength={300}
+                  value={descriptions[course.id] ?? course.shortDescription}
+                  onChange={(event) => setDescriptions((current) => ({ ...current, [course.id]: event.target.value }))}
+                  className="min-h-10 min-w-0 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+                />
+                {!course.organization ? (
+                  <label className="grid gap-1 text-xs font-semibold text-slate-300">
+                    Precio (MXN)
+                    <span className="relative block">
+                      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">$</span>
+                      <input
+                        aria-describedby={`instructor-course-${course.id}`}
+                        type="number"
+                        inputMode="decimal"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={coursePrices[course.id] ?? (course.price > 0 ? String(course.price) : "")}
+                        onChange={(event) => setCoursePrices((current) => ({ ...current, [course.id]: event.target.value }))}
+                        className="min-h-10 w-full rounded-lg border border-white/10 bg-slate-950 py-2 pl-7 pr-2 text-sm font-normal text-slate-100 sm:w-32"
+                      />
+                    </span>
+                  </label>
+                ) : <span className="self-center text-xs font-semibold text-brand-300">Incluido en plan institucional</span>}
+                <Button type="submit" size="sm" variant="secondary" disabled={update.isPending} className="sm:col-span-2 sm:justify-self-end 2xl:col-span-1">
+                  {course.status === "moderated" ? "Guardar corrección" : "Guardar datos"}
+                </Button>
+              </form>
+            ) : null}
             {!course.organization && course.status === "published" ? <p className="mt-2 text-xs text-slate-500">Puedes editar descripción, módulos, lecciones y recursos sin nueva aprobación. Solo un cambio de precio devuelve el curso a revisión de Academix.</p> : null}{course.status === "moderated" ? <p className="mt-2 text-xs text-amber-300">Corrige el precio, los datos o el contenido señalado. El curso seguirá dado de baja hasta que el equipo de moderación revise los cambios y lo restaure.</p> : null}
             <div className="mt-6 flex flex-wrap gap-3">
               {course.status === "draft" || course.status === "published" || course.status === "moderated" ? <ButtonLink to={authoringRoute(course.id)} size="sm">{course.status === "moderated" ? "Corregir contenido" : course.status === "draft" ? "Preparar curso para revisión" : "Editar contenido"}</ButtonLink> : course.status === "review" ? <p className="text-sm text-slate-400">Academix está revisando este curso.</p> : <p className="text-sm text-slate-400">El curso está dado de baja.</p>}
