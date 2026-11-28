@@ -89,19 +89,33 @@ describe("InstructorDashboardPage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const price = screen.getByRole("spinbutton", { name: "Precio de Programación desde cero" });
-    expect(price).toHaveValue(0);
+    const price = screen.getByRole("spinbutton", { name: "Precio (MXN)", description: "Programación desde cero" });
+    expect(price).toHaveValue(null);
+    expect(price).toHaveAttribute("inputmode", "decimal");
     expect(screen.getByRole("button", { name: "Guardar corrección" })).toBeInTheDocument();
     expect(screen.getByText(/Corrige el precio, los datos o el contenido señalado/i)).toBeInTheDocument();
 
+    await user.click(screen.getByRole("button", { name: "Guardar corrección" }));
+    await waitFor(() => {
+      expect(state.updateInstructorCourse).toHaveBeenCalledWith(
+        "course-moderated",
+        { shortDescription: "Curso Programación desde cero" },
+      );
+    });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Guardar corrección" })).toBeEnabled());
+
+    await user.type(price, "50.555");
+    await user.click(screen.getByRole("button", { name: "Guardar corrección" }));
+    expect(state.updateInstructorCourse).toHaveBeenCalledTimes(1);
+
     await user.clear(price);
-    await user.type(price, "50");
+    await user.type(price, "50.55");
     await user.click(screen.getByRole("button", { name: "Guardar corrección" }));
 
     await waitFor(() => {
       expect(state.updateInstructorCourse).toHaveBeenCalledWith(
         "course-moderated",
-        expect.objectContaining({ price: 50 }),
+        expect.objectContaining({ price: 50.55 }),
       );
     });
   });
