@@ -3,6 +3,8 @@ import type {
   UserListFilters, BasicListFilters, ManagedCourseFilters, ApplicationListFilters, ReviewListFilters,
   AdminReview,
   AuthoringCourseContent,
+  AuthoringCourseMedia,
+  CourseMediaKind,
   AuthoringLesson,
   AuthoringModule,
   AuthoringResource,
@@ -17,6 +19,7 @@ import type {
   UploadedCourseFile,
 } from "../types/management.types";
 import { api } from "./api";
+import { courseMediaFormats, COURSE_MEDIA_MAX_MB } from "../config/courseMedia";
 
 function query(values: Record<string, string | number | undefined>): string {
   const params = new URLSearchParams();
@@ -87,6 +90,16 @@ export const managementService = {
     api.post<AuthoringResource>(`/authoring/lessons/${encodeURIComponent(lessonId)}/resources`, input),
   updateResource: (resourceId: string, input: Partial<Omit<AuthoringResource, "id" | "type">>) =>
     api.patch<AuthoringResource>(`/authoring/resources/${encodeURIComponent(resourceId)}`, input),
+  uploadCourseMedia: (courseId: string, kind: CourseMediaKind, file: File) => {
+    if (!file.size) throw new Error("El archivo está vacío.");
+    if (file.size > COURSE_MEDIA_MAX_MB * 1024 * 1024) throw new Error("El archivo no puede superar " + COURSE_MEDIA_MAX_MB + " MB.");
+    if (!courseMediaFormats[kind].mimeTypes.includes(file.type)) {
+      throw new Error(kind === "cover" ? "Elige una imagen JPEG, PNG o WebP." : "Elige un video MP4.");
+    }
+    return api.postBinary<AuthoringCourseMedia>(`/authoring/courses/${encodeURIComponent(courseId)}/media/${kind}`, file, {
+      headers: { "Content-Type": file.type, "x-file-name": file.name.replace(/[^\x20-\x7e]/g, "_") },
+    });
+  },
   uploadCourseFile: (courseId: string, file: File) => {
     if (file.size > 25 * 1024 * 1024) throw new Error("El archivo no puede superar 25 MB.");
     return api.postBinary<UploadedCourseFile>(`/authoring/courses/${encodeURIComponent(courseId)}/files`, file, {

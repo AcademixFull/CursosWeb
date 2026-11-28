@@ -35,10 +35,6 @@ export default function InstructorDashboardPage() {
   const organizations = useOrganizations();
   const teachingOrganizations = (organizations.data ?? []).filter((organization) => organization.role === "administrator" || organization.role === "instructor");
   const queryClient = useQueryClient();
-  const submit = useMutation({
-    mutationFn: managementService.submitInstructorCourse,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: managementQueryKeys.instructorCourses }),
-  });
   const update = useMutation({
     mutationFn: ({ courseId, input }: { courseId: string; input: Partial<CourseInput> }) => managementService.updateInstructorCourse(courseId, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: managementQueryKeys.instructorCourses }),
@@ -124,15 +120,14 @@ export default function InstructorDashboardPage() {
             }}>{course.status === "moderated" ? "Guardar corrección" : "Guardar datos"}</Button></div> : null}
             {!course.organization && course.status === "published" ? <p className="mt-2 text-xs text-slate-500">Puedes editar descripción, módulos, lecciones y recursos sin nueva aprobación. Solo un cambio de precio devuelve el curso a revisión de Academix.</p> : null}{course.status === "moderated" ? <p className="mt-2 text-xs text-amber-300">Corrige el precio, los datos o el contenido señalado. El curso seguirá dado de baja hasta que el equipo de moderación revise los cambios y lo restaure.</p> : null}
             <div className="mt-6 flex flex-wrap gap-3">
-              {course.status === "draft" || course.status === "published" || course.status === "moderated" ? <ButtonLink to={authoringRoute(course.id)} size="sm">{course.status === "moderated" ? "Corregir contenido" : "Editar contenido"}</ButtonLink> : course.status === "review" ? <p className="text-sm text-slate-400">Academix está revisando este curso.</p> : <p className="text-sm text-slate-400">El curso está dado de baja.</p>}
-              {course.status === "draft" ? <Button size="sm" variant="secondary" disabled={submit.isPending} onClick={() => submit.mutate(course.id)}>Enviar a revisión</Button> : null}{course.status === "moderated" ? <p className="text-sm text-amber-300">Cuando termines las correcciones, el equipo de moderación podrá revisar el curso y restaurarlo.</p> : null}{course.status !== "archived" && course.status !== "moderated" ? <Button size="sm" variant="ghost" disabled={archive.isPending} onClick={() => archive.mutate(course.id)}>Dar de baja</Button> : null}
+              {course.status === "draft" || course.status === "published" || course.status === "moderated" ? <ButtonLink to={authoringRoute(course.id)} size="sm">{course.status === "moderated" ? "Corregir contenido" : course.status === "draft" ? "Preparar curso para revisión" : "Editar contenido"}</ButtonLink> : course.status === "review" ? <p className="text-sm text-slate-400">Academix está revisando este curso.</p> : <p className="text-sm text-slate-400">El curso está dado de baja.</p>}
+              {course.status === "moderated" ? <p className="text-sm text-amber-300">Cuando termines las correcciones, el equipo de moderación podrá revisar el curso y restaurarlo.</p> : null}{course.status !== "archived" && course.status !== "moderated" ? <Button size="sm" variant="ghost" disabled={archive.isPending} onClick={() => archive.mutate(course.id)}>Dar de baja</Button> : null}
             </div>
           </article>
         ))}
       </div>
       {courses.data ? <Pagination label="Mis cursos" pagination={courses.data.pagination} isPending={courses.isFetching} onPageChange={setPage} onLimitChange={(value) => { setLimit(value); setPage(1); }} /> : null}
       {courses.data?.items.length === 0 ? <p className="rounded-2xl border border-dashed border-white/15 p-8 text-center text-slate-400">No hay cursos asignados con este estado.</p> : null}
-      {submit.error ? <p role="alert" className="mt-4 text-sm text-red-300">{userErrorMessage(submit.error, "No pudimos enviar el curso a revisión. Intenta nuevamente.")}</p> : null}
       {update.error ? <p role="alert" className="mt-4 text-sm text-red-300">{userErrorMessage(update.error, "No pudimos guardar los cambios. Revisa tu conexión e inténtalo de nuevo.")}</p> : null}
       {create.error ? <p role="alert" className="mt-4 text-sm text-red-300">{userErrorMessage(create.error, "No pudimos crear el curso. Intenta nuevamente.")}</p> : null}{archive.error ? <p role="alert" className="mt-4 text-sm text-red-300">{userErrorMessage(archive.error, "No pudimos dar de baja el curso. Intenta nuevamente.")}</p> : null}
     </section>

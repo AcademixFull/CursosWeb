@@ -3,6 +3,7 @@ import { env } from "../config/env";
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import CourseGrid from "../components/courses/CourseGrid";
+import { CourseIntroVideo } from "../components/courses/CourseIntroVideo";
 import { EnrollmentDialog } from "../components/enrollment/EnrollmentDialog";
 import { ReviewDialog } from "../components/reviews/ReviewDialog";
 import { ReviewPagination } from "../components/reviews/ReviewPagination";
@@ -142,18 +143,24 @@ export default function CourseDetailPage() {
               <h1 className="mt-5 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
                 {course.title}
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-violet-100/80">{course.shortDescription}</p>
-              <div className="mt-6 flex flex-wrap gap-4 text-sm text-violet-100">
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">{course.shortDescription}</p>
+              <div className="mt-6 flex flex-wrap gap-4 text-sm text-slate-300">
                 <span>Por {course.instructor.name}</span>
                 <span>★ {course.rating} ({course.reviewCount} reseñas)</span>
                 <span>{course.durationHours} horas</span>
               </div>
             </div>
-            <div className="flex aspect-video items-center justify-center rounded-2xl border border-white/10 bg-linear-to-br from-violet-700/40 to-slate-950 shadow-2xl">
-              <span className="rounded-full bg-violet-600 p-6 text-2xl shadow-xl" aria-label="Vista previa del curso">
-                ▶
-              </span>
-            </div>
+            <figure className="min-w-0">
+              <CourseIntroVideo
+                key={course.introVideoUrl ?? course.id}
+                src={course.introVideoUrl}
+                poster={course.imageUrl}
+                onRetry={courseQuery.refetch}
+              />
+              {course.introVideoUrl ? (
+                <figcaption className="mt-3 text-sm font-semibold text-slate-300">Video introductorio</figcaption>
+              ) : null}
+            </figure>
           </div>
         </section>
 

@@ -66,6 +66,7 @@ export interface CreateReviewInput {
 
 export interface CourseDetail extends CourseSummary {
   savedPreview?: boolean;
+  introVideoUrl?: string;
   description: string;
   learningOutcomes: string[];
   requirements: string[];
